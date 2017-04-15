@@ -1,0 +1,16 @@
+package de.thm.arsnova.shared.entities
+
+import java.util.UUID
+
+case class Session(
+                    id: Option[UUID],
+                    keyword: String,
+                    userId: UUID,
+                    title: String,
+                    shortName: String,
+                    lastOwnerActivity: String,
+                    creationTime: String,
+                    active: Boolean,
+                    feedbackLock: Boolean,
+                    flipFlashcards: Boolean
+                  )
