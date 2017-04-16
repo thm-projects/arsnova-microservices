@@ -23,4 +23,6 @@ object SessionCommands {
   object CreateSessionFormat extends DefaultJsonProtocol {
     implicit val format: RootJsonFormat[CreateSession] = jsonFormat1(CreateSession)
   }
+
+  case class GetSessionByKeyword(keyword: String) extends SessionCommand[Session]
 }

@@ -16,18 +16,19 @@ val akkaDependencies = Seq(
   "com.typesafe.akka"     %% "akka-testkit"                         % akkaVersion % "test",
   "com.typesafe.akka"     %% "akka-http"                            % akkaHTTPVersion,
   "com.typesafe.akka"     %% "akka-http-testkit"                    % akkaHTTPVersion,
-  "com.typesafe.akka"     %% "akka-http-spray-json"                 % akkaHTTPVersion
+  "com.typesafe.akka"     %% "akka-http-spray-json"                 % akkaHTTPVersion,
+  "org.slf4j"             %  "slf4j-nop"                            % "1.7.21"
 )
 
 val slickDependencies = Seq(
   "com.typesafe.slick"    %% "slick"                                % slickVersion,
   "com.typesafe.slick"    %% "slick-hikaricp"                       % slickVersion,
-  "mysql"                 %  "mysql-connector-java"                 % "6.0.3",
+  "postgresql"            % "postgresql"                            % "9.1-901.jdbc4",
+  //"mysql"                 %  "mysql-connector-java"                 % "6.0.3",
   "org.flywaydb"          %  "flyway-core"                          % "3.2.1"
 )
 
 val testDependencies = Seq(
-  "org.slf4j"             %  "slf4j-nop"                            % "1.7.21",
   "org.scalatest"         %% "scalatest"                            % scalaTestVersion
 )
 

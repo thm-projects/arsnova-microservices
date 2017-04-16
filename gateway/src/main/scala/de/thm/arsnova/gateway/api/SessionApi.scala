@@ -1,7 +1,9 @@
 package de.thm.arsnova.gateway.api
 
+import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.util.{Success, Failure}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.util.Timeout
@@ -10,6 +12,7 @@ import spray.json._
 
 import de.thm.arsnova.shared.entities.Session
 import de.thm.arsnova.shared.commands.SessionCommands._
+import de.thm.arsnova.shared.mappings.UUIDProtocol._
 
 /*
 The API Interface regarding sessions, the core component for arsnova.voting.
@@ -20,21 +23,30 @@ trait SessionApi {
   import de.thm.arsnova.gateway.Context._
 
   implicit val timeout = Timeout(5.seconds)
+  val remote = system.actorSelection("akka://SessionService@127.0.0.1:9001/user/dispatcher")
 
   val sessionApi = pathPrefix("session") {
-    /*pathEndOrSingleSlash {
+    pathEndOrSingleSlash {
       post {
         entity(as[Session]) { session =>
-          complete (SessionService.create(session).map(_.toJson))
+          complete {
+            (remote ? CreateSession(session)).mapTo[Int].map(_.toJson)
+          }
         }
       }
-    } ~*/
+    } ~
+    pathPrefix(IntNumber) { keyword =>
+      get {
+        complete {
+          (remote ? GetSessionByKeyword(keyword.toString)).mapTo[Session].map(_.toJson)
+        }
+      }
+    } ~
     pathPrefix(JavaUUID) { sessionId =>
       pathEndOrSingleSlash {
         get {
           complete {
-            val remote = system.actorSelection("akka.tcp://SessionService@127.0.0.1:9001/user/dispatcher")
-            (remote ? GetSession(sessionId)).asInstanceOf[Future[Session]].map (_.toJson)
+            (remote ? GetSession(sessionId)).mapTo[Session].map(_.toJson)
           }
         }/* ~
           put {
