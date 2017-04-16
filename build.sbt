@@ -8,6 +8,7 @@ val akkaHTTPVersion = "10.0.5"
 val scalaTestVersion = "3.0.0"
 val scalaMockVersion = "3.2.2"
 val slickVersion = "3.2.0"
+val gatlingVersion = "2.2.4"
 
 val akkaDependencies = Seq(
   "com.typesafe.akka"     %% "akka-actor"                           % akkaVersion,
@@ -30,6 +31,11 @@ val slickDependencies = Seq(
 
 val testDependencies = Seq(
   "org.scalatest"         %% "scalatest"                            % scalaTestVersion
+)
+
+val gatlingDeps = Seq(
+  "io.gatling.highcharts" % "gatling-charts-highcharts"             % gatlingVersion % "test,it",
+  "io.gatling"            % "gatling-test-framework"                % gatlingVersion % "test,it"
 )
 
 // skip Tests in assembly job
@@ -59,3 +65,13 @@ lazy val sessionservice = (project in file("sessionservice"))
     libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
   .dependsOn(shared)
+
+lazy val stresstest = (project in file("stresstest"))
+  .settings(
+    libraryDependencies ++= gatlingDeps
+  )
+  .dependsOn(shared)
+
+
+// skip Tests in assembly job
+test in assembly := {}
