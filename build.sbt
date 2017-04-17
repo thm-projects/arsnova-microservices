@@ -41,10 +41,11 @@ val gatlingDeps = Seq(
 // skip Tests in assembly job
 // test in assembly := {}
 
-lazy val arsnovamicroservices = (project in file("."))
+lazy val root = (project in file("."))
   .aggregate(
     gateway,
-    sessionservice
+    sessionservice,
+    questionservice
   )
 
 lazy val shared = (project in file("shared"))
@@ -61,6 +62,12 @@ lazy val gateway = (project in file("gateway"))
   .dependsOn(shared)
 
 lazy val sessionservice = (project in file("sessionservice"))
+  .settings(
+    libraryDependencies ++= akkaDependencies ++ slickDependencies
+  )
+  .dependsOn(shared)
+
+lazy val questionservice = (project in file("questionservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
