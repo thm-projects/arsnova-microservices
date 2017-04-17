@@ -12,7 +12,6 @@ import spray.json._
 
 import de.thm.arsnova.shared.entities.Session
 import de.thm.arsnova.shared.commands.SessionCommands._
-import de.thm.arsnova.shared.mappings.UUIDProtocol._
 
 /*
 The API Interface regarding sessions, the core component for arsnova.voting.
