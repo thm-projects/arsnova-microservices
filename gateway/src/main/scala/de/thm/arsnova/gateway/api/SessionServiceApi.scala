@@ -16,7 +16,7 @@ import de.thm.arsnova.shared.commands.SessionCommands._
 /*
 The API Interface regarding sessions, the core component for arsnova.voting.
  */
-trait SessionApi {
+trait SessionServiceApi {
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
   import de.thm.arsnova.gateway.Context._
