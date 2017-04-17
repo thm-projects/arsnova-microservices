@@ -4,8 +4,10 @@ import akka.http.scaladsl.server.Directives._
 import de.thm.arsnova.gateway.api._
 
 trait Routes extends ApiErrorHandler
-  with SessionApi {
+  with SessionServiceApi
+  with QuestionServiceApi {
   val routes = {
-    sessionApi
+    sessionApi ~
+    questionServiceApi
   }
 }
