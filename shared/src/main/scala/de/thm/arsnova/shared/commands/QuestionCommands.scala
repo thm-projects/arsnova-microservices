@@ -12,5 +12,7 @@ object QuestionCommands {
 
   case class GetQuestionsBySessionId(id: UUID) extends QuestionCommand[Seq[Question]]
 
+  case class GetQuestionsBySessionIdAndVariant(id: UUID, variant: String) extends QuestionCommand[Seq[Question]]
+
   case class CreateQuestion(question: Question) extends QuestionCommand[Done]
 }
