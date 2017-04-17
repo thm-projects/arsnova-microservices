@@ -8,7 +8,6 @@ import de.thm.arsnova.shared.entities.Session
 
 object SessionCommands {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
-  import de.thm.arsnova.shared.mappings.UUIDProtocol._
 
   sealed trait SessionCommand[R]
 

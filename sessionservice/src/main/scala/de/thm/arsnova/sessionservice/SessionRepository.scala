@@ -7,9 +7,6 @@ import slick.lifted.TableQuery
 
 import de.thm.arsnova.shared.entities.Session
 
-/**
-  * Created by tekay on 4/15/17.
-  */
 object SessionRepository {
   import Context._
 
@@ -25,7 +22,7 @@ object SessionRepository {
   }
 
   def create(session: Session): Future[Int] = {
-    val sessionWithId = session.copy(id = Some(UUID.randomUUID))
-    db.run(sessionsTable += sessionWithId)
+    val itemWithId = session.copy(id = Some(UUID.randomUUID))
+    db.run(sessionsTable += itemWithId)
   }
 }
