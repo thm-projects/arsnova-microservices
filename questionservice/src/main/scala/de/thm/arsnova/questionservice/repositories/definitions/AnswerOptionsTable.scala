@@ -1,4 +1,4 @@
-package de.thm.arsnova.questionservice
+package de.thm.arsnova.questionservice.repositories.definitions
 
 import java.util.UUID
 import slick.driver.PostgresDriver.api._

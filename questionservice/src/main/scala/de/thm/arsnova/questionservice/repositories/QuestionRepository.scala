@@ -1,4 +1,4 @@
-package de.thm.arsnova.questionservice
+package de.thm.arsnova.questionservice.repositories
 
 import java.util.UUID
 import scala.concurrent.{Future, Await}
@@ -6,10 +6,11 @@ import scala.concurrent.duration._
 import slick.driver.PostgresDriver.api._
 import slick.lifted.TableQuery
 
+import definitions.QuestionsTable
 import de.thm.arsnova.shared.entities.Question
 
 object QuestionRepository {
-  import Context._
+  import de.thm.arsnova.questionservice.Context._
 
   val db: Database = Database.forConfig("database")
   val questionsTable = TableQuery[QuestionsTable]

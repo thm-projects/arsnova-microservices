@@ -1,15 +1,14 @@
-package de.thm.arsnova.questionservice
+package de.thm.arsnova.questionservice.repositories
 
 import java.util.UUID
 import scala.concurrent.Future
 import slick.driver.PostgresDriver.api._
 import slick.lifted.TableQuery
 
+import definitions.AnswerOptionsTable
 import de.thm.arsnova.shared.entities.AnswerOption
 
 object AnswerOptionRepository {
-  import Context._
-
   val db: Database = Database.forConfig("database")
   val answerOptionsTable = TableQuery[AnswerOptionsTable]
 

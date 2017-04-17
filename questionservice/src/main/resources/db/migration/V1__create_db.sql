@@ -25,3 +25,23 @@ CREATE TABLE answer_options (
   PRIMARY KEY(id),
   CONSTRAINT possible_answer_question_fk FOREIGN KEY (question_id) REFERENCES questions(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+CREATE TABLE freetext_answers (
+  id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  session_id uuid NOT NULL,
+  subject TEXT NOT NULL,
+  content TEXT NOT NULL,
+  PRIMARY KEY(id),
+  CONSTRAINT freetext_answer_question_fk FOREIGN KEY (question_id) REFERENCES questions(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE choice_answers (
+  id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  session_id uuid NOT NULL,
+  answer_option_id uuid NOT NULL,
+  PRIMARY KEY(id),
+  CONSTRAINT choice_answer_question_fk FOREIGN KEY (question_id) REFERENCES questions(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT choice_answer_answer_option_fk FOREIGN KEY (answer_option_id) REFERENCES answer_options(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
