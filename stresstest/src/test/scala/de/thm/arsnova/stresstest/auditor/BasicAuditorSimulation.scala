@@ -1,6 +1,7 @@
 package de.thm.arsnova.stresstest.auditor
 
 import java.util.UUID
+import java.util.Calendar
 import io.gatling.core.Predef._ // 2
 import io.gatling.http.Predef._
 import scala.concurrent.duration._
@@ -11,6 +12,9 @@ import de.thm.arsnova.shared.entities._
 
 object BasicAuditorSimulation {
   import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
+  import de.thm.arsnova.shared.mappings.CommentJsonProtocol._
+
+  val now = Calendar.getInstance.getTime.toString
 
   val joinSession = exec(http("Auditor joins session")
     .get("/session/42664be0-35d1-45c7-a87d-d2ed9cc9cad7"))
@@ -27,9 +31,19 @@ object BasicAuditorSimulation {
     .header("Content-Type", "application/json")
     .body(StringBody(newAnswer.toJson.toString)).asJSON)
 
+  val newComment = Comment(None, UUID.randomUUID, UUID.fromString("42664be0-35d1-45c7-a87d-d2ed9cc9cad7"),
+    false, "this the subject", "i have a question and i dare not ask.", now)
+
+  val postComment = exec(http("Auditor posts a comment")
+    .post("/session/42664be0-35d1-45c7-a87d-d2ed9cc9cad7/comment")
+    .header("Content-Type", "application/json")
+    .body(StringBody(newComment.toJson.toString)).asJSON
+  )
+
   val scn = scenario("Test").exec(
     joinSession.pause(3),
     getAllPrepQuestions.pause(3),
-    answerToMCQuestion
+    answerToMCQuestion.pause(3),
+    postComment
   )
 }
