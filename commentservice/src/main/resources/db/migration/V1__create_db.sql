@@ -5,6 +5,6 @@ CREATE TABLE comments (
   is_read boolean NOT NULL DEFAULT false,
   subject VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
-  created_at VARCHAR(20) NOT NULL,
+  created_at VARCHAR(30) NOT NULL,
   PRIMARY KEY(id)
 );
