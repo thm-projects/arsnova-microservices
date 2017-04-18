@@ -22,7 +22,6 @@ object AnswerOptionRepository {
 
   def create(answerOptions: Seq[AnswerOption]): Seq[Future[Int]] = {
     answerOptions.map { item =>
-      println(item.questionId.get)
       val itemWithId = item.copy(id = Some(UUID.randomUUID))
       db.run(answerOptionsTable += itemWithId)
     }
