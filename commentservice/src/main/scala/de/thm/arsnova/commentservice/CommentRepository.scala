@@ -24,7 +24,6 @@ object CommentRepository {
   def create(comment: Comment): Future[UUID] = {
     val cId = UUID.randomUUID
     val itemWithId = comment.copy(id = Some(cId))
-    println(itemWithId)
     db.run(commentsTable += itemWithId).map(_ => cId)
   }
 }
