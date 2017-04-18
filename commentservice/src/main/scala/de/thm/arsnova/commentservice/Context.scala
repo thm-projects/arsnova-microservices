@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigFactory
 object Context {
   val config = ConfigFactory.load
 
-  implicit val system = ActorSystem("QuestionService", config)
+  implicit val system = ActorSystem("CommentService", config)
   implicit val executionContext = system.dispatcher
   implicit val timeout = Timeout(2 minutes)
   protected val log: LoggingAdapter = Logging(system, getClass)

@@ -1,4 +1,4 @@
-package de.thm.arsnova.sessionservice
+package de.thm.arsnova.commentservice
 
 import java.util.UUID
 

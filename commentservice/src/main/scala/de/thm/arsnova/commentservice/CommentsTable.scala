@@ -7,7 +7,7 @@ import slick.sql.SqlProfile.ColumnOption._
 import de.thm.arsnova.shared.entities.Comment
 
 class CommentsTable(tag: Tag) extends Table[Comment](tag, "comments"){
-  def id: Rep[UUID] = column[UUID]("id", O.PrimaryKey, O.AutoInc)
+  def id: Rep[UUID] = column[UUID]("id", O.PrimaryKey)
   def userId: Rep[UUID] = column[UUID]("user_id")
   def sessionId: Rep[UUID] = column[UUID]("session_id")
   def isRead: Rep[Boolean] = column[Boolean]("is_read")
