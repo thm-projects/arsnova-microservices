@@ -18,7 +18,7 @@ trait FreetextAnswerApi {
 
   import de.thm.arsnova.shared.mappings.FreetextAnswerJsonProtocol._
 
-  implicit val timeoutFreetextAnswer = Timeout(5.seconds)
+  implicit val timeoutFreetextAnswer = Timeout(10.seconds)
   val remoteFreetextAnswer = system.actorSelection("akka://QuestionService@127.0.0.1:9002/user/dispatcher")
 
   val freetextAnswerApi = pathPrefix("session") {

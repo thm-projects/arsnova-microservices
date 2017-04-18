@@ -18,7 +18,7 @@ trait QuestionApi {
 
   import de.thm.arsnova.shared.mappings.QuestionJsonProtocol._
 
-  implicit val timeoutQuestion = Timeout(5.seconds)
+  implicit val timeoutQuestion = Timeout(10.seconds)
   val remoteQuestion = system.actorSelection("akka://QuestionService@127.0.0.1:9002/user/dispatcher")
 
   val questionApi = pathPrefix("session") {

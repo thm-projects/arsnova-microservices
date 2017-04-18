@@ -18,7 +18,7 @@ trait ChoiceAnswerApi {
 
   import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
 
-  implicit val timeoutChoiceAnswer = Timeout(5.seconds)
+  implicit val timeoutChoiceAnswer = Timeout(10.seconds)
   val remoteChoiceAnswer = system.actorSelection("akka://QuestionService@127.0.0.1:9002/user/dispatcher")
 
   val choiceAnswerApi = pathPrefix("session") {

@@ -21,7 +21,7 @@ trait SessionServiceApi {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
   import de.thm.arsnova.gateway.Context._
 
-  implicit val timeout = Timeout(5.seconds)
+  implicit val timeout = Timeout(10.seconds)
   val remote = system.actorSelection("akka://SessionService@127.0.0.1:9001/user/dispatcher")
 
   val sessionApi = pathPrefix("session") {
