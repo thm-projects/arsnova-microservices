@@ -38,16 +38,12 @@ object QuestionRepository {
   }
 
   def create(newQuestion: Question): Future[Int] = {
-    newQuestion.format match {
-      case "mc" => {
-        (db.run(questionsTable returning questionsTable.map(_.id) += newQuestion)).map(
-          qId => {
-            val answerOptionsWithQId = newQuestion.answerOptions.get.map(_.copy(questionId = Some(qId)))
-            AnswerOptionRepository.create(answerOptionsWithQId)
-            1
-          })
-      }
-      case _ => db.run(questionsTable += newQuestion)
+    val qId = UUID.randomUUID
+    val itemWithId = newQuestion.copy(id = Some(qId))
+    newQuestion.answerOptions match {
+      case Some(aO) => AnswerOptionRepository.create(aO.map(_.copy(questionId = Some(qId))))
+      case None =>
     }
+    db.run(questionsTable += itemWithId)
   }
 }

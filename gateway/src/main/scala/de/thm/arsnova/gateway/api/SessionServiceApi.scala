@@ -32,12 +32,12 @@ trait SessionServiceApi {
             (remote ? CreateSession(session)).mapTo[Int].map(_.toJson)
           }
         }
-      }
-    } ~
-    pathPrefix(IntNumber) { keyword =>
+      } ~
       get {
-        complete {
-          (remote ? GetSessionByKeyword(keyword.toString)).mapTo[Session].map(_.toJson)
+        parameters("keyword") { keyword =>
+          complete {
+            (remote ? GetSessionByKeyword(keyword)).mapTo[Session].map(_.toJson)
+          }
         }
       }
     } ~
