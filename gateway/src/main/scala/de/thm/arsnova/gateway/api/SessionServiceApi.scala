@@ -29,7 +29,7 @@ trait SessionServiceApi {
       post {
         entity(as[Session]) { session =>
           complete {
-            (remote ? CreateSession(session)).mapTo[Int].map(_.toJson)
+            (remote ? CreateSession(session)).mapTo[UUID].map(_.toJson)
           }
         }
       } ~

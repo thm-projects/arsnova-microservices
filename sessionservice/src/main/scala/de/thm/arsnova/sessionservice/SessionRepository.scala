@@ -21,8 +21,9 @@ object SessionRepository {
     db.run(sessionsTable.filter(_.key === key).result.head)
   }
 
-  def create(session: Session): Future[Int] = {
-    val itemWithId = session.copy(id = Some(UUID.randomUUID))
-    db.run(sessionsTable += itemWithId)
+  def create(session: Session): Future[UUID] = {
+    val sId = UUID.randomUUID
+    val itemWithId = session.copy(id = Some(sId))
+    db.run(sessionsTable += itemWithId).map(_ => sId)
   }
 }
