@@ -45,7 +45,8 @@ lazy val root = (project in file("."))
   .aggregate(
     gateway,
     sessionservice,
-    questionservice
+    questionservice,
+    commentservice
   )
 
 lazy val shared = (project in file("shared"))
@@ -68,6 +69,12 @@ lazy val sessionservice = (project in file("sessionservice"))
   .dependsOn(shared)
 
 lazy val questionservice = (project in file("questionservice"))
+  .settings(
+    libraryDependencies ++= akkaDependencies ++ slickDependencies
+  )
+  .dependsOn(shared)
+
+lazy val commentservice = (project in file("commentservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
