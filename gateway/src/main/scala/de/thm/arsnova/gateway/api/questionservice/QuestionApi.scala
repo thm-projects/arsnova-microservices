@@ -50,7 +50,7 @@ trait QuestionApi {
           entity(as[Question]) { question =>
             complete {
               (remoteQuestion ? CreateQuestion(question.copy(sessionId = sessionId)))
-                .mapTo[Int].map(_.toJson)
+                .mapTo[UUID].map(_.toJson)
             }
           }
         }
