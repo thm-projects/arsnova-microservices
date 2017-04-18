@@ -22,7 +22,7 @@ trait TutorScenario {
       .post("/session/")
       .header("Content-Type", "application/json")
       .body(StringBody(session.toJson.toString)).asJSON
-      .check(bodyString.saveAs("sessionId"))
+      .check(jsonPath("$").saveAs("sessionId"))
   ).pause(4)
 
   def createQuestion(question: Question, name: String) = exec(
