@@ -21,7 +21,8 @@ object ChoiceAnswerRepository {
   }
 
   def create(choiceAnswer: ChoiceAnswer): Future[Int] = {
-    db.run(choiceAnswersTable += choiceAnswer)
+    val itemWithId = choiceAnswer.copy(id = Some(UUID.randomUUID))
+    db.run(choiceAnswersTable += itemWithId)
   }
 
   def update(choiceAnswer: ChoiceAnswer): Future[Int] = {

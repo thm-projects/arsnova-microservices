@@ -1,7 +1,7 @@
 package de.thm.arsnova.questionservice.repositories.definitions
 
 import java.util.UUID
-import slick.driver.MySQLDriver.api._
+import slick.driver.PostgresDriver.api._
 
 import de.thm.arsnova.shared.entities.ChoiceAnswer
 
