@@ -24,11 +24,8 @@ class Stresstest extends Simulation {
     .doNotTrackHeader("1")
     .userAgentHeader("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0")
 
-  val tutorScn = scenario("Basic Tutor").exec(
-    BasicTutorSimulation.createSession
-  )
-
   setUp(
-    tutorScn.inject(rampUsers(100) over (5 seconds))
+    BasicTutorSimulation.scn.inject(rampUsers(100) over (5 seconds)),
+    BasicAuditorSimulation.scn.inject(rampUsers(1000) over (5 seconds))
   ).protocols(httpProtocol)
 }

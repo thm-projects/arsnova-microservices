@@ -6,18 +6,25 @@ import spray.json._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
-
 import scala.concurrent.duration._
+
 import de.thm.arsnova.shared.entities._
 
-object BasicTutorSimulation {
+object BasicTutorSimulation extends TutorScenario {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.QuestionJsonProtocol._
 
-  val now = Calendar.getInstance.getTime.toString
-  val newSession = Session(None, "12312312", UUID.fromString("b055f5d8-1f8c-11e7-93ae-92361f002671"), "A new Session", "ans", now, now, true, false, false)
+  val mcAnswerOptions = Seq(
+    AnswerOption(None, None, false, "12", -10),
+    AnswerOption(None, None, true, "13", 10),
+    AnswerOption(None, None, false, "14", -10),
+    AnswerOption(None, None, true, "thirteen", 10)
+  )
+  val newMCQuestion = Question(None, UUID.randomUUID, "new Question Subject", "This is an MC question for stress testing",
+    "preparation", "mc", Some("This is the hint!"), Some("The answer is 13"), true, false, true, true, false, None, Some(mcAnswerOptions))
 
-  val createSession = exec(http("Tutor creates session")
-    .post("/session/")
-    .header("Content-Type", "application/json")
-    .body(StringBody(newSession.toJson.toString)).asJSON)
+  val scn = scenario("Basic Tutor").exec(
+    createSession(basicNewSession),
+    createQuestion(newMCQuestion, "mc")
+  )
 }
