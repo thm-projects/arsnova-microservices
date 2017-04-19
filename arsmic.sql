@@ -63,6 +63,23 @@ CREATE TABLE choice_answers (
 ALTER TABLE choice_answers OWNER TO arsnova3;
 
 --
+-- Name: comments; Type: TABLE; Schema: public; Owner: arsnova3
+--
+
+CREATE TABLE comments (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    session_id uuid NOT NULL,
+    is_read boolean DEFAULT false NOT NULL,
+    subject character varying(255) NOT NULL,
+    content text NOT NULL,
+    created_at character varying(30) NOT NULL
+);
+
+
+ALTER TABLE comments OWNER TO arsnova3;
+
+--
 -- Name: freetext_answers; Type: TABLE; Schema: public; Owner: arsnova3
 --
 
@@ -147,6 +164,14 @@ COPY choice_answers (id, question_id, session_id, answer_option_id) FROM stdin;
 
 
 --
+-- Data for Name: comments; Type: TABLE DATA; Schema: public; Owner: arsnova3
+--
+
+COPY comments (id, user_id, session_id, is_read, subject, content, created_at) FROM stdin;
+\.
+
+
+--
 -- Data for Name: freetext_answers; Type: TABLE DATA; Schema: public; Owner: arsnova3
 --
 
@@ -193,6 +218,14 @@ ALTER TABLE ONLY answer_options
 
 ALTER TABLE ONLY choice_answers
     ADD CONSTRAINT choice_answers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: comments_pkey; Type: CONSTRAINT; Schema: public; Owner: arsnova3
+--
+
+ALTER TABLE ONLY comments
+    ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
 
 
 --
