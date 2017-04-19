@@ -24,8 +24,8 @@ val akkaDependencies = Seq(
 val slickDependencies = Seq(
   "com.typesafe.slick"    %% "slick"                                % slickVersion,
   "com.typesafe.slick"    %% "slick-hikaricp"                       % slickVersion,
-  "postgresql"            % "postgresql"                            % "9.1-901.jdbc4",
-  //"mysql"                 %  "mysql-connector-java"                 % "6.0.3",
+  "org.postgresql"        %  "postgresql"                           % "9.4-1206-jdbc42",
+//"mysql"                 %  "mysql-connector-java"                 % "6.0.3",
   "org.flywaydb"          %  "flyway-core"                          % "3.2.1"
 )
 
