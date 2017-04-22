@@ -44,6 +44,7 @@ val gatlingDeps = Seq(
 lazy val root = (project in file("."))
   .aggregate(
     gateway,
+    commandservice,
     sessionservice,
     questionservice,
     commentservice
@@ -59,6 +60,12 @@ lazy val shared = (project in file("shared"))
 lazy val gateway = (project in file("gateway"))
   .settings(
     libraryDependencies ++= akkaDependencies
+  )
+  .dependsOn(shared)
+
+lazy val commandservice = (project in file("commandservice"))
+  .settings(
+    libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
   .dependsOn(shared)
 
