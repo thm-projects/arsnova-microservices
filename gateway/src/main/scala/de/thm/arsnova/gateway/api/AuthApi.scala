@@ -22,10 +22,12 @@ trait AuthApi {
 
   val authApi = pathPrefix("auth") {
     pathPrefix("whoami") {
-      headerValueByName("X-Session-Token") { tokenstring =>
-        complete {
-          (remoteAuth ? CheckTokenString(tokenstring))
-            .mapTo[Boolean].map(_.toJson)
+      get {
+        headerValueByName("X-Session-Token") { tokenstring =>
+          complete {
+            (remoteAuth ? CheckTokenString(tokenstring))
+              .mapTo[Boolean].map(_.toJson)
+          }
         }
       }
     } ~
