@@ -12,9 +12,16 @@ class AuthActor extends Actor {
   def receive = {
     case LoginUser(username, password) => ((ret: ActorRef) => {
        UserRepository.verifyLogin(username, password).map {
-         case Success(uuid) => TokenRepository.create(uuid) pipeTo sender
-         case Failure(f) => Future{ f } pipeTo sender
+         case Some(uuid) => TokenRepository.create(uuid) pipeTo ret
+         case None => Future{ "not found" } pipeTo ret
        }
+    }) (sender)
+    case CreateUser(user) => ((ret: ActorRef) => {
+      UserRepository.create(user) pipeTo ret
+    }) (sender)
+
+    case CheckTokenString(tokenstring) => ((ret: ActorRef) => {
+      UserRepository.checkTokenString(tokenstring) pipeTo ret
     }) (sender)
   }
 }

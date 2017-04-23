@@ -17,7 +17,7 @@ object UserRepository {
   def create(user: User): Future[UUID] = {
     val uId = UUID.randomUUID
     val itemWithId = user.copy(id = Some(uId))
-    db.run(usersTable += itemWithId)
+    db.run(usersTable += itemWithId).map(_ => uId)
   }
 
   def update(newUser: User, userId: UUID): Future[Int] = {
@@ -31,12 +31,16 @@ object UserRepository {
     db.run(usersTable.filter(_.id === userId).delete)
   }
 
-  def getByLoginTokenString(loginTokenString: String): Future[User] = {
+  def getUserByTokenString(tokenString: String): Future[Option[User]] = {
     val qry = for {
-      token <- tokensTable filter(_.token === loginTokenString)
+      token <- tokensTable filter(_.token === tokenString)
       user <- usersTable if (token.userId === user.id)
     } yield (user)
-    db.run(qry.result.head)
+    db.run(qry.result.headOption)
+  }
+
+  def checkTokenString(tokenString: String): Future[Boolean] = {
+    db.run(tokensTable.filter(_.token === tokenString).exists.result)
   }
 
   def verifyLogin(username: String, password: String) = Future[Option[UUID]] = {
