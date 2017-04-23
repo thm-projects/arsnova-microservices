@@ -41,7 +41,7 @@ trait AuthApi {
       entity(as[User]) { user =>
         complete {
           (remoteAuth ? CreateUser(user))
-            .mapTo[Int].map(_.toJson)
+            .mapTo[UUID].map(_.toJson)
         }
       }
     }
