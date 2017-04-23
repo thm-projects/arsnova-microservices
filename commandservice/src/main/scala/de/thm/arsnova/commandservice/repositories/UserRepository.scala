@@ -33,9 +33,13 @@ object UserRepository {
 
   def getByLoginTokenString(loginTokenString: String): Future[User] = {
     val qry = for {
-      token <- loginTokensTable filter(_.token === loginTokenString)
+      token <- tokensTable filter(_.token === loginTokenString)
       user <- usersTable if (token.userId === user.id)
     } yield (user)
     db.run(qry.result.head)
+  }
+
+  def verifyLogin(username: String, password: String) = Future[Option[UUID]] = {
+    db.run(usersTable.filter(_.username === username && _.password === password).map(_.id).result.headOption)
   }
 }
