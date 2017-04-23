@@ -11,7 +11,7 @@ import akka.http.scaladsl.server.Directives._
 import spray.json._
 
 import de.thm.arsnova.shared.commands.AuthCommands._
-import de.thm.arsnova.shared.entities.User
+import de.thm.arsnova.shared.entities.{User, Token}
 
 trait AuthApi {
   import de.thm.arsnova.gateway.Context._

@@ -10,9 +10,9 @@ import de.thm.arsnova.shared.entities.Token
 object TokenRepository extends BaseRepository {
   import de.thm.arsnova.commandservice.Context._
 
-  def create(userId: UUID): Future[Token] = {
+  def create(userId: UUID): Future[String] = {
     val now = new Date().getTime
     val token = Token(UUID.randomUUID.toString, userId, now.toString, None, now.toString)
-    db.run(tokensTable += token).map(_ => token)
+    db.run(tokensTable += token).map(_ => token.token)
   }
 }
