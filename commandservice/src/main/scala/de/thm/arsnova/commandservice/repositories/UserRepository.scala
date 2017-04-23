@@ -7,8 +7,8 @@ import slick.lifted.TableQuery
 
 import de.thm.arsnova.shared.entities.User
 
-object UserRepository {
-  import Context._
+object UserRepository extends BaseRepository {
+  import de.thm.arsnova.commandservice.Context._
 
   def findById(userId: UUID): Future[User] = {
     db.run(usersTable.filter(_.id === userId).result.head)
@@ -23,7 +23,7 @@ object UserRepository {
   def update(newUser: User, userId: UUID): Future[Int] = {
     db.run(usersTable.filter(_.id === userId)
       .map(user => (user.username, user.password))
-      .update((newUser.userName, newUser.password))
+      .update((newUser.username, newUser.password))
     )
   }
 
@@ -43,7 +43,7 @@ object UserRepository {
     db.run(tokensTable.filter(_.token === tokenString).exists.result)
   }
 
-  def verifyLogin(username: String, password: String) = Future[Option[UUID]] = {
-    db.run(usersTable.filter(_.username === username && _.password === password).map(_.id).result.headOption)
+  def verifyLogin(username: String, password: String): Future[Option[UUID]] = {
+    db.run(usersTable.filter(u => (u.username === username && u.password === password)).map(_.id).result.headOption)
   }
 }
