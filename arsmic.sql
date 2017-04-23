@@ -139,6 +139,34 @@ CREATE TABLE sessions (
 ALTER TABLE sessions OWNER TO arsnova3;
 
 --
+-- Name: tokens; Type: TABLE; Schema: public; Owner: arsnova3
+--
+
+CREATE TABLE tokens (
+    token character varying(255) NOT NULL,
+    user_id uuid NOT NULL,
+    created character varying(30) NOT NULL,
+    modified character varying(30),
+    last_used character varying(30) NOT NULL
+);
+
+
+ALTER TABLE tokens OWNER TO arsnova3;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: arsnova3
+--
+
+CREATE TABLE users (
+    id uuid NOT NULL,
+    username character varying(255) NOT NULL,
+    pwd character varying(255) NOT NULL
+);
+
+
+ALTER TABLE users OWNER TO arsnova3;
+
+--
 -- Data for Name: answer_options; Type: TABLE DATA; Schema: public; Owner: arsnova3
 --
 
@@ -205,6 +233,22 @@ f30cba91-e974-4c9d-a39d-9e699d71f424	22222222	b055f5d8-1f8c-11e7-93ae-92361f0026
 
 
 --
+-- Data for Name: tokens; Type: TABLE DATA; Schema: public; Owner: arsnova3
+--
+
+COPY tokens (token, user_id, created, modified, last_used) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: arsnova3
+--
+
+COPY users (id, username, pwd) FROM stdin;
+\.
+
+
+--
 -- Name: answer_options_pkey; Type: CONSTRAINT; Schema: public; Owner: arsnova3
 --
 
@@ -253,6 +297,30 @@ ALTER TABLE ONLY sessions
 
 
 --
+-- Name: tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: arsnova3
+--
+
+ALTER TABLE ONLY tokens
+    ADD CONSTRAINT tokens_pkey PRIMARY KEY (token);
+
+
+--
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: arsnova3
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users_username_key; Type: CONSTRAINT; Schema: public; Owner: arsnova3
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
 -- Name: choice_answer_answer_option_fk; Type: FK CONSTRAINT; Schema: public; Owner: arsnova3
 --
 
@@ -282,6 +350,14 @@ ALTER TABLE ONLY freetext_answers
 
 ALTER TABLE ONLY answer_options
     ADD CONSTRAINT possible_answer_question_fk FOREIGN KEY (question_id) REFERENCES questions(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: token_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: arsnova3
+--
+
+ALTER TABLE ONLY tokens
+    ADD CONSTRAINT token_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

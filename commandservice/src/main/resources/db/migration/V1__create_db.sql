@@ -1,6 +1,6 @@
 CREATE TABLE users (
   id uuid NULL,
-  username VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL UNIQUE,
   pwd VARCHAR(255) NOT NULL,
   PRIMARY KEY(id)
 );
