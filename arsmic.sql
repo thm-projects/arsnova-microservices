@@ -237,6 +237,7 @@ f30cba91-e974-4c9d-a39d-9e699d71f424	22222222	b055f5d8-1f8c-11e7-93ae-92361f0026
 --
 
 COPY tokens (token, user_id, created, modified, last_used) FROM stdin;
+d4fd1738-37ae-43c9-a34a-b21a533f4ef0	90e3bcd9-5e89-4d19-b44b-7f91821b32b6	1492955001039	\N	1492955001039
 \.
 
 
@@ -245,6 +246,7 @@ COPY tokens (token, user_id, created, modified, last_used) FROM stdin;
 --
 
 COPY users (id, username, pwd) FROM stdin;
+90e3bcd9-5e89-4d19-b44b-7f91821b32b6	test	testpassword
 \.
 
 
