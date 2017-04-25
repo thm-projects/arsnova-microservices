@@ -6,7 +6,7 @@ import akka.Done
 import de.thm.arsnova.shared.entities.ChoiceAnswer
 
 object ChoiceAnswerCommands {
-  sealed trait ChoiceAnswerCommand[R]
+  sealed trait ChoiceAnswerCommand[R] extends Command[R]
 
   case class GetChoiceAnswer(id: UUID) extends ChoiceAnswerCommand[ChoiceAnswer]
 

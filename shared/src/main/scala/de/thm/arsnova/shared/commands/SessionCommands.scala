@@ -9,7 +9,7 @@ import de.thm.arsnova.shared.entities.Session
 object SessionCommands {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
-  sealed trait SessionCommand[R]
+  sealed trait SessionCommand[R] extends Command[R]
 
   case class GetSession(id: UUID) extends SessionCommand[Session]
 

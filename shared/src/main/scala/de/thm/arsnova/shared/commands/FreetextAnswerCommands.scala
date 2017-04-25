@@ -6,7 +6,7 @@ import akka.Done
 import de.thm.arsnova.shared.entities.FreetextAnswer
 
 object FreetextAnswerCommands {
-  sealed trait FreetextAnswerCommand[R]
+  sealed trait FreetextAnswerCommand[R] extends Command[R]
 
   case class GetFreetextAnswer(id: UUID) extends FreetextAnswerCommand[FreetextAnswer]
 

@@ -6,7 +6,7 @@ import akka.Done
 import de.thm.arsnova.shared.entities.{Token, User}
 
 object AuthCommands {
-  sealed trait AuthCommand[R]
+  sealed trait AuthCommand[R] extends Command[R]
 
   case class LoginUser(username: String, password: String) extends AuthCommand[String]
 

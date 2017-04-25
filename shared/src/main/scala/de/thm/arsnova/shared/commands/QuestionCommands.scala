@@ -6,7 +6,7 @@ import akka.Done
 import de.thm.arsnova.shared.entities.Question
 
 object QuestionCommands {
-  sealed trait QuestionCommand[R]
+  sealed trait QuestionCommand[R] extends Command[R]
 
   case class GetQuestion(id: UUID) extends QuestionCommand[Question]
 

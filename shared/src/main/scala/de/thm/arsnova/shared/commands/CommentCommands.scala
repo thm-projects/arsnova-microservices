@@ -6,7 +6,7 @@ import akka.Done
 import de.thm.arsnova.shared.entities.Comment
 
 object CommentCommands {
-  sealed trait CommentCommand[R]
+  sealed trait CommentCommand[R] extends Command[R]
 
   case class GetComment(id: UUID) extends CommentCommand[Comment]
 
