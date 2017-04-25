@@ -6,26 +6,21 @@ import scala.concurrent.Future
 import scala.util.{Success, Failure}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
-import akka.util.Timeout
 import akka.http.scaladsl.server.Directives._
 import spray.json._
 
 import de.thm.arsnova.shared.commands.AuthCommands._
 import de.thm.arsnova.shared.entities.{User, Token}
 
-trait AuthApi {
-  import de.thm.arsnova.gateway.Context._
+trait AuthApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.UserJsonProtocol._
-
-  implicit val timeoutAuth = Timeout(10.seconds)
-  val remoteAuth = system.actorSelection("akka://CommandService@127.0.0.1:8880/user/auth")
 
   val authApi = pathPrefix("auth") {
     pathPrefix("whoami") {
       get {
         headerValueByName("X-Session-Token") { tokenstring =>
           complete {
-            (remoteAuth ? CheckTokenString(tokenstring))
+            (remoteAuthActor ? CheckTokenString(tokenstring))
               .mapTo[Boolean].map(_.toJson)
           }
         }
@@ -34,7 +29,7 @@ trait AuthApi {
     get {
       parameters("username", "password") { (username, password) =>
         complete {
-          (remoteAuth ? LoginUser(username, password))
+          (remoteAuthActor ? LoginUser(username, password))
             .mapTo[String].map(_.toJson)
         }
       }
@@ -42,7 +37,7 @@ trait AuthApi {
     post {
       entity(as[User]) { user =>
         complete {
-          (remoteAuth ? CreateUser(user))
+          (remoteAuthActor ? CreateUser(user))
             .mapTo[UUID].map(_.toJson)
         }
       }
