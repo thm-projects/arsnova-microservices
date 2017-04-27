@@ -4,7 +4,7 @@ import java.util.UUID
 import scala.util.{Failure, Success}
 import scala.concurrent.{ExecutionContext, Future}
 import de.thm.arsnova.commandservice.repositories._
-import de.thm.arsnova.shared.commands.AuthCommands._
+import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.pattern.pipe
