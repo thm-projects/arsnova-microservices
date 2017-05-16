@@ -11,9 +11,9 @@ import spray.json._
 
 import de.thm.arsnova.gateway.api.BaseApi
 import de.thm.arsnova.shared.entities.Question
-import de.thm.arsnova.shared.commands.QuestionCommands._
+import de.thm.arsnova.shared.servicecommands.QuestionCommands._
 
-trait QuestionApi {
+trait QuestionApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.QuestionJsonProtocol._
 
   val questionApi = pathPrefix("session") {
@@ -22,21 +22,21 @@ trait QuestionApi {
         pathPrefix(JavaUUID) { questionId =>
           get {
             complete {
-              (remoteQuestion ? GetQuestion(questionId))
+              (remoteCommander ? GetQuestion(questionId))
                 .mapTo[Question].map(_.toJson)
             }
           }
         } ~
         get {
           complete {
-            (remoteQuestion ? GetQuestionsBySessionId(sessionId))
+            (remoteCommander ? GetQuestionsBySessionId(sessionId))
               .mapTo[Seq[Question]].map(_.toJson)
           }
         } ~
         get {
           parameters("variant") { variant =>
             complete {
-              (remoteQuestion ? GetQuestionsBySessionIdAndVariant(sessionId, variant))
+              (remoteCommander ? GetQuestionsBySessionIdAndVariant(sessionId, variant))
                 .mapTo[Seq[Question]].map(_.toJson)
             }
           }
@@ -44,7 +44,7 @@ trait QuestionApi {
         post {
           entity(as[Question]) { question =>
             complete {
-              (remoteQuestion ? CreateQuestion(question.copy(sessionId = sessionId)))
+              (remoteCommander ? CreateQuestion(question.copy(sessionId = sessionId)))
                 .mapTo[UUID].map(_.toJson)
             }
           }

@@ -9,7 +9,7 @@ import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import spray.json._
 
-import de.thm.arsnova.shared.commands.AuthCommands._
+import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import de.thm.arsnova.shared.entities.{User, Token}
 
 trait AuthApi extends BaseApi {
@@ -20,7 +20,7 @@ trait AuthApi extends BaseApi {
       get {
         headerValueByName("X-Session-Token") { tokenstring =>
           complete {
-            (remoteAuthActor ? CheckTokenString(tokenstring))
+            (remoteCommander ? CheckTokenString(tokenstring))
               .mapTo[Boolean].map(_.toJson)
           }
         }
@@ -29,7 +29,7 @@ trait AuthApi extends BaseApi {
     get {
       parameters("username", "password") { (username, password) =>
         complete {
-          (remoteAuthActor ? LoginUser(username, password))
+          (remoteCommander ? LoginUser(username, password))
             .mapTo[String].map(_.toJson)
         }
       }
@@ -37,7 +37,7 @@ trait AuthApi extends BaseApi {
     post {
       entity(as[User]) { user =>
         complete {
-          (remoteAuthActor ? CreateUser(user))
+          (remoteCommander ? CreateUser(user))
             .mapTo[UUID].map(_.toJson)
         }
       }

@@ -11,7 +11,7 @@ import spray.json._
 
 import de.thm.arsnova.gateway.api.BaseApi
 import de.thm.arsnova.shared.entities.ChoiceAnswer
-import de.thm.arsnova.shared.commands.ChoiceAnswerCommands._
+import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 
 trait ChoiceAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
@@ -24,21 +24,21 @@ trait ChoiceAnswerApi extends BaseApi {
             pathPrefix(JavaUUID) { answerId =>
               get {
                 complete {
-                  (remoteChoiceAnswer ? GetChoiceAnswer(answerId))
+                  (remoteCommander ? GetChoiceAnswer(answerId))
                     .mapTo[ChoiceAnswer].map(_.toJson)
                 }
               }
             }
             get {
               complete {
-                (remoteChoiceAnswer ? GetChoiceAnswersByQuestionId(questionId))
+                (remoteCommander ? GetChoiceAnswersByQuestionId(questionId))
                   .mapTo[Seq[ChoiceAnswer]].map(_.toJson)
               }
             } ~
             post {
               entity(as[ChoiceAnswer]) { answer =>
                 complete {
-                  (remoteChoiceAnswer ? CreateChoiceAnswer(answer))
+                  (remoteCommander ? CreateChoiceAnswer(answer))
                     .mapTo[Int].map(_.toJson)
                 }
               }

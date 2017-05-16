@@ -72,6 +72,12 @@ lazy val managementservice = (project in file("managementservice"))
 
 lazy val commandservice = (project in file("commandservice"))
   .settings(
+    libraryDependencies ++= akkaDependencies
+  )
+  .dependsOn(shared)
+
+lazy val authservice = (project in file("authservice"))
+  .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
   .dependsOn(shared)

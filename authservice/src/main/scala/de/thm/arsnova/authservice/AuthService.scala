@@ -1,15 +1,15 @@
-package de.thm.arsnova.commentservice
+package de.thm.arsnova.authservice
 
-import akka.actor.{Props}
+import akka.actor.Props
 
 import de.thm.arsnova.shared.actors.ServiceManagementActor
 import de.thm.arsnova.shared.management.RegistryCommands.RegisterService
 
-object CommentService extends App {
+class AuthService {
   import Context._
 
-  val dispatcher = system.actorOf(Props[DispatcherActor], name = "dispatcher")
+  val auth = system.actorOf(Props[AuthActor], name = "auth")
   val manager = system.actorOf(Props[ServiceManagementActor], name = "manager")
 
-  manager ! RegisterService("AuthService", dispatcher)
+  manager ! RegisterService("AuthService", auth)
 }

@@ -6,7 +6,7 @@ import scala.util.{Failure, Success}
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.pattern.pipe
-import de.thm.arsnova.shared.commands.CommentCommands._
+import de.thm.arsnova.shared.servicecommands.CommentCommands._
 import de.thm.arsnova.shared.entities.Comment
 
 import scala.concurrent.ExecutionContext

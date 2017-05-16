@@ -11,7 +11,7 @@ import spray.json._
 
 import de.thm.arsnova.gateway.api.BaseApi
 import de.thm.arsnova.shared.entities.FreetextAnswer
-import de.thm.arsnova.shared.commands.FreetextAnswerCommands._
+import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 
 trait FreetextAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.FreetextAnswerJsonProtocol._
@@ -24,21 +24,21 @@ trait FreetextAnswerApi extends BaseApi {
             pathPrefix(JavaUUID) { answerId =>
               get {
                 complete {
-                  (remoteFreetextAnswer ? GetFreetextAnswer(answerId))
+                  (remoteCommander ? GetFreetextAnswer(answerId))
                     .mapTo[FreetextAnswer].map(_.toJson)
                 }
               }
             }
             get {
               complete {
-                (remoteFreetextAnswer ? GetFreetextAnswersByQuestionId(questionId))
+                (remoteCommander ? GetFreetextAnswersByQuestionId(questionId))
                   .mapTo[Seq[FreetextAnswer]].map(_.toJson)
               }
             } ~
             post {
               entity(as[FreetextAnswer]) { answer =>
                 complete {
-                  (remoteFreetextAnswer ? CreateFreetextAnswer(answer))
+                  (remoteCommander ? CreateFreetextAnswer(answer))
                     .mapTo[Int].map(_.toJson)
                 }
               }

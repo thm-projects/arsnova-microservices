@@ -4,12 +4,13 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 
 trait BaseApi {
-  import de.thm.arsnova.gateway.Context._
+  import de.thm.arsnova.gateway.Context.system
+
+  // TODO: why do i need a new implicit val?
+  implicit val executionContext = system.dispatcher
 
   // timeout for actor calls
   implicit val timeout = Timeout(10.seconds)
-  // actor in the commandservice that handles auth
-  val remoteAuthorizer = system.actorSelection("akka://CommandService@127.0.0.1:8880/user/auth")
-  // actor for every command besides authcommands
+  // actor for every command
   val remoteCommander = system.actorSelection("akka://CommandService@127.0.0.1:8880/user/commander")
 }

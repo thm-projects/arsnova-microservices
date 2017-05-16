@@ -10,7 +10,8 @@ import akka.http.scaladsl.server.Directives._
 import spray.json._
 
 import de.thm.arsnova.shared.entities.Session
-import de.thm.arsnova.shared.commands.SessionCommands._
+import de.thm.arsnova.shared.servicecommands.SessionCommands._
+import de.thm.arsnova.shared.servicecommands.CommandWithToken
 
 /*
 The API Interface regarding sessions, the core component for arsnova.voting.
@@ -21,36 +22,33 @@ trait SessionServiceApi extends BaseApi {
 
   val sessionApi = pathPrefix("session") {
     pathEndOrSingleSlash {
-      post {
-        entity(as[Session]) { session =>
-          complete {
-            (remote ? CreateSession(session)).mapTo[UUID].map(_.toJson)
-          }
-        }
-      } ~
-      get {
-        parameters("keyword") { keyword =>
-          complete {
-            (remote ? GetSessionByKeyword(keyword)).mapTo[Session].map(_.toJson)
-          }
-        }
-      }
-    } ~
-    pathPrefix(JavaUUID) { sessionId =>
-      pathEndOrSingleSlash {
-        get {
-          complete {
-            (remote ? GetSession(sessionId)).mapTo[Session].map(_.toJson)
-          }
-        }/* ~
-          put {
-            entity(as[Session]) { session =>
-              complete (SessionService.update(session, sessionId).map(_.toJson))
+      optionalHeaderValueByName("X-Session-Token") { tokenstring =>
+        post {
+          entity(as[Session]) { session =>
+            complete {
+              (remoteCommander ? CommandWithToken(CreateSession(session), tokenstring))
+                .mapTo[UUID].map(_.toJson)
             }
-          } ~
-          delete {
-            complete (SessionService.delete(sessionId).map(_.toJson))
-          }*/
+          }
+        } ~
+        get {
+          parameters("keyword") { keyword =>
+            complete {
+              (remoteCommander ? CommandWithToken(GetSessionByKeyword(keyword), tokenstring))
+                .mapTo[Session].map(_.toJson)
+            }
+          }
+        } ~
+        pathPrefix(JavaUUID) { sessionId =>
+          pathEndOrSingleSlash {
+            get {
+              complete {
+                (remoteCommander ? CommandWithToken(GetSession(sessionId), tokenstring))
+                  .mapTo[Session].map(_.toJson)
+              }
+            }
+          }
+        }
       }
     }
   }

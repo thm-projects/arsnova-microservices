@@ -1,4 +1,4 @@
-package de.thm.arsnova.commandservice.repositories
+package de.thm.arsnova.authservice.repositories
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -8,7 +8,7 @@ import slick.lifted.TableQuery
 import de.thm.arsnova.shared.entities.User
 
 object UserRepository extends BaseRepository {
-  import de.thm.arsnova.commandservice.Context._
+  import de.thm.arsnova.authservice.Context._
 
   def findById(userId: UUID): Future[User] = {
     db.run(usersTable.filter(_.id === userId).result.head)

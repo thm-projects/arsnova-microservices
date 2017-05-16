@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.Directives._
 import spray.json._
 
 import de.thm.arsnova.shared.entities.Comment
-import de.thm.arsnova.shared.commands.CommentCommands._
+import de.thm.arsnova.shared.servicecommands.CommentCommands._
 
 trait CommentServiceApi extends BaseApi {
   // protocol for serializing data
@@ -22,21 +22,21 @@ trait CommentServiceApi extends BaseApi {
         pathPrefix(JavaUUID) { commentId =>
           get {
             complete {
-              (remoteComment ? GetComment(commentId))
+              (remoteCommander ? GetComment(commentId))
                 .mapTo[Comment].map(_.toJson)
             }
           }
         } ~
         get {
           complete {
-            (remoteComment ? GetCommentBySessionId(sessionId))
+            (remoteCommander ? GetCommentBySessionId(sessionId))
               .mapTo[Seq[Comment]].map(_.toJson)
           }
         } ~
         post {
           entity(as[Comment]) { comment =>
             complete {
-              (remoteComment ? CreateComment(comment))
+              (remoteCommander ? CreateComment(comment))
                 .mapTo[UUID].map(_.toJson)
             }
           }

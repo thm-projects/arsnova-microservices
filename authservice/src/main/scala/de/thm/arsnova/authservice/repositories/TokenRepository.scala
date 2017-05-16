@@ -1,4 +1,4 @@
-package de.thm.arsnova.commandservice.repositories
+package de.thm.arsnova.authservice.repositories
 
 import java.util.{UUID, Date}
 import scala.concurrent.Future

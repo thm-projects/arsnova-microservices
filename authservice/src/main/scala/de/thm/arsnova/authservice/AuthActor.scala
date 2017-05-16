@@ -1,9 +1,9 @@
-package de.thm.arsnova.commandservice
+package de.thm.arsnova.authservice
 
 import java.util.UUID
 import scala.util.{Failure, Success}
 import scala.concurrent.{ExecutionContext, Future}
-import de.thm.arsnova.commandservice.repositories._
+import de.thm.arsnova.authservice.repositories._
 import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import akka.actor.Actor
 import akka.actor.ActorRef
@@ -21,6 +21,9 @@ class AuthActor extends Actor {
     }) (sender)
     case CreateUser(user) => ((ret: ActorRef) => {
       UserRepository.create(user) pipeTo ret
+    }) (sender)
+    case GetUserFromTokenString(tokenstring) => ((ret: ActorRef) => {
+      UserRepository.getUserByTokenString(tokenstring)
     }) (sender)
 
     case CheckTokenString(tokenstring) => ((ret: ActorRef) => {

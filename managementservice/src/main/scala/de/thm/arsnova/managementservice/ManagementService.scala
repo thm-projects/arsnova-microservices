@@ -5,5 +5,5 @@ import akka.actor.{Props}
 object ManagementService extends App {
   import Context._
 
-  //val auth = system.actorOf(Props[AuthActor], name = "auth")
+  val registry = system.actorOf(Props[ServiceRegistryActor], name = "registry")
 }

@@ -5,5 +5,6 @@ import akka.actor.{Props}
 object CommandService extends App {
   import Context._
 
-  val auth = system.actorOf(Props[AuthActor], name = "auth")
+  val router = system.actorOf(Props[RoutingActor], name = "router")
+  val commander = system.actorOf(Props[CommandActor], name = "commander")
 }

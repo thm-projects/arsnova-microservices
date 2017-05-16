@@ -10,9 +10,9 @@ import scala.concurrent.ExecutionContext
 
 import de.thm.arsnova.questionservice.repositories._
 import de.thm.arsnova.shared.entities.{Question, ChoiceAnswer, FreetextAnswer}
-import de.thm.arsnova.shared.commands.QuestionCommands._
-import de.thm.arsnova.shared.commands.ChoiceAnswerCommands._
-import de.thm.arsnova.shared.commands.FreetextAnswerCommands._
+import de.thm.arsnova.shared.servicecommands.QuestionCommands._
+import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
+import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 
 class DispatcherActor extends Actor {
   implicit val ex: ExecutionContext = context.system.dispatcher

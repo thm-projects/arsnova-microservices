@@ -1,4 +1,4 @@
-package de.thm.arsnova.commandservice
+package de.thm.arsnova.authservice
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
