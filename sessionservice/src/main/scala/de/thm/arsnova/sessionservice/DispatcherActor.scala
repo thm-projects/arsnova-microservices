@@ -15,6 +15,7 @@ import de.thm.arsnova.shared.entities.Session
 
 class DispatcherActor extends Actor {
   implicit val ex: ExecutionContext = context.system.dispatcher
+
   def receive = {
     case CommandPackage(command, user, returnRef) => {
       command match {

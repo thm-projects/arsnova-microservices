@@ -3,48 +3,55 @@ package de.thm.arsnova.questionservice
 import java.util.UUID
 
 import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.pattern.pipe
-import scala.concurrent.ExecutionContext
 
 import de.thm.arsnova.questionservice.repositories._
-import de.thm.arsnova.shared.entities.{Question, ChoiceAnswer, FreetextAnswer}
+import de.thm.arsnova.shared.entities.{ChoiceAnswer, FreetextAnswer, Question}
+import de.thm.arsnova.shared.management.CommandPackage
 import de.thm.arsnova.shared.servicecommands.QuestionCommands._
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 
 class DispatcherActor extends Actor {
   implicit val ex: ExecutionContext = context.system.dispatcher
+
   def receive = {
-    case GetQuestion(id) => ((ret: ActorRef) => {
-      QuestionRepository.findById(id) pipeTo ret
-    }) (sender)
-    case GetQuestionsBySessionId(id) => ((ret: ActorRef) => {
-      QuestionRepository.findBySessionId(id) pipeTo ret
-    }) (sender)
-    case CreateQuestion(question) => ((ret: ActorRef) => {
-      QuestionRepository.create(question) pipeTo ret
-    }) (sender)
+    case CommandPackage(command, user, returnRef) => {
 
-    case GetChoiceAnswer(id) => ((ret: ActorRef) => {
-      ChoiceAnswerRepository.findById(id) pipeTo ret
-    }) (sender)
-    case GetChoiceAnswersByQuestionId(id) => ((ret: ActorRef) => {
-      ChoiceAnswerRepository.findByQuestionId(id) pipeTo ret
-    }) (sender)
-    case CreateChoiceAnswer(answer) => ((ret: ActorRef) => {
-      ChoiceAnswerRepository.create(answer) pipeTo ret
-    }) (sender)
+      command match {
+        case GetQuestion(id) => {
+          QuestionRepository.findById(id) pipeTo returnRef
+        }
+        case GetQuestionsBySessionId(id) => {
+          QuestionRepository.findBySessionId(id) pipeTo returnRef
+        }
+        case CreateQuestion(question) => {
+          QuestionRepository.create(question) pipeTo returnRef
+        }
 
-    case GetFreetextAnswer(id) => ((ret: ActorRef) => {
-      FreetextAnswerRepository.findById(id) pipeTo ret
-    }) (sender)
-    case GetFreetextAnswersByQuestionId(id) => ((ret: ActorRef) => {
-      FreetextAnswerRepository.findByQuestionId(id) pipeTo ret
-    }) (sender)
-    case CreateFreetextAnswer(answer) => ((ret: ActorRef) => {
-      FreetextAnswerRepository.create(answer) pipeTo ret
-    }) (sender)
+        case GetChoiceAnswer(id) => {
+          ChoiceAnswerRepository.findById(id) pipeTo returnRef
+        }
+        case GetChoiceAnswersByQuestionId(id) => {
+          ChoiceAnswerRepository.findByQuestionId(id) pipeTo returnRef
+        }
+        case CreateChoiceAnswer(answer) => {
+          ChoiceAnswerRepository.create(answer) pipeTo returnRef
+        }
+
+        case GetFreetextAnswer(id) => {
+          FreetextAnswerRepository.findById(id) pipeTo returnRef
+        }
+        case GetFreetextAnswersByQuestionId(id) => {
+          FreetextAnswerRepository.findByQuestionId(id) pipeTo returnRef
+        }
+        case CreateFreetextAnswer(answer) => {
+          FreetextAnswerRepository.create(answer) pipeTo returnRef
+        }
+      }
+    }
   }
 }

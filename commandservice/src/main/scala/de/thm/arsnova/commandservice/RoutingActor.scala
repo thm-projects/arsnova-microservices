@@ -26,7 +26,6 @@ class RoutingActor extends Actor {
     case p: CommandPackage => {
       p.command match {
         case c: AuthCommand => {
-          println("AuthCommand incoming")
           cache.get("AuthService") match {
             case Some(ref) => ref ! p
             case None => println("no service for this command")
@@ -34,7 +33,6 @@ class RoutingActor extends Actor {
         }
 
         case c: SessionCommand => {
-          println("SessionCommand incoming")
           cache.get("SessionService") match {
             case Some(ref) => ref ! p
             case None => println("no service for this command")
@@ -42,21 +40,18 @@ class RoutingActor extends Actor {
         }
 
         case c: QuestionCommand => {
-          println("QuestionCommand incoming")
           cache.get("QuestionService") match {
             case Some(ref) => ref ! p
             case None => println("no service for this command")
           }
         }
         case c: ChoiceAnswerCommand => {
-          println("ChoiceAnswerCommand incoming")
           cache.get("QuestionService") match {
             case Some(ref) => ref ! p
             case None => println("no service for this command")
           }
         }
         case c: FreetextAnswerCommand => {
-          println("FreetextAnswerCommand incoming")
           cache.get("QuestionService") match {
             case Some(ref) => ref ! p
             case None => println("no service for this command")
@@ -64,7 +59,6 @@ class RoutingActor extends Actor {
         }
 
         case c: CommentCommand => {
-          println("CommentCommand incoming")
           cache.get("CommentService") match {
             case Some(ref) => ref ! p
             case None => println("no service for this command")

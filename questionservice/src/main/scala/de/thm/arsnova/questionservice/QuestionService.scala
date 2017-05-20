@@ -11,5 +11,5 @@ object QuestionService extends App {
   val dispatcher = system.actorOf(Props[DispatcherActor], name = "dispatcher")
   val manager = system.actorOf(Props[ServiceManagementActor], name = "manager")
 
-  manager ! RegisterService("AuthService", dispatcher)
+  manager ! RegisterService("QuestionService", dispatcher)
 }

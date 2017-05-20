@@ -11,5 +11,5 @@ object CommentService extends App {
   val dispatcher = system.actorOf(Props[DispatcherActor], name = "dispatcher")
   val manager = system.actorOf(Props[ServiceManagementActor], name = "manager")
 
-  manager ! RegisterService("AuthService", dispatcher)
+  manager ! RegisterService("CommentService", dispatcher)
 }

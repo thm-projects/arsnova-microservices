@@ -30,4 +30,4 @@ class AuthActor extends Actor {
       UserRepository.checkTokenString(tokenstring) pipeTo ret
     }) (sender)
   }
-}b
+}

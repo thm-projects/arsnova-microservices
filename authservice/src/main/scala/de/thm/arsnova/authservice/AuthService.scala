@@ -5,7 +5,7 @@ import akka.actor.Props
 import de.thm.arsnova.shared.actors.ServiceManagementActor
 import de.thm.arsnova.shared.management.RegistryCommands.RegisterService
 
-class AuthService {
+object AuthService extends App {
   import Context._
 
   val auth = system.actorOf(Props[AuthActor], name = "auth")

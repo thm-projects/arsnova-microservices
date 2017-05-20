@@ -21,8 +21,8 @@ trait SessionServiceApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
   val sessionApi = pathPrefix("session") {
-    pathEndOrSingleSlash {
-      optionalHeaderValueByName("X-Session-Token") { tokenstring =>
+    optionalHeaderValueByName("X-Session-Token") { tokenstring =>
+      pathEndOrSingleSlash {
         post {
           entity(as[Session]) { session =>
             complete {
@@ -38,14 +38,14 @@ trait SessionServiceApi extends BaseApi {
                 .mapTo[Session].map(_.toJson)
             }
           }
-        } ~
-        pathPrefix(JavaUUID) { sessionId =>
-          pathEndOrSingleSlash {
-            get {
-              complete {
-                (remoteCommander ? CommandWithToken(GetSession(sessionId), tokenstring))
-                  .mapTo[Session].map(_.toJson)
-              }
+        }
+      } ~
+      pathPrefix(JavaUUID) { sessionId =>
+        pathEndOrSingleSlash {
+          get {
+            complete {
+              (remoteCommander ? CommandWithToken(GetSession(sessionId), tokenstring))
+                .mapTo[Session].map(_.toJson)
             }
           }
         }
