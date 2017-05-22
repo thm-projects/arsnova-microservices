@@ -26,7 +26,7 @@ class DispatcherActor extends Actor {
           SessionRepository.findByKeyword(keyword) pipeTo returnRef
         }
         case CreateSession(session) => {
-          SessionRepository.create(session) pipeTo returnRef
+          SessionRepository.create(session, user) pipeTo returnRef
         }
       }
     }

@@ -2,10 +2,12 @@ package de.thm.arsnova.sessionservice
 
 import java.util.UUID
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 import slick.driver.PostgresDriver.api._
 import slick.lifted.TableQuery
 
-import de.thm.arsnova.shared.entities.Session
+import de.thm.arsnova.shared.entities.{Session, User}
+import de.thm.arsnova.shared.Exceptions._
 
 object SessionRepository {
   import Context._
@@ -21,9 +23,14 @@ object SessionRepository {
     db.run(sessionsTable.filter(_.key === key).result.head)
   }
 
-  def create(session: Session): Future[UUID] = {
-    val sId = UUID.randomUUID
-    val itemWithId = session.copy(id = Some(sId))
-    db.run(sessionsTable += itemWithId).map(_ => sId)
+  def create(session: Session, user: Option[User]): Future[UUID] = {
+    user match {
+      case None => Future.failed(NoUserException("createSession"))
+      case Some(user) => {
+        val sId = UUID.randomUUID
+        val itemWithId = session.copy(id = Some(sId), userId = user.id.get)
+        db.run(sessionsTable += itemWithId).map(_ => sId)
+      }
+    }
   }
 }
