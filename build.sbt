@@ -54,9 +54,7 @@ lazy val root = (project in file("."))
 
 lazy val shared = (project in file("shared"))
   .settings(
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http-spray-json" % akkaHTTPVersion
-    )
+    libraryDependencies ++= akkaDependencies
   )
 
 lazy val gateway = (project in file("gateway"))
