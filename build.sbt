@@ -3,7 +3,7 @@ organization in ThisBuild := "de.thm.arsnova"
 version in ThisBuild := "0.1"
 scalaVersion in ThisBuild := "2.11.8"
 
-val akkaVersion = "2.5.0"
+val akkaVersion = "2.5.3"
 val akkaHTTPVersion = "10.0.5"
 val scalaTestVersion = "3.0.0"
 val scalaMockVersion = "3.2.2"
@@ -13,6 +13,7 @@ val gatlingVersion = "2.2.4"
 val akkaDependencies = Seq(
   "com.typesafe.akka"     %% "akka-actor"                           % akkaVersion,
   "com.typesafe.akka"     %% "akka-remote"                          % akkaVersion,
+  "com.typesafe.akka"     %% "akka-cluster"                         % akkaVersion,
   "com.typesafe.akka"     %% "akka-stream"                          % akkaVersion,
   "com.typesafe.akka"     %% "akka-testkit"                         % akkaVersion % "test",
   "com.typesafe.akka"     %% "akka-http"                            % akkaHTTPVersion,
