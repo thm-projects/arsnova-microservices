@@ -8,7 +8,7 @@ import slick.lifted.TableQuery
 import de.thm.arsnova.shared.entities.Token
 
 object TokenRepository extends BaseRepository {
-  import de.thm.arsnova.commandservice.Context._
+  import de.thm.arsnova.authservice.Context._
 
   def create(userId: UUID): Future[String] = {
     val now = new Date().getTime

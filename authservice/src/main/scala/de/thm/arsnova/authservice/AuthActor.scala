@@ -7,9 +7,12 @@ import de.thm.arsnova.authservice.repositories._
 import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import akka.actor.Actor
 import akka.actor.ActorRef
+import akka.cluster.Cluster
 import akka.pattern.pipe
 
 class AuthActor extends Actor {
+  val cluster = Cluster(context.system)
+
   implicit val ex: ExecutionContext = context.system.dispatcher
 
   def receive = {

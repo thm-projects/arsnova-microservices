@@ -2,6 +2,7 @@ package de.thm.arsnova.managementservice
 
 import scala.util.{Failure, Success}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import akka.cluster.Cluster
 import akka.cluster.ClusterEvent._
 import akka.actor.{Actor, ActorRef, RootActorPath, Address}
@@ -10,6 +11,8 @@ import de.thm.arsnova.shared.management.RegistryCommands._
 
 class ServiceRegistryActor extends Actor {
   val cluster = Cluster(context.system)
+
+  implicit val ec: ExecutionContext = context.system.dispatcher
 
   val remoteCommander = context.actorSelection("akka://CommandService@127.0.0.1:8880/user/router")
 
@@ -29,13 +32,16 @@ class ServiceRegistryActor extends Actor {
     case MemberUp(newMember) => {
       newMember.roles.foreach { role =>
         // actorSelection needs to be resolved (async!)
-        val actorRefFuture = context.actorSelection(RootActorPath(newMember.address) / "user" / "dispatcher").resolveOne()
+        val actorRefFuture = context.actorSelection(RootActorPath(newMember.address) / "user" / "dispatcher").resolveOne(5.seconds)
         actorRefFuture.onComplete {
           case Success(ref) => {
             nodes.get((role, newMember.address)) match {
               // only needed when service has many roles. prevents having multiple entries for the same microservice
               case Some(e) =>
-              case None => nodes += (role, newMember.address) -> ref
+              case None => {
+                println(s"new service with role $role registered on address ${newMember.address}")
+                nodes += (role, newMember.address) -> ref
+              }
             }
             remoteCommander ! RegisterService(role, ref)
           }
