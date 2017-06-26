@@ -5,6 +5,7 @@ variables:
   MIRROR_REPO: git@github.com:thm-projects/arsnova-microservices.git
 
 sync_mirror:
+  tags: git
   stage: synchronization
   when: always
   allow_failure: true
