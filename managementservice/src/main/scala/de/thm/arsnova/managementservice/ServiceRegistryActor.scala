@@ -5,21 +5,21 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.cluster.{Cluster, Member}
 import akka.cluster.ClusterEvent._
-import akka.actor.{Actor, ActorRef, RootActorPath, Address}
+import akka.cluster.pubsub.DistributedPubSub
+import akka.cluster.pubsub.DistributedPubSubMediator.{Subscribe, SubscribeAck}
+import akka.actor.{Actor, ActorRef, Address, RootActorPath}
 import akka.pattern.pipe
 import de.thm.arsnova.shared.management.RegistryCommands._
 
 class ServiceRegistryActor extends Actor {
   val cluster = Cluster(context.system)
 
+  val mediator = DistributedPubSub(context.system).mediator
+  mediator ! Subscribe("registry", self)
+
   implicit val ec: ExecutionContext = context.system.dispatcher
 
   val remoteCommander = context.actorSelection("akka://CommandService@127.0.0.1:8880/user/router")
-
-  // managing all nodes of the cluster
-  var nodes = scala.collection.mutable.HashSet[Member]()
-  // mangaing all actors that receive (arsnova-)commands
-  val serviceActors = collection.mutable.Map[String, ActorRef]()
 
   override def preStart(): Unit = {
     cluster.subscribe(self, classOf[MemberEvent], classOf[UnreachableMember])
@@ -31,16 +31,22 @@ class ServiceRegistryActor extends Actor {
 
   def receive = {
     // a new member joins the cluster
-    case MemberUp(newMember) => {
-      ARSnovaCluster.addMember(newMember)
+    case MemberUp(member) => {
+      println(s"a member in the cluster is up on ${member.address} with roles ${member.roles}")
+      ARSnovaCluster.addMember(member)
     }
     // a member leaves the cluster
     case MemberLeft(member) => {
+      println(s"a member left the cluster on ${member.address} with roles ${member.roles}")
       ARSnovaCluster.removeMember(member)
     }
 
-    // a service registeres an actor for handling service commands
+    case SubscribeAck(Subscribe("registry", None, `self`)) =>
+      println("registry successfully subscribed to \"registry\"")
+
+    // a service registers an actor for handling service commands
     case RegisterService(serviceType, remote) => {
+      println("works")
       ARSnovaCluster.addServiceActor(sender.path.address, serviceType, remote)
       remoteCommander ! RegisterService(serviceType, remote)
     }
@@ -52,5 +58,6 @@ class ServiceRegistryActor extends Actor {
         case None =>
       }
     }
+    case s: Any => println(s)
   }
 }

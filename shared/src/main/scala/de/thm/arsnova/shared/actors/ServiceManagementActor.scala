@@ -1,16 +1,34 @@
 package de.thm.arsnova.shared.actors
 
+import de.thm.arsnova.shared.management.RegistryCommands._
 import akka.actor.Actor
 import akka.actor.ActorRef
+import akka.cluster.{Cluster, Member}
+import akka.cluster.pubsub.DistributedPubSub
+import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe, SubscribeAck}
 
-import de.thm.arsnova.shared.management.RegistryCommands._
+class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) extends Actor {
+  //val cluster = Cluster(context.system)
 
-class ServiceManagementActor extends Actor {
+  val mediator = DistributedPubSub(context.system).mediator
+  mediator ! Subscribe("registry", self)
 
-  val registry = context.actorSelection("akka://ManagementService@127.0.0.1:8870/user/registry")
+  override def preStart(): Unit = {
+    mediator ! Publish("registry", RegisterService(serviceType, serviceActorRef))
+  }
+
+  override def postStop(): Unit = {
+    mediator ! Publish("registry", UnregisterService(serviceType, serviceActorRef))
+  }
 
   def receive = {
-    case RegisterService(serviceType, remote) =>
-      registry ! RegisterService(serviceType, remote)
+    case SubscribeAck(Subscribe("registry", None, `self`)) =>
+      println("manager successfully subscribed to \"registry\"")
+
+    case "startup" => {
+      println("startup")
+      mediator ! Publish("registry", RegisterService(serviceType, serviceActorRef))
+    }
+    case RegisterService(a, b) => println("whyyyyyyyyy only here")
   }
 }

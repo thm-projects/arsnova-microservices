@@ -9,7 +9,8 @@ object AuthService extends App {
   import Context._
 
   val auth = system.actorOf(Props[AuthActor], name = "auth")
-  //val manager = system.actorOf(Props[ServiceManagementActor], name = "manager")
+  val managerProps = Props(classOf[ServiceManagementActor], "auth", auth)
+  val manager = system.actorOf(managerProps, name = "manager")
 
-  //manager ! RegisterService("AuthService", auth)
+  manager ! "startup"
 }

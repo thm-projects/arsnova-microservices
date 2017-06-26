@@ -14,6 +14,7 @@ val akkaDependencies = Seq(
   "com.typesafe.akka"     %% "akka-actor"                           % akkaVersion,
   "com.typesafe.akka"     %% "akka-remote"                          % akkaVersion,
   "com.typesafe.akka"     %% "akka-cluster"                         % akkaVersion,
+  "com.typesafe.akka"     %% "akka-cluster-tools"                   % akkaVersion,
   "com.typesafe.akka"     %% "akka-stream"                          % akkaVersion,
   "com.typesafe.akka"     %% "akka-testkit"                         % akkaVersion % "test",
   "com.typesafe.akka"     %% "akka-http"                            % akkaHTTPVersion,

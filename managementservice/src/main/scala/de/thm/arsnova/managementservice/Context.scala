@@ -1,6 +1,7 @@
 package de.thm.arsnova.managementservice
 
 import akka.actor.ActorSystem
+import akka.cluster.Cluster
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -13,4 +14,7 @@ object Context {
   implicit val executionContext = system.dispatcher
   implicit val timeout = Timeout(2 minutes)
   protected val log: LoggingAdapter = Logging(system, getClass)
+
+  val cluster = Cluster(system)
+  cluster.join(cluster.selfAddress)
 }
