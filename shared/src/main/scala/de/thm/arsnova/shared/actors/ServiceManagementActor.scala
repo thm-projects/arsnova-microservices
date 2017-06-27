@@ -1,10 +1,9 @@
 package de.thm.arsnova.shared.actors
 
 import de.thm.arsnova.shared.management.RegistryCommands._
-import akka.actor.Actor
-import akka.actor.ActorRef
+import akka.actor.{Actor, ActorLogging, ActorRef}
 
-class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) extends Actor {
+class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) extends Actor with ActorLogging {
   var registry: Option[ActorRef] = None
 
   override def postStop(): Unit = {
@@ -17,7 +16,7 @@ class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) ext
   def receive = {
     case RequestRegistration =>
       registry = Some(sender)
-      println("manager got request to register service actors")
+      log.info("manager got request to register service actors")
       sender ! RegisterService(serviceType, serviceActorRef)
   }
 }
