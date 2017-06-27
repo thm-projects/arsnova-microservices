@@ -45,6 +45,7 @@ class ServiceRegistryActor extends Actor {
       ARSnovaCluster.addServiceActor(sender.path.address, serviceType, remote)
     }
     case UnregisterService(serviceType, remote) => {
+      println(s"a service with type $serviceType has unregistered")
       ARSnovaCluster.removeServiceActor(sender.path.address, serviceType) match {
         // there is an actual serviceActor
         case Some(ref) =>
