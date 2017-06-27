@@ -8,5 +8,5 @@ object AuthService extends App {
   import Context._
 
   val auth = system.actorOf(Props[AuthActor], name = "auth")
-  val manager = system.actorOf(ServiceManagementActor.props("auth", auth), name = "manager")
+  val manager = system.actorOf(ServiceManagementActor.props("auth", auth), "manager")
 }

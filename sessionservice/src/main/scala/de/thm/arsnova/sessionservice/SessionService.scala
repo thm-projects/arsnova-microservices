@@ -8,5 +8,5 @@ object SessionService extends App {
   import Context._
 
   val dispatcher = system.actorOf(Props[DispatcherActor], name = "dispatcher")
-  val manager = system.actorOf(ServiceManagementActor.props("session", dispatcher), name = "manager")
+  val manager = system.actorOf(ServiceManagementActor.props("session", dispatcher), "manager")
 }

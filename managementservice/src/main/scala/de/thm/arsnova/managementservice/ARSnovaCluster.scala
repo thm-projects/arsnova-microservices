@@ -9,8 +9,8 @@ object ARSnovaCluster {
   private var serviceActors = collection.mutable.Map[(Address, String), ActorRef]()
 
   def addMember(member: Member): Unit = {
-    // add member to cluster nodes. member hasn't publicated what microservice-type it is
-    // could be done with member.roles, currently not sure if neccessary since microservices have to announce actors anyway
+    // add member to cluster nodes. member hasn't published what microservice-type it is
+    // could be done with member.roles, currently not sure if useful since microservices have to announce actors anyway
     nodes = nodes :+ member
   }
 

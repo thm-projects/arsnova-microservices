@@ -8,5 +8,5 @@ object CommentService extends App {
   import Context._
 
   val dispatcher = system.actorOf(Props[DispatcherActor], name = "dispatcher")
-  val manager = system.actorOf(ServiceManagementActor.props("comment", dispatcher), name = "manager")
+  val manager = system.actorOf(ServiceManagementActor.props("comment", dispatcher), "manager")
 }
