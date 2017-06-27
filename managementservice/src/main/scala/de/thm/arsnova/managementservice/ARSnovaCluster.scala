@@ -17,8 +17,11 @@ object ARSnovaCluster {
     nodes = nodes.filterNot(_ == member)
   }
 
-  def getServiceActorsForMember(member: Member): Seq[ActorRef] = {
-
+  def getServiceActorsForMember(member: Member): Seq[(String, ActorRef)] = {
+    services.find(_.address == member.address) match {
+      case Some(node) => node.serviceActors
+      case None => Nil
+    }
   }
 
   def addServiceActor(address: Address, role: String, ref: ActorRef): Unit = {

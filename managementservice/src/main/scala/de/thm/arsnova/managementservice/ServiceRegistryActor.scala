@@ -37,7 +37,9 @@ class ServiceRegistryActor extends Actor with ActorLogging {
     }
     // a member is unreachable
     case UnreachableMember(member: Member) => {
-
+      ARSnovaCluster.getServiceActorsForMember(member).map {node =>
+        // spread the dead service Actors
+      }
     }
 
     case SubscribeAck(Subscribe("registry", None, `self`)) =>
