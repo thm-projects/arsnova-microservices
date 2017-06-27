@@ -14,7 +14,4 @@ object Context {
   implicit val executionContext = system.dispatcher
   implicit val timeout = Timeout(2 minutes)
   protected val log: LoggingAdapter = Logging(system, getClass)
-
-  val cluster = Cluster(system)
-  cluster.join(cluster.selfAddress)
 }

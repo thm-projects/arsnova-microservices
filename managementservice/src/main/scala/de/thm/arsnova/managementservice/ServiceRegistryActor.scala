@@ -1,14 +1,10 @@
 package de.thm.arsnova.managementservice
 
-import scala.util.{Failure, Success}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
-import akka.cluster.{Cluster, Member}
+import akka.cluster.Cluster
 import akka.cluster.ClusterEvent._
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Subscribe, SubscribeAck}
-import akka.actor.{Actor, ActorRef, Address, RootActorPath}
-import akka.pattern.pipe
+import akka.actor.{Actor, RootActorPath}
 import de.thm.arsnova.shared.management.RegistryCommands._
 
 class ServiceRegistryActor extends Actor {
@@ -16,10 +12,6 @@ class ServiceRegistryActor extends Actor {
 
   val mediator = DistributedPubSub(context.system).mediator
   mediator ! Subscribe("registry", self)
-
-  implicit val ec: ExecutionContext = context.system.dispatcher
-
-  val remoteCommander = context.actorSelection("akka://CommandService@127.0.0.1:8880/user/router")
 
   override def preStart(): Unit = {
     cluster.subscribe(self, classOf[MemberEvent], classOf[UnreachableMember])
@@ -33,6 +25,9 @@ class ServiceRegistryActor extends Actor {
     // a new member joins the cluster
     case MemberUp(member) => {
       println(s"a member in the cluster is up on ${member.address} with roles ${member.roles}")
+      // manager path is convention!
+      val managerRef = context.actorSelection(RootActorPath(member.address) / "user" / "manager")
+      managerRef ! RequestRegistration
       ARSnovaCluster.addMember(member)
     }
     // a member leaves the cluster
@@ -46,9 +41,8 @@ class ServiceRegistryActor extends Actor {
 
     // a service registers an actor for handling service commands
     case RegisterService(serviceType, remote) => {
-      println("works")
+      println(s"a new service with type $serviceType has registered")
       ARSnovaCluster.addServiceActor(sender.path.address, serviceType, remote)
-      remoteCommander ! RegisterService(serviceType, remote)
     }
     case UnregisterService(serviceType, remote) => {
       ARSnovaCluster.removeServiceActor(sender.path.address, serviceType) match {
