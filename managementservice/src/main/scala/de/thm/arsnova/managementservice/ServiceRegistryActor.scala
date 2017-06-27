@@ -1,6 +1,6 @@
 package de.thm.arsnova.managementservice
 
-import akka.cluster.Cluster
+import akka.cluster.{Cluster, Member}
 import akka.cluster.ClusterEvent._
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Subscribe, SubscribeAck}
@@ -35,6 +35,10 @@ class ServiceRegistryActor extends Actor with ActorLogging {
       log.info(s"a member left the cluster on ${member.address} with roles ${member.roles}")
       ARSnovaCluster.removeMember(member)
     }
+    // a member is unreachable
+    case UnreachableMember(member: Member) => {
+
+    }
 
     case SubscribeAck(Subscribe("registry", None, `self`)) =>
       log.info("registry successfully subscribed to \"registry\"")
@@ -46,12 +50,7 @@ class ServiceRegistryActor extends Actor with ActorLogging {
     }
     case UnregisterService(serviceType, remote) => {
       log.info(s"a service with type $serviceType has unregistered")
-      ARSnovaCluster.removeServiceActor(sender.path.address, serviceType) match {
-        // there is an actual serviceActor
-        case Some(ref) =>
-        // no serviceActor (service hasn't registered any) :(
-        case None =>
-      }
+      ARSnovaCluster.removeServiceActor(sender.path.address, serviceType, remote)
     }
     case s: Any => println(s)
   }
