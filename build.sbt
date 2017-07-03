@@ -20,7 +20,7 @@ val akkaDependencies = Seq(
   "com.typesafe.akka"     %% "akka-http"                            % akkaHTTPVersion,
   "com.typesafe.akka"     %% "akka-http-testkit"                    % akkaHTTPVersion,
   "com.typesafe.akka"     %% "akka-http-spray-json"                 % akkaHTTPVersion,
-  "org.slf4j"             %  "slf4j-nop"                            % "1.7.21"
+  "ch.qos.logback"        %  "logback-classic"                      % "1.2.3"
 )
 
 val slickDependencies = Seq(
@@ -62,7 +62,7 @@ lazy val gateway = (project in file("gateway"))
   .settings(
     libraryDependencies ++= akkaDependencies
   )
-  .dependsOn(shared)
+  .dependsOn(shared, authservice, sessionservice)
 
 lazy val managementservice = (project in file("managementservice"))
   .settings(
@@ -86,7 +86,7 @@ lazy val sessionservice = (project in file("sessionservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
-  .dependsOn(shared)
+  .dependsOn(shared, authservice)
 
 lazy val questionservice = (project in file("questionservice"))
   .settings(

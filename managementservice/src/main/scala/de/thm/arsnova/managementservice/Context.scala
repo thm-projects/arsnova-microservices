@@ -16,5 +16,4 @@ object Context {
   protected val log: LoggingAdapter = Logging(system, getClass)
 
   val cluster = Cluster(system)
-  cluster.join(cluster.selfAddress)
 }

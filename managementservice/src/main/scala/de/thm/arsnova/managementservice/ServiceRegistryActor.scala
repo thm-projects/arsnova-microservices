@@ -27,7 +27,7 @@ class ServiceRegistryActor extends Actor with ActorLogging {
       log.info(s"a member in the cluster is up on ${member.address} with roles ${member.roles}")
       // manager path is convention!
       val managerRef = context.actorSelection(RootActorPath(member.address) / "user" / "manager")
-      managerRef ! RequestRegistration
+      //managerRef ! RequestRegistration
       ARSnovaCluster.addMember(member)
     }
     // a member leaves the cluster

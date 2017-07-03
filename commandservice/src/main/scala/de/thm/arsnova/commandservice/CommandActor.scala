@@ -1,15 +1,16 @@
 package de.thm.arsnova.commandservice
 
-import scala.util.{Failure, Success}
-import scala.concurrent.{ExecutionContext, Future}
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.pattern.{pipe, ask}
-
 import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import de.thm.arsnova.shared.servicecommands._
 import de.thm.arsnova.shared.management.CommandPackage
 import de.thm.arsnova.shared.entities.User
+
+import scala.util.{Failure, Success}
+import scala.concurrent.{ExecutionContext, Future}
+import akka.actor.{Actor, ActorRef, Props}
+import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
+import akka.pattern.{ask, pipe}
+import akka.routing.RandomPool
 
 class CommandActor extends Actor {
   import Context.{timeout, executionContext}

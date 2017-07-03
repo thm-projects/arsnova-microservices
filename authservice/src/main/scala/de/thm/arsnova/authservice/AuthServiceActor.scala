@@ -10,23 +10,21 @@ import akka.actor.ActorRef
 import akka.cluster.Cluster
 import akka.pattern.pipe
 
-class AuthActor extends Actor {
-  val cluster = Cluster(context.system)
-
+class AuthServiceActor extends Actor {
   implicit val ex: ExecutionContext = context.system.dispatcher
 
   def receive = {
     case LoginUser(username, password) => ((ret: ActorRef) => {
-       UserRepository.verifyLogin(username, password).map {
-         case Some(uuid) => TokenRepository.create(uuid) pipeTo ret
-         case None => Future { "not found" } pipeTo ret
-       }
+      UserRepository.verifyLogin(username, password).map {
+        case Some(uuid) => TokenRepository.create(uuid) pipeTo ret
+        case None => Future { "not found" } pipeTo ret
+      }
     }) (sender)
     case CreateUser(user) => ((ret: ActorRef) => {
       UserRepository.create(user) pipeTo ret
     }) (sender)
     case GetUserFromTokenString(tokenstring) => ((ret: ActorRef) => {
-      UserRepository.getUserByTokenString(tokenstring)
+      UserRepository.getUserByTokenString(tokenstring) pipeTo ret
     }) (sender)
 
     case CheckTokenString(tokenstring) => ((ret: ActorRef) => {
