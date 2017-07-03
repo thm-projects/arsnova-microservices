@@ -25,7 +25,7 @@ class Stresstest extends Simulation {
     .userAgentHeader("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0")
 
   setUp(
-    BasicTutorSimulation.scn.inject(rampUsers(100) over (5 seconds)),
-    BasicAuditorSimulation.scn.inject(rampUsers(1000) over (5 seconds))
+    //BasicTutorSimulation.scn.inject(rampUsers(100) over (5 seconds)),
+    BasicAuditorSimulation.scn.inject(rampUsers(500) over (5 seconds))
   ).protocols(httpProtocol)
 }

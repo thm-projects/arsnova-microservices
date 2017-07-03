@@ -23,8 +23,8 @@ trait AuthApi extends BaseApi {
 
   val authRouter = system.actorOf(
     ClusterRouterPool(RandomPool(10), ClusterRouterPoolSettings(
-      totalInstances = 10,
-      maxInstancesPerNode = 20,
+      totalInstances = 2000,
+      maxInstancesPerNode = 1000,
       allowLocalRoutees = false,
       useRole = Some("auth")
     )).props(Props[AuthServiceActor]), "AuthRouter"
