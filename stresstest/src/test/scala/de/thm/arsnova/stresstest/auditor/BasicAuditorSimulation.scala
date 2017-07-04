@@ -17,7 +17,7 @@ object BasicAuditorSimulation {
   val now = Calendar.getInstance.getTime.toString
 
   val joinSession = exec(http("Auditor joins session")
-    .get("/session/85298f09-2ff2-40af-b3de-c6264f1339ca"))
+    .get("/session/a1927004-b489-4b85-a90d-17ecf5996d57"))
 
   /*val getAllPrepQuestions = exec(http("Auditor gets all preparation questions")
     .get("/session/42664be0-35d1-45c7-a87d-d2ed9cc9cad7/question/")

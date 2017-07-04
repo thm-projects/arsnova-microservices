@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
-import akka.routing.BalancingPool
+import akka.routing.RandomPool
 import de.thm.arsnova.sessionservice.SessionServiceActor
 import spray.json._
 
@@ -27,9 +27,9 @@ trait SessionServiceApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
   val sessionRouter = system.actorOf(
-    ClusterRouterPool(new BalancingPool(0), ClusterRouterPoolSettings(
-      totalInstances = 1000,
-      maxInstancesPerNode = 500,
+    ClusterRouterPool(new RandomPool(10), ClusterRouterPoolSettings(
+      totalInstances = 100,
+      maxInstancesPerNode = 50,
       allowLocalRoutees = false,
       useRole = Some("session")
     )).props(Props[SessionServiceActor]), "SessionRouter"

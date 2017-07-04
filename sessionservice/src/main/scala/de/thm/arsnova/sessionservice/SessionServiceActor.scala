@@ -33,6 +33,7 @@ class SessionServiceActor extends Actor {
     case CommandWithToken(command, token) => ((ret: ActorRef) => {
       command match {
         case GetSession(id) => {
+          println("yo")
           SessionRepository.findById(id) pipeTo ret
         }
         case GetSessionByKeyword(keyword) => {
