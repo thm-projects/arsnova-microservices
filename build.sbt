@@ -40,6 +40,12 @@ val gatlingDeps = Seq(
   "io.gatling"            % "gatling-test-framework"                % gatlingVersion % "test,it"
 )
 
+val kamonDeps = Seq(
+  "io.kamon" %% "kamon-core" % "0.6.0",
+  "io.kamon" %% "kamon-statsd" % "0.6.0",
+  "io.kamon" %% "kamon-datadog" % "0.6.0"
+)
+
 // skip Tests in assembly job
 // test in assembly := {}
 
@@ -60,7 +66,7 @@ lazy val shared = (project in file("shared"))
 
 lazy val gateway = (project in file("gateway"))
   .settings(
-    libraryDependencies ++= akkaDependencies
+    libraryDependencies ++= akkaDependencies ++ kamonDeps
   )
   .dependsOn(shared, authservice, sessionservice)
 
@@ -84,7 +90,7 @@ lazy val authservice = (project in file("authservice"))
 
 lazy val sessionservice = (project in file("sessionservice"))
   .settings(
-    libraryDependencies ++= akkaDependencies ++ slickDependencies
+    libraryDependencies ++= akkaDependencies ++ slickDependencies ++ kamonDeps
   )
   .dependsOn(shared, authservice)
 
@@ -106,6 +112,17 @@ lazy val stresstest = (project in file("stresstest"))
   )
   .dependsOn(shared)
 
+
+aspectjSettings
+
+// Here we are effectively adding the `-javaagent` JVM startup
+// option with the location of the AspectJ Weaver provided by
+// the sbt-aspectj plugin.
+javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj
+
+// We need to ensure that the JVM is forked for the
+// AspectJ Weaver to kick in properly and do it's magic.
+fork in run := true
 
 // skip Tests in assembly job
 test in assembly := {}
