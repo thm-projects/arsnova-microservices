@@ -9,6 +9,7 @@ val scalaTestVersion = "3.0.0"
 val scalaMockVersion = "3.2.2"
 val slickVersion = "3.2.0"
 val gatlingVersion = "2.2.4"
+val kamonVersion = "0.6.7"
 
 val akkaDependencies = Seq(
   "com.typesafe.akka"     %% "akka-actor"                           % akkaVersion,
@@ -41,9 +42,10 @@ val gatlingDeps = Seq(
 )
 
 val kamonDeps = Seq(
-  "io.kamon" %% "kamon-core" % "0.6.0",
-  "io.kamon" %% "kamon-statsd" % "0.6.0",
-  "io.kamon" %% "kamon-datadog" % "0.6.0"
+  "io.kamon" %% "kamon-core" % kamonVersion,
+  "io.kamon" %% "kamon-akka-2.5" % kamonVersion,
+  "io.kamon" %% "kamon-statsd" % kamonVersion,
+  "io.kamon" %% "kamon-datadog" % kamonVersion
 )
 
 // skip Tests in assembly job
@@ -111,18 +113,6 @@ lazy val stresstest = (project in file("stresstest"))
     libraryDependencies ++= gatlingDeps
   )
   .dependsOn(shared)
-
-
-aspectjSettings
-
-// Here we are effectively adding the `-javaagent` JVM startup
-// option with the location of the AspectJ Weaver provided by
-// the sbt-aspectj plugin.
-javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj
-
-// We need to ensure that the JVM is forked for the
-// AspectJ Weaver to kick in properly and do it's magic.
-fork in run := true
 
 // skip Tests in assembly job
 test in assembly := {}
