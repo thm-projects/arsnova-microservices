@@ -7,6 +7,7 @@ import java.util.UUID
 
 import akka.actor.Props
 import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
+import akka.cluster.routing.{ClusterRouterGroup, ClusterRouterGroupSettings}
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -15,6 +16,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import akka.routing.RandomPool
+import akka.routing.RandomGroup
 import de.thm.arsnova.sessionservice.SessionServiceActor
 import spray.json._
 
@@ -28,12 +30,18 @@ trait SessionServiceApi extends BaseApi {
 
   val sessionRouter = system.actorOf(
     ClusterRouterPool(new RandomPool(10), ClusterRouterPoolSettings(
-      totalInstances = 100,
-      maxInstancesPerNode = 50,
+      totalInstances = 10,
+      maxInstancesPerNode = 10,
       allowLocalRoutees = false,
       useRole = Some("session")
     )).props(Props[SessionServiceActor]), "SessionRouter"
   )
+
+  /*val sessionRouter = system.actorOf(
+    ClusterRouterGroup(RandomGroup(Nil), ClusterRouterGroupSettings(
+      totalInstances = 100, routeesPaths = List("/user/sessionWorker"),
+      allowLocalRoutees = false, useRole = Some("session"))).props(),
+    name = "workerRouter2")*/
 
   val sessionApi = pathPrefix("session") {
     optionalHeaderValueByName("X-Session-Token") { tokenstring =>
