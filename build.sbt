@@ -44,8 +44,7 @@ val gatlingDeps = Seq(
 val kamonDeps = Seq(
   "io.kamon" %% "kamon-core" % kamonVersion,
   "io.kamon" %% "kamon-akka-2.5" % kamonVersion,
-  "io.kamon" %% "kamon-statsd" % kamonVersion,
-  "io.kamon" %% "kamon-datadog" % kamonVersion
+  "io.kamon" %% "kamon-statsd" % kamonVersion
 )
 
 // skip Tests in assembly job
