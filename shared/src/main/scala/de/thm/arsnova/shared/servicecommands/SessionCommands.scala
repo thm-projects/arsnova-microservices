@@ -9,7 +9,9 @@ import de.thm.arsnova.shared.entities.Session
 object SessionCommands {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
-  sealed trait SessionCommand extends ServiceCommand
+  sealed trait SessionCommand extends ServiceCommand {
+    def id: UUID
+  }
 
   case class GetSession(id: UUID) extends SessionCommand
 
@@ -17,11 +19,9 @@ object SessionCommands {
     implicit val format: RootJsonFormat[GetSession] = jsonFormat1(GetSession)
   }
 
-  case class CreateSession(session: Session) extends SessionCommand
+  case class CreateSession(id: UUID, session: Session, token: String) extends SessionCommand
 
   object CreateSessionFormat extends DefaultJsonProtocol {
-    implicit val format: RootJsonFormat[CreateSession] = jsonFormat1(CreateSession)
+    implicit val format: RootJsonFormat[CreateSession] = jsonFormat3(CreateSession)
   }
-
-  case class GetSessionByKeyword(keyword: String) extends SessionCommand
 }

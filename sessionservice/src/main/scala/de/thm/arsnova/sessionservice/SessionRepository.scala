@@ -23,13 +23,13 @@ object SessionRepository {
     db.run(sessionsTable.filter(_.key === key).result.head)
   }
 
-  def create(session: Session, user: Option[User]): Future[UUID] = {
+  def create(session: Session, user: Option[User]): Future[Session] = {
     user match {
       case None => Future.failed(NoUserException("createSession"))
       case Some(user) => {
         val sId = UUID.randomUUID
-        val itemWithId = session.copy(id = Some(sId), userId = user.id.get)
-        db.run(sessionsTable += itemWithId).map(_ => sId)
+        val itemWithId = session.copy(userId = user.id.get)
+        db.run(sessionsTable += itemWithId).map(_ => itemWithId)
       }
     }
   }

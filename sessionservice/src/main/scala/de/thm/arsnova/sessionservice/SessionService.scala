@@ -2,6 +2,7 @@ package de.thm.arsnova.sessionservice
 
 import akka.actor.Props
 import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
+import akka.cluster.sharding.{ClusterShardingSettings, ClusterSharding}
 import akka.routing.{ConsistentHashingPool, RandomPool}
 import kamon.Kamon
 import de.thm.arsnova.authservice.AuthServiceActor
@@ -11,6 +12,13 @@ object SessionService extends App with MigrationConfig {
   import Context._
 
   Kamon.start()
+
+  ClusterSharding(system).start(
+    typeName = Post.shardName,
+    entityProps = Post.props(authorListingRegion),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = Post.idExtractor,
+    extractShardId = Post.shardResolver)
 
   val authRouter = system.actorOf(
     ClusterRouterPool(new RandomPool(10), ClusterRouterPoolSettings(
