@@ -64,9 +64,6 @@ class SessionActor extends PersistentActor {
 
   def initial: Receive = {
     case GetSession(id) => ((ret: ActorRef) => {
-      println("XXXXXXXXXXXXXXXXXXXX")
-      println("got it")
-      println("XXXXXXXXXXXXXXXXXXXX")
       SessionRepository.findById(id) map { session =>
         state = Some(session)
         context.become(created)
@@ -90,8 +87,12 @@ class SessionActor extends PersistentActor {
   }
 
   def created: Receive = {
-    case CommandWithToken(command, token) => command match {
-      case GetSession(_) => state.get
-    }
+    case GetSession(id) => ((ret: ActorRef) => {
+      SessionRepository.findById(id) map { session =>
+        state = Some(session)
+        context.become(created)
+        ret ! session
+      }
+    }) (sender)
   }
 }
