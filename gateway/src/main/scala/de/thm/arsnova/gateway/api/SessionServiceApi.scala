@@ -3,11 +3,14 @@ package de.thm.arsnova.gateway.api
 import de.thm.arsnova.shared.entities.Session
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
+import de.thm.arsnova.sessionservice.SessionActor
+
 import java.util.UUID
 
 import akka.actor.Props
 import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
 import akka.cluster.routing.{ClusterRouterGroup, ClusterRouterGroupSettings}
+import akka.cluster.sharding.ClusterSharding
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -17,7 +20,6 @@ import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
-import de.thm.arsnova.sessionservice.SessionServiceActor
 import spray.json._
 
 /*
@@ -28,20 +30,13 @@ trait SessionServiceApi extends BaseApi {
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
-  val sessionRouter = system.actorOf(
-    ClusterRouterPool(new RandomPool(10), ClusterRouterPoolSettings(
-      totalInstances = 10,
-      maxInstancesPerNode = 10,
-      allowLocalRoutees = false,
-      useRole = Some("session")
-    )).props(Props[SessionServiceActor]), "SessionRouter"
-  )
+  ClusterSharding(system).startProxy(
+    typeName = SessionActor.shardName,
+    role = Some("session"),
+    extractEntityId = SessionActor.idExtractor,
+    extractShardId = SessionActor.shardResolver)
 
-  /*val sessionRouter = system.actorOf(
-    ClusterRouterGroup(RandomGroup(Nil), ClusterRouterGroupSettings(
-      totalInstances = 100, routeesPaths = List("/user/sessionWorker"),
-      allowLocalRoutees = false, useRole = Some("session"))).props(),
-    name = "workerRouter2")*/
+  val sessionRegion = ClusterSharding(system).shardRegion(SessionActor.shardName)
 
   val sessionApi = pathPrefix("session") {
     optionalHeaderValueByName("X-Session-Token") { tokenstring =>
@@ -49,16 +44,9 @@ trait SessionServiceApi extends BaseApi {
         post {
           entity(as[Session]) { session =>
             complete {
-              (sessionRouter ? CommandWithToken(CreateSession(session), tokenstring))
+              val newId = UUID.randomUUID()
+              (sessionRegion ? CreateSession(newId, session.copy(id = Some(newId)), tokenstring))
                 .mapTo[UUID].map(_.toJson)
-            }
-          }
-        } ~
-        get {
-          parameters("keyword") { keyword =>
-            complete {
-              (sessionRouter ? CommandWithToken(GetSessionByKeyword(keyword), tokenstring))
-                .mapTo[Session].map(_.toJson)
             }
           }
         }
@@ -67,7 +55,7 @@ trait SessionServiceApi extends BaseApi {
         pathEndOrSingleSlash {
           get {
             complete {
-              (sessionRouter ? CommandWithToken(GetSession(sessionId), tokenstring))
+              (sessionRegion ? GetSession(sessionId))
                 .mapTo[Session].map(_.toJson)
             }
           }

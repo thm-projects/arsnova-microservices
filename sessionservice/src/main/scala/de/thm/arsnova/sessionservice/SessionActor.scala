@@ -9,16 +9,19 @@ import akka.actor.PoisonPill
 import akka.actor.Props
 import akka.actor.ReceiveTimeout
 import akka.pattern.{ask, pipe}
+import akka.util.Timeout
 import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import de.thm.arsnova.shared.entities.{Session, User}
-import de.thm.arsnova.shared.events.SessionEvents.SessionCreated
+import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionEvent}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
+import de.thm.arsnova.shared.Exceptions
+import de.thm.arsnova.shared.Exceptions.NoUserException
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 object SessionActor {
   val shardName = "Session"
@@ -36,6 +39,9 @@ object SessionActor {
 
 class SessionActor extends PersistentActor {
 
+  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val timeout: Timeout = 5.seconds
+
   val authRouter = context.actorSelection("/user/AuthRouter")
 
   def tokenToUser(tokenstring: String): Future[Option[User]] = {
@@ -50,31 +56,35 @@ class SessionActor extends PersistentActor {
   private var state: Option[Session] = None
 
   override def receiveRecover: Receive = {
-
+    case event: SessionEvent =>
+      println(event)
   }
 
   override def receiveCommand: Receive = initial
 
   def initial: Receive = {
     case GetSession(id) => ((ret: ActorRef) => {
-      SessionRepository.findById(id) map {
-        case session: Session => {
-          state = Some(session)
-          context.become(created)
-          ret ! session
-        }
+      println("XXXXXXXXXXXXXXXXXXXX")
+      println("got it")
+      println("XXXXXXXXXXXXXXXXXXXX")
+      SessionRepository.findById(id) map { session =>
+        state = Some(session)
+        context.become(created)
+        ret ! session
       }
     }) (sender)
     case CreateSession(id, session, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map { user =>
-        SessionRepository.create(session, user) map {
-          case session: Session => {
-            persist(SessionCreated(session))
-            state = Some(session)
-            context.become(created)
-            ret ! session.id
+      token match {
+        case Some(t) => tokenToUser(t) map { user =>
+          SessionRepository.create(session, user) map { session =>
+            persist(SessionCreated(session)) { evt =>
+              state = Some(evt.session)
+              context.become(created)
+              ret ! session.id
+            }
           }
         }
+        case None => ret ! NoUserException
       }
     }) (sender)
   }

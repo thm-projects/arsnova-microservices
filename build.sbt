@@ -12,17 +12,19 @@ val gatlingVersion = "2.2.4"
 val kamonVersion = "0.6.7"
 
 val akkaDependencies = Seq(
-  "com.typesafe.akka"     %% "akka-actor"                           % akkaVersion,
-  "com.typesafe.akka"     %% "akka-remote"                          % akkaVersion,
-  "com.typesafe.akka"     %% "akka-cluster"                         % akkaVersion,
-  "com.typesafe.akka"     %% "akka-cluster-tools"                   % akkaVersion,
-  "com.typesafe.akka"     %% "akka-stream"                          % akkaVersion,
-  "com.typesafe.akka"     %% "akka-cluster-sharding"                % akkaVersion,
-  "com.typesafe.akka"     %% "akka-testkit"                         % akkaVersion % "test",
-  "com.typesafe.akka"     %% "akka-http"                            % akkaHTTPVersion,
-  "com.typesafe.akka"     %% "akka-http-testkit"                    % akkaHTTPVersion,
-  "com.typesafe.akka"     %% "akka-http-spray-json"                 % akkaHTTPVersion,
-  "ch.qos.logback"        %  "logback-classic"                      % "1.2.3"
+  "com.typesafe.akka"         %% "akka-actor"                           % akkaVersion,
+  "com.typesafe.akka"         %% "akka-remote"                          % akkaVersion,
+  "com.typesafe.akka"         %% "akka-cluster"                         % akkaVersion,
+  "com.typesafe.akka"         %% "akka-cluster-tools"                   % akkaVersion,
+  "com.typesafe.akka"         %% "akka-stream"                          % akkaVersion,
+  "com.typesafe.akka"         %% "akka-cluster-sharding"                % akkaVersion,
+  "com.typesafe.akka"         %% "akka-testkit"                         % akkaVersion % "test",
+  "com.typesafe.akka"         %% "akka-http"                            % akkaHTTPVersion,
+  "com.typesafe.akka"         %% "akka-http-testkit"                    % akkaHTTPVersion,
+  "com.typesafe.akka"         %% "akka-http-spray-json"                 % akkaHTTPVersion,
+  "org.iq80.leveldb"          % "leveldb"                               % "0.7",
+  "org.fusesource.leveldbjni" % "leveldbjni-all"                    % "1.8",
+  "ch.qos.logback"            %  "logback-classic"                      % "1.2.3"
 )
 
 val slickDependencies = Seq(
