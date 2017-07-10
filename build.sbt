@@ -19,12 +19,13 @@ val akkaDependencies = Seq(
   "com.typesafe.akka"         %% "akka-stream"                          % akkaVersion,
   "com.typesafe.akka"         %% "akka-cluster-sharding"                % akkaVersion,
   "com.typesafe.akka"         %% "akka-testkit"                         % akkaVersion % "test",
+  "com.typesafe.akka"         %% "akka-slf4j"                           % akkaVersion,
   "com.typesafe.akka"         %% "akka-http"                            % akkaHTTPVersion,
   "com.typesafe.akka"         %% "akka-http-testkit"                    % akkaHTTPVersion,
   "com.typesafe.akka"         %% "akka-http-spray-json"                 % akkaHTTPVersion,
   "org.iq80.leveldb"          % "leveldb"                               % "0.7",
-  "org.fusesource.leveldbjni" % "leveldbjni-all"                    % "1.8",
-  "ch.qos.logback"            %  "logback-classic"                      % "1.2.3"
+  "org.fusesource.leveldbjni" % "leveldbjni-all"                        % "1.8",
+  "ch.qos.logback"            % "logback-classic"                       % "1.2.3"
 )
 
 val slickDependencies = Seq(
