@@ -1,16 +1,20 @@
 package de.thm.arsnova.sessionservice
 
-import akka.actor.Props
+import akka.actor.{ActorIdentity, ActorPath, ActorSystem, Identify, Props}
 import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
+import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
+import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStore}
 import akka.routing.{ConsistentHashingPool, RandomPool}
+import akka.util.Timeout
+import akka.pattern.ask
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import kamon.Kamon
 import de.thm.arsnova.authservice.AuthServiceActor
 import de.thm.arsnova.shared.actors.ServiceManagementActor
 
 object SessionService extends App with MigrationConfig {
   import Context._
-
-  Kamon.start()
 
   val authRouter = system.actorOf(
     ClusterRouterPool(new RandomPool(10), ClusterRouterPoolSettings(
@@ -20,6 +24,20 @@ object SessionService extends App with MigrationConfig {
       useRole = Some("auth")
     )).props(Props[AuthServiceActor]), "AuthRouter"
   )
+
+  val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
+  SharedLeveldbJournal.setStore(storeRef, system)
+
+  ClusterSharding(system).start(
+    typeName = SessionActor.shardName,
+    entityProps = SessionActor.props(authRouter),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = SessionActor.idExtractor,
+    extractShardId = SessionActor.shardResolver)
+
+  if (args.contains("kamon")) {
+    Kamon.start()
+  }
 
   if (args.contains("migrate")) {
     migrate()
