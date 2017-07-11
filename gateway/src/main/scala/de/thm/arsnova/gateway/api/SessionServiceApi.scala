@@ -46,7 +46,7 @@ trait SessionServiceApi extends BaseApi {
             complete {
               val newId = UUID.randomUUID()
               (sessionRegion ? CreateSession(newId, session.copy(id = Some(newId)), tokenstring))
-                .mapTo[UUID].map(_.toJson)
+                .mapTo[Session].map(_.toJson)
             }
           }
         }

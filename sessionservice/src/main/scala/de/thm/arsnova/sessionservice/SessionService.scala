@@ -16,16 +16,6 @@ import de.thm.arsnova.shared.actors.ServiceManagementActor
 object SessionService extends App with MigrationConfig {
   import Context._
 
-  val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
-  SharedLeveldbJournal.setStore(storeRef, system)
-
-  ClusterSharding(system).start(
-    typeName = SessionActor.shardName,
-    entityProps = SessionActor.props(),
-    settings = ClusterShardingSettings(system),
-    extractEntityId = SessionActor.idExtractor,
-    extractShardId = SessionActor.shardResolver)
-
   val authRouter = system.actorOf(
     ClusterRouterPool(new RandomPool(10), ClusterRouterPoolSettings(
       totalInstances = 10,
@@ -34,6 +24,16 @@ object SessionService extends App with MigrationConfig {
       useRole = Some("auth")
     )).props(Props[AuthServiceActor]), "AuthRouter"
   )
+
+  val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
+  SharedLeveldbJournal.setStore(storeRef, system)
+
+  ClusterSharding(system).start(
+    typeName = SessionActor.shardName,
+    entityProps = SessionActor.props(authRouter),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = SessionActor.idExtractor,
+    extractShardId = SessionActor.shardResolver)
 
   if (args.contains("kamon")) {
     Kamon.start()
