@@ -11,6 +11,9 @@
     <root level="warning">
         <appender-ref ref="CONSOLE" />
     </root>
+    <root level="debug">
+        <appender-ref ref="CONSOLE" />
+    </root>
     <logger name="ch.qos.logback"                           level="warn" />
     <logger name="akka"                                     level="warn" />
     <logger name="org.zaxxer.hikari"                        level="error" />
