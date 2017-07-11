@@ -16,8 +16,6 @@ import de.thm.arsnova.shared.actors.ServiceManagementActor
 object SessionService extends App with MigrationConfig {
   import Context._
 
-  Kamon.start()
-
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
 
@@ -36,6 +34,10 @@ object SessionService extends App with MigrationConfig {
       useRole = Some("auth")
     )).props(Props[AuthServiceActor]), "AuthRouter"
   )
+
+  if (args.contains("kamon")) {
+    Kamon.start()
+  }
 
   if (args.contains("migrate")) {
     migrate()

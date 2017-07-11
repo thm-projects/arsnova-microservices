@@ -9,7 +9,10 @@ import kamon.Kamon
 object GatewayService extends App with Config with Routes {
   import Context._
 
-  Kamon.start()
+
+  if (args.contains("kamon")) {
+    Kamon.start()
+  }
 
   Http().bindAndHandle(handler = logRequestResult("log")(routes), interface = httpInterface, port = httpPort)
 }
