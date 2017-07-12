@@ -24,4 +24,14 @@ object SessionCommands {
   object CreateSessionFormat extends DefaultJsonProtocol {
     implicit val format: RootJsonFormat[CreateSession] = jsonFormat3(CreateSession)
   }
+
+  sealed trait SessionListCommand extends ServiceCommand
+
+  case class LookupSession(keyword: String) extends SessionListCommand
+
+  case class SessionIdFromKeyword(id: Option[UUID]) extends SessionListCommand
+
+  case class GenerateKeyword(id: UUID) extends SessionListCommand
+
+  case class NewKeyword(keyword: String) extends SessionListCommand
 }
