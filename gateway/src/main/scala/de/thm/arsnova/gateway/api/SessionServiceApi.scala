@@ -1,5 +1,6 @@
 package de.thm.arsnova.gateway.api
 
+import de.thm.arsnova.gateway.SessionListClientActor
 import de.thm.arsnova.shared.entities.Session
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
@@ -38,10 +39,12 @@ trait SessionServiceApi extends BaseApi {
 
   val sessionRegion = ClusterSharding(system).shardRegion(SessionActor.shardName)
 
+  val sessionList = system.actorOf(Props[SessionListClientActor], name = "sessionlist")
+
   val sessionApi = pathPrefix("session") {
-    optionalHeaderValueByName("X-Session-Token") { tokenstring =>
-      pathEndOrSingleSlash {
-        post {
+    pathEndOrSingleSlash {
+      post {
+        optionalHeaderValueByName("X-Session-Token") { tokenstring =>
           entity(as[Session]) { session =>
             complete {
               val newId = UUID.randomUUID()
@@ -51,13 +54,23 @@ trait SessionServiceApi extends BaseApi {
           }
         }
       } ~
-      pathPrefix(JavaUUID) { sessionId =>
-        pathEndOrSingleSlash {
-          get {
-            complete {
-              (sessionRegion ? GetSession(sessionId))
+      get {
+        parameter("keyword") { keyword =>
+          complete {
+            (sessionList ? LookupSession(keyword)).mapTo[UUID].map { id =>
+              (sessionRegion ? GetSession(id))
                 .mapTo[Session].map(_.toJson)
             }
+          }
+        }
+      }
+    } ~
+    pathPrefix(JavaUUID) { sessionId =>
+      pathEndOrSingleSlash {
+        get {
+          complete {
+            (sessionRegion ? GetSession(sessionId))
+              .mapTo[Session].map(_.toJson)
           }
         }
       }
