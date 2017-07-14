@@ -47,4 +47,5 @@ object SessionService extends App with MigrationConfig {
   }
 
   // val manager = system.actorOf(ServiceManagementActor.props("session", dispatcher), "manager")
+  val sessionList = system.actorOf(Props[SessionListActor], name = "sessionlist")
 }

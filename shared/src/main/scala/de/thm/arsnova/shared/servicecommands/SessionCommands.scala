@@ -27,6 +27,8 @@ object SessionCommands {
 
   sealed trait SessionListCommand extends ServiceCommand
 
+  case class SessionListEntry(id: UUID, keyword: String) extends SessionListCommand
+
   case class LookupSession(keyword: String) extends SessionListCommand
 
   case class SessionIdFromKeyword(id: Option[UUID]) extends SessionListCommand
