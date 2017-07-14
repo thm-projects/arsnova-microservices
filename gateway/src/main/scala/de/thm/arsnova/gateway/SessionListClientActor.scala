@@ -19,17 +19,28 @@ class SessionListClientActor extends Actor with ActorLogging {
 
   mediator ! Subscribe(pubsubChannel, self)
 
+  def putKVToMap(keyword: String, id: UUID) = {
+    println(s"new keyword: $keyword")
+    keys.put(keyword, id) match {
+      case Some(oldid) =>
+        if (id != oldid) {
+          log.warning(s"id for keyword $keyword got overridden")
+        }
+    }
+  }
+
   def receive = {
     // pub sub messages
     case SubscribeAck(Subscribe("sessionlist", None, `self`)) =>
       log.info("subscribed to sessionlist")
-    case SessionListEntry(id, keyword) =>
-      keys.put(keyword, id) match {
-        case Some(oldid) =>
-          if (id != oldid) {
-            log.warning(s"id for keyword $keyword got overridden")
-          }
+      mediator ! Publish("sessionlist", GetSessionList(self))
+    case SessionList(list) => {
+      list.foreach { entry =>
+        putKVToMap(entry.keyword, entry.id)
       }
+    }
+    case SessionListEntry(id, keyword) =>
+      putKVToMap(keyword, id)
 
     // business logic messages
     case LookupSession(keyword) => ((ret: ActorRef) => {

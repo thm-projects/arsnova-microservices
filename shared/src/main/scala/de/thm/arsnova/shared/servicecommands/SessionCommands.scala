@@ -3,6 +3,7 @@ package de.thm.arsnova.shared.servicecommands
 import java.util.UUID
 
 import akka.Done
+import akka.actor.ActorRef
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 import de.thm.arsnova.shared.entities.Session
 
@@ -26,6 +27,10 @@ object SessionCommands {
   }
 
   sealed trait SessionListCommand extends ServiceCommand
+
+  case class GetSessionList(ref: ActorRef) extends SessionListCommand
+
+  case class SessionList(list: Seq[SessionListEntry]) extends SessionListCommand
 
   case class SessionListEntry(id: UUID, keyword: String) extends SessionListCommand
 

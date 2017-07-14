@@ -59,6 +59,11 @@ class SessionListActor extends Actor with ActorLogging {
       log.info("subscribed to sessionlist")
     case SessionListEntry(id, keyword) =>
       putKVToMap(keyword, id)
+    case GetSessionList(ref) =>
+      val list = keys.toSeq map {
+        case (k, v) => SessionListEntry(v, k)
+      }
+      ref ! SessionList(list)
 
     // business logic messages
     case LookupSession(keyword) => ((ret: ActorRef) => {
