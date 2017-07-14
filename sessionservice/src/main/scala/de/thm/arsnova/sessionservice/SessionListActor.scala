@@ -2,10 +2,11 @@ package de.thm.arsnova.sessionservice
 
 import java.util.UUID
 
-import akka.actor.{Actor, ActorRef, ActorLogging}
-import akka.cluster.pubsub.{DistributedPubSubMediator, DistributedPubSub}
+import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 
+import scala.concurrent.ExecutionContext
 import scala.util.Random
 
 class SessionListActor extends Actor with ActorLogging {
@@ -14,11 +15,30 @@ class SessionListActor extends Actor with ActorLogging {
 
   val pubsubChannel = "sessionlist"
 
+  implicit val ec: ExecutionContext = context.dispatcher
+
   val keys: collection.mutable.HashMap[String, UUID] = collection.mutable.HashMap.empty[String, UUID]
 
   val mediator = DistributedPubSub(context.system).mediator
 
   mediator ! Subscribe(pubsubChannel, self)
+
+  def putKVToMap(keyword: String, id: UUID) = {
+    keys.put(keyword, id) match {
+      case Some(oldid) =>
+        if (id != oldid) {
+          log.warning(s"id for keyword $keyword got overridden")
+        }
+    }
+  }
+
+  override def preStart(): Unit = {
+    SessionRepository.getKeywordList().map { tuples: Seq[(String, UUID)] =>
+      tuples.foreach {t =>
+        putKVToMap(t._1, t._2)
+      }
+    }
+  }
 
   def generateUniqueKeyword(tries: Int): Option[String] = {
     if (tries < 10) {
@@ -38,12 +58,7 @@ class SessionListActor extends Actor with ActorLogging {
     case SubscribeAck(Subscribe("sessionlist", None, `self`)) =>
       log.info("subscribed to sessionlist")
     case SessionListEntry(id, keyword) =>
-      keys.put(keyword, id) match {
-        case Some(oldid) =>
-          if (id != oldid) {
-            log.warning(s"id for keyword $keyword got overridden")
-          }
-      }
+      putKVToMap(keyword, id)
 
     // business logic messages
     case LookupSession(keyword) => ((ret: ActorRef) => {

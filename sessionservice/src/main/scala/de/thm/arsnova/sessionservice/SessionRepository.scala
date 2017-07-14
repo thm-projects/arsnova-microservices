@@ -33,4 +33,9 @@ object SessionRepository {
       }
     }
   }
+
+  def getKeywordList(): Future[Seq[(String, UUID)]] = {
+    val qry = sessionsTable.map(s => (s.key, s.id)).result
+    db.run(qry)
+  }
 }
