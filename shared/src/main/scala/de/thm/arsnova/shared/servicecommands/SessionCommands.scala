@@ -28,6 +28,8 @@ object SessionCommands {
 
   sealed trait SessionListCommand extends ServiceCommand
 
+  case class GetSessionEntry(keyword: String, ref: ActorRef) extends SessionListCommand
+
   case class GetSessionList(ref: ActorRef) extends SessionListCommand
 
   case class SessionList(list: Seq[SessionListEntry]) extends SessionListCommand
