@@ -27,7 +27,7 @@ object SessionRepository {
     user match {
       case None => Future.failed(NoUserException("createSession"))
       case Some(user) => {
-        db.run(sessionsTable += itemWithId).map(_ => itemWithId)
+        db.run(sessionsTable += session).map(_ => session)
       }
     }
   }
