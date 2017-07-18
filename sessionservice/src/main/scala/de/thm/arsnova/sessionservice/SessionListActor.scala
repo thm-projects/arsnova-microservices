@@ -18,14 +18,14 @@ class SessionListActor extends Actor with ActorLogging {
 
   val dChannel = "sessionlist"
 
+  val sessionList: collection.mutable.HashMap[String, UUID] =
+    collection.mutable.HashMap.empty[String, UUID]
+
   implicit val ec: ExecutionContext = context.dispatcher
 
   implicit val timeout: Timeout = 5.seconds
 
   implicit val cluster = Cluster(context.system)
-
-  val keys: collection.mutable.HashMap[String, UUID] =
-    collection.mutable.HashMap.empty[String, UUID]
 
   val replicator = DistributedData(context.system).replicator
 
@@ -64,6 +64,7 @@ class SessionListActor extends Actor with ActorLogging {
       ref ! SessionIdFromKeyword(None)
     case c @ Changed(dataKey) =>
       println("changed dataKey")
+      println(c)
 
     // business logic messages
     case LookupSession(keyword) => {

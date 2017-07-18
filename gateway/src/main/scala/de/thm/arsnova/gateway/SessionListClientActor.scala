@@ -16,6 +16,9 @@ import scala.util.Random
 class SessionListClientActor extends Actor with ActorLogging {
   val dChannel = "sessionlist"
 
+  val sessionList: collection.mutable.HashMap[String, UUID] =
+    collection.mutable.HashMap.empty[String, UUID]
+
   implicit val ec: ExecutionContext = context.dispatcher
 
   implicit val timeout: Timeout = 5.seconds

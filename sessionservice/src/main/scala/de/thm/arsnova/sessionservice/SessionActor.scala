@@ -74,11 +74,11 @@ class SessionActor(authRouter: ActorRef, sessionList: ActorRef) extends Persiste
         case Some(t) => tokenToUser(t) map { user =>
           (sessionList ? GenerateKeyword(session.id.get)).mapTo[NewKeyword].map { newKeyword =>
             val s = session.copy(keyword = Some(newKeyword.keyword))
-            SessionRepository.create(session, user) map { s =>
-              state = Some(session)
+            SessionRepository.create(s, user) map { sRet =>
+              state = Some(sRet)
               context.become(created)
-              ret ! session
-              persistAsync(SessionCreated(session))(_)
+              ret ! sRet
+              persistAsync(SessionCreated(sRet))(_)
             }
           }
         }
