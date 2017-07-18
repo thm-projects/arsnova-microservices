@@ -19,10 +19,6 @@ object SessionRepository {
     db.run(sessionsTable.filter(_.id === id).result.head)
   }
 
-  def findByKeyword(key: String): Future[Session] = {
-    db.run(sessionsTable.filter(_.key === key).result.head)
-  }
-
   def create(session: Session, user: Option[User]): Future[Session] = {
     user match {
       case None => Future.failed(NoUserException("createSession"))

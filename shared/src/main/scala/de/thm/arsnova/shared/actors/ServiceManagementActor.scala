@@ -2,6 +2,7 @@ package de.thm.arsnova.shared.actors
 
 import de.thm.arsnova.shared.management.RegistryCommands._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.pattern.ask
 
 class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) extends Actor with ActorLogging {
   var registry: Option[ActorRef] = None
@@ -18,6 +19,15 @@ class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) ext
       registry = Some(sender)
       log.info("manager got request to register service actors")
       sender ! RegisterService(serviceType, serviceActorRef)
+    case m @ GetActorRefForService(serviceType) => ((ret: ActorRef) => {
+      registry match {
+        case Some(r) => (r ? m).map {ret ! _}
+        case None => {
+          // TODO: return case class capsuling exception
+          ret ! ""
+        }
+      }
+    }) (sender)
   }
 }
 

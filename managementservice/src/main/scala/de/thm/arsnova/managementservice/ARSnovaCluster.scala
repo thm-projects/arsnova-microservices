@@ -39,6 +39,11 @@ object ARSnovaCluster {
     }
   }
 
+  def findActorForService(serviceType: String): Option[ActorRef] = {
+    val allActors: Seq[(String, ActorRef)] = services.flatMap(_.serviceActors)
+    allActors.find(tuple => tuple._1 == serviceType).map(_._2)
+  }
+
   def removeServiceActor(address: Address, role: String, ref: ActorRef): Unit = {
     services.find(_.address == address) match {
       // there is an actual node with this address

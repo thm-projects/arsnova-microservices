@@ -59,6 +59,7 @@ lazy val root = (project in file("."))
     gateway,
     managementservice,
     commandservice,
+    keywordservice,
     sessionservice,
     questionservice,
     commentservice

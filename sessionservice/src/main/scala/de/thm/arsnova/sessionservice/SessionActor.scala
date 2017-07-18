@@ -26,8 +26,8 @@ import scala.concurrent.{ExecutionContext, Future}
 object SessionActor {
   val shardName = "Session"
 
-  def props(authRouter: ActorRef, sessionList: ActorRef): Props =
-    Props(new SessionActor(authRouter: ActorRef, sessionList: ActorRef))
+  def props(authRouter: ActorRef): Props =
+    Props(new SessionActor(authRouter: ActorRef))
 
   val idExtractor: ShardRegion.ExtractEntityId = {
     case cmd: SessionCommand => (cmd.id.toString, cmd)
@@ -38,7 +38,7 @@ object SessionActor {
   }
 }
 
-class SessionActor(authRouter: ActorRef, sessionList: ActorRef) extends PersistentActor {
+class SessionActor(authRouter: ActorRef) extends PersistentActor {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
@@ -57,6 +57,7 @@ class SessionActor(authRouter: ActorRef, sessionList: ActorRef) extends Persiste
   override def receiveRecover: Receive = {
     case event: SessionEvent =>
       println(event)
+    case s: Any => println(s)
   }
 
   override def receiveCommand: Receive = initial
@@ -72,14 +73,11 @@ class SessionActor(authRouter: ActorRef, sessionList: ActorRef) extends Persiste
     case CreateSession(id, session, token) => ((ret: ActorRef) => {
       token match {
         case Some(t) => tokenToUser(t) map { user =>
-          (sessionList ? GenerateKeyword(session.id.get)).mapTo[NewKeyword].map { newKeyword =>
-            val s = session.copy(keyword = Some(newKeyword.keyword))
-            SessionRepository.create(s, user) map { sRet =>
-              state = Some(sRet)
-              context.become(created)
-              ret ! sRet
-              persistAsync(SessionCreated(sRet))(_)
-            }
+          SessionRepository.create(session, user) map { sRet =>
+            state = Some(sRet)
+            context.become(created)
+            ret ! sRet
+            persist(SessionCreated(sRet))(e => println(e))
           }
         }
         case None => ret ! NoUserException

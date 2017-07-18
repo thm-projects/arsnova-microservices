@@ -10,4 +10,6 @@ object RegistryCommands {
   case class RegisterService(serviceType: String, remote: ActorRef) extends RegistryCommand
 
   case class UnregisterService(serviceType: String, remote: ActorRef) extends RegistryCommand
+
+  case class GetActorRefForService(serviceType: String) extends RegistryCommand
 }

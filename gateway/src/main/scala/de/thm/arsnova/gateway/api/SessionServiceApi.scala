@@ -1,11 +1,10 @@
 package de.thm.arsnova.gateway.api
 
 import de.thm.arsnova.gateway.SessionListClientActor
-import de.thm.arsnova.shared.entities.Session
+import de.thm.arsnova.shared.entities.{Session, SessionListEntry}
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.sessionservice.SessionActor
-
 import java.util.UUID
 
 import akka.actor.Props
@@ -24,6 +23,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
 import spray.json._
+import de.thm.arsnova.shared.servicecommands.KeywordCommands._
 
 /*
 The API Interface regarding sessions, the core component for arsnova.voting.
@@ -49,9 +49,11 @@ trait SessionServiceApi extends BaseApi {
         optionalHeaderValueByName("X-Session-Token") { tokenstring =>
           entity(as[Session]) { session =>
             complete {
-              val newId = UUID.randomUUID()
-              (sessionRegion ? CreateSession(newId, session.copy(id = Some(newId)), tokenstring))
-                .mapTo[Session].map(_.toJson)
+              (sessionList ? GenerateEntry).mapTo[SessionListEntry].map { s =>
+                val completeSession = session.copy(id = Some(s.id), keyword = Some(s.keyword))
+                (sessionRegion ? CreateSession(completeSession.id.get, completeSession, tokenstring))
+                  .mapTo[Session].map(_.toJson)
+              }
             }
           }
         }

@@ -2,19 +2,27 @@ package de.thm.arsnova.gateway
 
 import java.util.UUID
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.Cluster
-import akka.cluster.ddata.{DistributedData, LWWMap, LWWMapKey, Replicator}
-import akka.cluster.ddata.Replicator._
 import akka.util.Timeout
-import de.thm.arsnova.shared.servicecommands.SessionCommands._
+import akka.pattern.ask
+import de.thm.arsnova.shared.servicecommands.KeywordCommands._
+import de.thm.arsnova.shared.management.RegistryCommands._
+import de.thm.arsnova.shared.entities.SessionListEntry
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.Random
 
-class SessionListClientActor extends Actor with ActorLogging {
-  val dChannel = "sessionlist"
+object SessionListClientActor {
+  def props(manager: ActorRef): Props =
+    Props(new SessionListClientActor(manager))
+}
+
+class SessionListClientActor(manager: ActorRef) extends Actor with ActorLogging {
+  val serviceType = "sessionlist"
+
+  var sessionLister: Option[ActorRef] = None
 
   val sessionList: collection.mutable.HashMap[String, UUID] =
     collection.mutable.HashMap.empty[String, UUID]
@@ -25,24 +33,31 @@ class SessionListClientActor extends Actor with ActorLogging {
 
   implicit val cluster = Cluster(context.system)
 
-  val replicator = DistributedData(context.system).replicator
-
-  val dataKey = LWWMapKey[String, UUID](dChannel)
-
-  replicator ! Subscribe(dataKey, self)
+  override def preStart(): Unit = {
+    (manager ? GetActorRefForService(serviceType)).mapTo[ActorRef].map { ref =>
+      sessionLister = Some(ref)
+    }
+  }
 
   def receive = {
-    // ddata messages
-    case g @ GetSuccess(LWWMapKey(_), Some(GetSessionEntry(keyword, ref))) =>
-      println(g.dataValue)
-    case NotFound(_, Some(GetSessionEntry(keyword, ref))) =>
-      ref ! SessionIdFromKeyword(None)
-    case c @ Changed(dataKey) =>
-      println("changed dataKey")
-
     // business logic messages
-    case LookupSession(keyword) => {
-      replicator ! Get(dataKey, ReadLocal, Some(GetSessionEntry(keyword, sender())))
-    }
+    case m @ LookupSession(keyword) => ((ret: ActorRef) => {
+      // check cache
+      sessionList.get(keyword) match {
+        case Some(id) => ret ! id
+        // ask keyword service about keyword
+        case None => (sessionLister.get ? m).mapTo[UUID].map { id =>
+          // store in cache
+          sessionList += (keyword -> id)
+          ret ! id
+        }
+      }
+    }) (sender)
+    case m @ GenerateEntry => ((ret: ActorRef) => {
+      (sessionLister.get ? m).mapTo[SessionListEntry].map { s =>
+        sessionList += (s.keyword -> s.id)
+        ret ! s
+      }
+    }) (sender)
   }
 }

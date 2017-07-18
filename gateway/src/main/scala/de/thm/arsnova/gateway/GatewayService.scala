@@ -9,7 +9,6 @@ import kamon.Kamon
 object GatewayService extends App with Config with Routes {
   import Context._
 
-
   if (args.contains("kamon")) {
     Kamon.start()
   }

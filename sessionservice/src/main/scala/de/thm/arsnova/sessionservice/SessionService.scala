@@ -16,8 +16,6 @@ import de.thm.arsnova.shared.actors.ServiceManagementActor
 object SessionService extends App with MigrationConfig {
   import Context._
 
-  val sessionList = system.actorOf(Props[SessionListActor], name = "sessionlist")
-
   val authRouter = system.actorOf(
     ClusterRouterPool(new RandomPool(10), ClusterRouterPoolSettings(
       totalInstances = 10,
@@ -32,7 +30,7 @@ object SessionService extends App with MigrationConfig {
 
   ClusterSharding(system).start(
     typeName = SessionActor.shardName,
-    entityProps = SessionActor.props(authRouter, sessionList),
+    entityProps = SessionActor.props(authRouter),
     settings = ClusterShardingSettings(system),
     extractEntityId = SessionActor.idExtractor,
     extractShardId = SessionActor.shardResolver)

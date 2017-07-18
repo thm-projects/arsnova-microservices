@@ -4,7 +4,7 @@ import akka.cluster.{Cluster, Member}
 import akka.cluster.ClusterEvent._
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Subscribe, SubscribeAck}
-import akka.actor.{Actor, ActorLogging, RootActorPath}
+import akka.actor.{Actor, ActorRef, ActorLogging, RootActorPath}
 import de.thm.arsnova.shared.management.RegistryCommands._
 
 class ServiceRegistryActor extends Actor with ActorLogging {
@@ -27,7 +27,7 @@ class ServiceRegistryActor extends Actor with ActorLogging {
       log.info(s"a member in the cluster is up on ${member.address} with roles ${member.roles}")
       // manager path is convention!
       val managerRef = context.actorSelection(RootActorPath(member.address) / "user" / "manager")
-      //managerRef ! RequestRegistration
+      managerRef ! RequestRegistration
       ARSnovaCluster.addMember(member)
     }
     // a member leaves the cluster
@@ -54,6 +54,12 @@ class ServiceRegistryActor extends Actor with ActorLogging {
       log.info(s"a service with type $serviceType has unregistered")
       ARSnovaCluster.removeServiceActor(sender.path.address, serviceType, remote)
     }
+    case GetActorRefForService(serviceType) => ((ret: ActorRef) => {
+      ARSnovaCluster.findActorForService(serviceType) match {
+        case Some(ref) => ret ! ref
+        case None => ret ! ""
+      }
+    }) (sender)
     case s: Any => println(s)
   }
 }
