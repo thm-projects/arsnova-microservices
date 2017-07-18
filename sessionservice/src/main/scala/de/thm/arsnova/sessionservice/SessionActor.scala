@@ -73,7 +73,7 @@ class SessionActor(authRouter: ActorRef, sessionList: ActorRef) extends Persiste
       token match {
         case Some(t) => tokenToUser(t) map { user =>
           (sessionList ? GenerateKeyword(session.id.get)).mapTo[NewKeyword].map { newKeyword =>
-            val s = session.copy(keyword = newKeyword.keyword)
+            val s = session.copy(keyword = Some(newKeyword.keyword))
             SessionRepository.create(session, user) map { s =>
               state = Some(session)
               context.become(created)

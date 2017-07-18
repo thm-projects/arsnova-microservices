@@ -18,5 +18,5 @@ class SessionsTable(tag: Tag) extends Table[Session](tag, "sessions"){
   def feedbackLock: Rep[Boolean] = column[Boolean]("feedback_lock")
   def flipFlashcards: Rep[Boolean] = column[Boolean]("flip_flashcards")
 
-  def * = (id.?, key, userId, title, shortName, lastOwnerActivity, creationTime, active, feedbackLock, flipFlashcards) <> (Session.tupled, Session.unapply)
+  def * = (id.?, key.?, userId, title, shortName, lastOwnerActivity, creationTime, active, feedbackLock, flipFlashcards) <> (Session.tupled, Session.unapply)
 }

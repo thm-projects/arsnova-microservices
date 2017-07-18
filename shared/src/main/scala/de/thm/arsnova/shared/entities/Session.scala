@@ -4,7 +4,7 @@ import java.util.UUID
 
 case class Session(
                     id: Option[UUID],
-                    keyword: String,
+                    keyword: Option[String],
                     userId: UUID,
                     title: String,
                     shortName: String,
