@@ -93,11 +93,17 @@ lazy val authservice = (project in file("authservice"))
   )
   .dependsOn(shared)
 
+lazy val keywordservice = (project in file("keywordservice"))
+  .settings(
+    libraryDependencies ++= akkaDependencies ++ slickDependencies ++ kamonDeps
+  )
+  .dependsOn(shared)
+
 lazy val sessionservice = (project in file("sessionservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies ++ kamonDeps
   )
-  .dependsOn(shared, authservice)
+  .dependsOn(shared, authservice, keywordservice)
 
 lazy val questionservice = (project in file("questionservice"))
   .settings(
