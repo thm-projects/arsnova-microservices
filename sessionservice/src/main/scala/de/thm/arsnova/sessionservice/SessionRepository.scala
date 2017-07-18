@@ -27,8 +27,6 @@ object SessionRepository {
     user match {
       case None => Future.failed(NoUserException("createSession"))
       case Some(user) => {
-        val sId = UUID.randomUUID
-        val itemWithId = session.copy(userId = user.id.get)
         db.run(sessionsTable += itemWithId).map(_ => itemWithId)
       }
     }
