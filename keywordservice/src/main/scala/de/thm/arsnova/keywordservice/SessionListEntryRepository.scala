@@ -46,7 +46,7 @@ object SessionListEntryRepository {
   }
 
   def getEntryFromId(keyword: String): Future[SessionListEntry] = {
-    val qry = sessionListEntriesTable.filter(_.key === keyword).result.headOption
+    val qry = sessionListEntriesTable.filter(_.key === keyword).result.head
     db.run(qry)
   }
 }
