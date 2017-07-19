@@ -30,23 +30,44 @@ class SessionListClientActor extends Actor with ActorLogging {
 
   implicit val cluster = Cluster(context.system)
 
-  override def preStart(): Unit = {
-    (manager ? GetActorRefForService(serviceType)).mapTo[ActorRef].map { ref =>
-      sessionLister = Some(ref)
-    }
+  def receive: Receive = start
+
+  def start: Receive = {
+    case m @ LookupSession(keyword) => ((ret: ActorRef) => {
+      // check cache
+      (manager ? GetActorRefForService(serviceType)).mapTo[ActorRef].map { ref =>
+        sessionLister = Some(ref)
+        (sessionLister.get ? m).mapTo[UUID].map { id =>
+          // store in cache
+          sessionList += (keyword -> id)
+          ret ! id
+        }
+        context.become(gotSessionListActor)
+      }
+    }) (sender)
+    case m @ GenerateEntry => ((ret: ActorRef) => {
+      (manager ? GetActorRefForService(serviceType)).mapTo[ActorRef].map { ref =>
+        sessionLister = Some(ref)
+        (sessionLister.get ? m).mapTo[SessionListEntry].map { s =>
+          sessionList += (s.keyword -> s.id)
+          ret ! s
+        }
+        context.become(gotSessionListActor)
+      }
+    }) (sender)
   }
 
-  def receive = {
+  def gotSessionListActor: Receive = {
     // business logic messages
     case m @ LookupSession(keyword) => ((ret: ActorRef) => {
       // check cache
       sessionList.get(keyword) match {
         case Some(id) => ret ! id
         // ask keyword service about keyword
-        case None => (sessionLister.get ? m).mapTo[UUID].map { id =>
+        case None => (sessionLister.get ? m).mapTo[SessionListEntry].map { entry =>
           // store in cache
-          sessionList += (keyword -> id)
-          ret ! id
+          sessionList += (entry.keyword -> entry.id)
+          ret ! entry.id
         }
       }
     }) (sender)

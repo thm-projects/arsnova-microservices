@@ -1,5 +1,6 @@
 package de.thm.arsnova.gateway
 
+import akka.actor.Props
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
@@ -14,7 +15,7 @@ object GatewayService extends App with Config with Routes {
     Kamon.start()
   }
 
-  Http().bindAndHandle(handler = logRequestResult("log")(routes), interface = httpInterface, port = httpPort)
-
   val manager = system.actorOf(ServiceManagementActor.props(Nil), "manager")
+
+  Http().bindAndHandle(handler = logRequestResult("log")(routes), interface = httpInterface, port = httpPort)
 }
