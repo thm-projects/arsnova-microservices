@@ -3,9 +3,17 @@ package de.thm.arsnova.shared.actors
 import de.thm.arsnova.shared.management.RegistryCommands._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
+import akka.util.Timeout
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) extends Actor with ActorLogging {
   var registry: Option[ActorRef] = None
+
+  implicit val ec: ExecutionContext = context.dispatcher
+
+  implicit val timeout: Timeout = 5.seconds
 
   override def postStop(): Unit = {
     registry match {
