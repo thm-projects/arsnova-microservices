@@ -61,12 +61,9 @@ trait SessionServiceApi extends BaseApi {
       get {
         parameter("keyword") { keyword =>
           complete {
-            (sessionList ? LookupSession(keyword)).mapTo[SessionIdFromKeyword].map { sidFromkey: SessionIdFromKeyword =>
-              sidFromkey.id match {
-                case Some(sessionId) =>
-                  (sessionRegion ? GetSession(sessionId))
-                    .mapTo[Session].map(_.toJson)
-              }
+            (sessionList ? LookupSession(keyword)).mapTo[UUID].map { sid: UUID =>
+              (sessionRegion ? GetSession(sid))
+                .mapTo[Session].map(_.toJson)
             }
           }
         }
