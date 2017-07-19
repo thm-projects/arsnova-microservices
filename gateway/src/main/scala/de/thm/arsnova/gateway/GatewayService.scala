@@ -4,6 +4,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import de.thm.arsnova.sessionservice.SessionActor
+import de.thm.arsnova.shared.actors.ServiceManagementActor
 import kamon.Kamon
 
 object GatewayService extends App with Config with Routes {
@@ -14,4 +15,6 @@ object GatewayService extends App with Config with Routes {
   }
 
   Http().bindAndHandle(handler = logRequestResult("log")(routes), interface = httpInterface, port = httpPort)
+
+  val manager = system.actorOf(ServiceManagementActor.props(Nil), "manager")
 }

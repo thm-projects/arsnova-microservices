@@ -8,7 +8,7 @@ object AuthService extends App with MigrationConfig {
   import Context._
 
   val auth = system.actorOf(Props[AuthServiceActor], name = "auth")
-  val manager = system.actorOf(ServiceManagementActor.props("auth", auth), "manager")
+  val manager = system.actorOf(ServiceManagementActor.props(Seq(("auth", auth))), "manager")
 
   if (args.contains("migrate")) {
     migrate()

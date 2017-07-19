@@ -20,5 +20,5 @@ object KeywordService extends App with MigrationConfig {
   }
 
   val router = system.actorOf(RoundRobinPool(10).props(Props[SessionListActor]), "router")
-  val manager = system.actorOf(ServiceManagementActor.props("sessionlist", router), "manager")
+  val manager = system.actorOf(ServiceManagementActor.props(Seq(("sessionlist", router))), "manager")
 }

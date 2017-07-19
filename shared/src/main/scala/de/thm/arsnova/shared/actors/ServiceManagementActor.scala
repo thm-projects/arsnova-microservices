@@ -8,7 +8,10 @@ import akka.util.Timeout
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) extends Actor with ActorLogging {
+/*
+serviceActorRefs - actors that should be registered to the management service
+ */
+class ServiceManagementActor(serviceActorRefs: Seq[(String, ActorRef)]) extends Actor with ActorLogging {
   var registry: Option[ActorRef] = None
 
   implicit val ec: ExecutionContext = context.dispatcher
@@ -16,9 +19,11 @@ class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) ext
   implicit val timeout: Timeout = 5.seconds
 
   override def postStop(): Unit = {
-    registry match {
-      case Some(ref) => ref ! UnregisterService(serviceType, serviceActorRef)
-      case None =>
+    serviceActorRefs foreach { s =>
+      registry match {
+        case Some (ref) => ref ! UnregisterService (s._1, s._2)
+        case None =>
+      }
     }
   }
 
@@ -26,7 +31,9 @@ class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) ext
     case RequestRegistration =>
       registry = Some(sender)
       log.info("manager got request to register service actors")
-      sender ! RegisterService(serviceType, serviceActorRef)
+      serviceActorRefs foreach { s =>
+        sender ! RegisterService(s._1, s._2)
+      }
     case m @ GetActorRefForService(serviceType) => ((ret: ActorRef) => {
       registry match {
         case Some(r) => (r ? m).map {ret ! _}
@@ -40,7 +47,7 @@ class ServiceManagementActor(serviceType: String, serviceActorRef: ActorRef) ext
 }
 
 object ServiceManagementActor {
-  def props(serviceType: String, serviceActorRef: ActorRef) = {
-    Props(new ServiceManagementActor(serviceType, serviceActorRef))
+  def props(serviceActorRefs: Seq[(String, ActorRef)]) = {
+    Props(new ServiceManagementActor(serviceActorRefs))
   }
 }

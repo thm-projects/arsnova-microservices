@@ -14,13 +14,10 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.Random
 
-object SessionListClientActor {
-  def props(manager: ActorRef): Props =
-    Props(new SessionListClientActor(manager))
-}
-
-class SessionListClientActor(manager: ActorRef) extends Actor with ActorLogging {
+class SessionListClientActor extends Actor with ActorLogging {
   val serviceType = "sessionlist"
+
+  val manager = context.actorSelection("/user/manager")
 
   var sessionLister: Option[ActorRef] = None
 
