@@ -40,15 +40,13 @@ object ContentRepository {
     )
   }
 
-  def create(newContent: Content): Future[UUID] = {
-    val cId = UUID.randomUUID
-    val itemWithId = newContent.copy(id = Some(cId))
-    db.run(questionsTable += itemWithId).map { w =>
+  def create(newContent: Content): Future[Content] = {
+    db.run(questionsTable += newContent).map { w =>
       newContent.answerOptions match {
-        case Some(aO) => AnswerOptionRepository.create(aO.map(_.copy(contentId = Some(cId))))
+        case Some(aO) => AnswerOptionRepository.create(aO)
         case None =>
       }
-      cId
+      newContent
     }
   }
 }
