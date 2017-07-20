@@ -6,13 +6,15 @@ import akka.Done
 import de.thm.arsnova.shared.entities.Question
 
 object QuestionCommands {
-  sealed trait QuestionCommand extends ServiceCommand
+  sealed trait QuestionCommand extends ServiceCommand {
+    def sessionid: UUID
+  }
 
-  case class GetQuestion(id: UUID) extends QuestionCommand
+  case class GetQuestion(sessionid: UUID, id: UUID) extends QuestionCommand
 
-  case class GetQuestionsBySessionId(id: UUID) extends QuestionCommand
+  case class GetQuestionsBySessionId(sessionid: UUID) extends QuestionCommand
 
-  case class GetQuestionsBySessionIdAndVariant(id: UUID, variant: String) extends QuestionCommand
+  case class GetQuestionsBySessionIdAndVariant(sessionid: UUID, variant: String) extends QuestionCommand
 
-  case class CreateQuestion(question: Question) extends QuestionCommand
+  case class CreateQuestion(sessionid: UUID, question: Question) extends QuestionCommand
 }
