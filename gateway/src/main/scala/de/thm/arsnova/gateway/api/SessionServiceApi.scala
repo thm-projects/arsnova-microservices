@@ -68,7 +68,7 @@ trait SessionServiceApi extends BaseApi {
               case Some(sid) =>
                 (sessionRegion ? GetSession(sid))
                   .mapTo[Session].map(_.toJson)
-              case None => Future.successful(NoSuchSession(keyword)).map(_.toJson)
+              case None => Future.successful(NoSuchSession(Right(keyword))).map(_.toJson)
             }
           }
         }

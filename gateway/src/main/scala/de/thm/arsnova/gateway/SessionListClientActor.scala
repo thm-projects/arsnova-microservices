@@ -33,26 +33,37 @@ class SessionListClientActor extends Actor with ActorLogging {
 
   def receive: Receive = start
 
+  def lookupSession(m: LookupSession, ret: ActorRef): Unit = {
+    (sessionLister.get ? m).mapTo[Option[SessionListEntry]].map {
+      case Some(entry) => {
+        // store in cache
+        sessionList += (entry.keyword -> entry.id)
+        ret ! Some(entry.id)
+      }
+      case None => ret ! None
+    }
+  }
+
+  def generateEntry(ret: ActorRef): Unit = {
+    (sessionLister.get ? GenerateEntry).mapTo[SessionListEntry].map { s =>
+      sessionList += (s.keyword -> s.id)
+      ret ! s
+    }
+  }
+
   def start: Receive = {
     case m @ LookupSession(keyword) => ((ret: ActorRef) => {
       // check cache
       (manager ? GetActorRefForService(serviceType)).mapTo[ActorRef].map { ref =>
         sessionLister = Some(ref)
-        (sessionLister.get ? m).mapTo[UUID].map { id =>
-          // store in cache
-          sessionList += (keyword -> id)
-          ret ! id
-        }
+        lookupSession(m, ret)
         context.become(gotSessionListActor)
       }
     }) (sender)
     case m @ GenerateEntry => ((ret: ActorRef) => {
       (manager ? GetActorRefForService(serviceType)).mapTo[ActorRef].map { ref =>
         sessionLister = Some(ref)
-        (sessionLister.get ? m).mapTo[SessionListEntry].map { s =>
-          sessionList += (s.keyword -> s.id)
-          ret ! s
-        }
+        generateEntry(ret)
         context.become(gotSessionListActor)
       }
     }) (sender)
@@ -65,21 +76,11 @@ class SessionListClientActor extends Actor with ActorLogging {
       sessionList.get(keyword) match {
         case Some(id) => ret ! id
         // ask keyword service about keyword
-        case None => (sessionLister.get ? m).mapTo[Option[SessionListEntry]].map {
-          case Some(entry) => {
-            // store in cache
-            sessionList += (entry.keyword -> entry.id)
-            ret ! Some(entry.id)
-          }
-          case None => ret ! None
-        }
+        case None => lookupSession(m, ret)
       }
     }) (sender)
     case m @ GenerateEntry => ((ret: ActorRef) => {
-      (sessionLister.get ? m).mapTo[SessionListEntry].map { s =>
-        sessionList += (s.keyword -> s.id)
-        ret ! s
-      }
+      generateEntry(ret)
     }) (sender)
   }
 }
