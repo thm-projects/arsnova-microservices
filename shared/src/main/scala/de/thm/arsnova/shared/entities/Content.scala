@@ -2,7 +2,7 @@ package de.thm.arsnova.shared.entities
 
 import java.util.UUID
 
-case class Question(
+case class Content(
                      id: Option[UUID],
                      sessionId: UUID,
                      subject: String,

@@ -9,7 +9,7 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthCommand
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.ChoiceAnswerCommand
 import de.thm.arsnova.shared.servicecommands.CommentCommands.CommentCommand
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands.FreetextAnswerCommand
-import de.thm.arsnova.shared.servicecommands.QuestionCommands.QuestionCommand
+import de.thm.arsnova.shared.servicecommands.ContentCommands.QuestionCommand
 import de.thm.arsnova.shared.servicecommands.SessionCommands.SessionCommand
 import de.thm.arsnova.shared.management.CommandPackage
 import de.thm.arsnova.shared.management.RegistryCommands.RegisterService

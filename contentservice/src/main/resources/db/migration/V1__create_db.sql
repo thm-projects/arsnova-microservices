@@ -1,4 +1,4 @@
-CREATE TABLE questions (
+CREATE TABLE contentlist (
   id uuid NOT NULL,
   session_id uuid NOT NULL,
   subject VARCHAR(255) NOT NULL,
@@ -18,30 +18,30 @@ CREATE TABLE questions (
 
 CREATE TABLE answer_options (
   id uuid NOT NULL,
-  question_id uuid NOT NULL,
+  content_id uuid NOT NULL,
   correct boolean NOT NULL,
   content TEXT NOT NULL,
   points INT NOT NULL,
   PRIMARY KEY(id),
-  CONSTRAINT possible_answer_question_fk FOREIGN KEY (question_id) REFERENCES questions(id) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT possible_answer_question_fk FOREIGN KEY (content_id) REFERENCES contentlist(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE freetext_answers (
   id uuid NOT NULL,
-  question_id uuid NOT NULL,
+  content_id uuid NOT NULL,
   session_id uuid NOT NULL,
   subject TEXT NOT NULL,
   content TEXT NOT NULL,
   PRIMARY KEY(id),
-  CONSTRAINT freetext_answer_question_fk FOREIGN KEY (question_id) REFERENCES questions(id) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT freetext_answer_content_fk FOREIGN KEY (content_id) REFERENCES contentlist(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE choice_answers (
   id uuid NOT NULL,
-  question_id uuid NOT NULL,
+  content_id uuid NOT NULL,
   session_id uuid NOT NULL,
   answer_option_id uuid NOT NULL,
   PRIMARY KEY(id),
-  CONSTRAINT choice_answer_question_fk FOREIGN KEY (question_id) REFERENCES questions(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT choice_answer_content_fk FOREIGN KEY (question_id) REFERENCES contentlist(id) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT choice_answer_answer_option_fk FOREIGN KEY (answer_option_id) REFERENCES answer_options(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

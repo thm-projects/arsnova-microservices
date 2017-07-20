@@ -11,7 +11,7 @@ import de.thm.arsnova.shared.actors.ServiceManagementActor
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object QuestionService extends App {
+object ContentService extends App {
   import Context._
 
   val authRouter = system.actorOf(

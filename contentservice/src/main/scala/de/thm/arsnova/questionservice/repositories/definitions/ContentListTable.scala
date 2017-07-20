@@ -4,10 +4,11 @@ import java.util.UUID
 import slick.driver.PostgresDriver.api._
 import spray.json._
 
-import de.thm.arsnova.shared.entities.{Question, AnswerOption, FormatAttributes}
+import de.thm.arsnova.shared.entities.{Content, AnswerOption, FormatAttributes}
 
-class QuestionsTable(tag: Tag) extends Table[Question](tag, "questions"){
-  import de.thm.arsnova.shared.mappings.QuestionJsonProtocol._
+class ContentListTable(tag: Tag) extends Table[Content](tag, "contentlist"){
+  import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
+
   def id: Rep[UUID] = column[UUID]("id", O.PrimaryKey)
   def sessionId: Rep[UUID] = column[UUID]("session_id")
   def subject: Rep[String] = column[String]("subject")
@@ -33,7 +34,7 @@ class QuestionsTable(tag: Tag) extends Table[Question](tag, "questions"){
         case (id, sessionId, subject, content, variant, format, hint, solution, active, vD, sS, sA, aA, formatAttributes) => {
           formatAttributes match {
             // some question formats don't have formatAttributes
-            case "null" => new Question(id, sessionId, subject, content, variant, format, hint, solution, active, vD, sS, sA, aA, None, None)
+            case "null" => new Content(id, sessionId, subject, content, variant, format, hint, solution, active, vD, sS, sA, aA, None, None)
             // formatAttributes are stored as JSON strings. This parsese them into the map
             // using the formatAttributes JSON protocol doesn't work since it returns a JsObject
             case _ => val fA = formatAttributes.substring(1, formatAttributes.length - 1)
@@ -41,12 +42,12 @@ class QuestionsTable(tag: Tag) extends Table[Question](tag, "questions"){
               .map(_.split(":"))
               .map { case Array(k, v) => (k.substring(1, k.length-1), v.substring(1, v.length-1))}
               .toMap
-              new Question(id, sessionId, subject, content, variant, format, hint, solution, active, vD, sS, sA, aA, Some(FormatAttributes(fA)), None)
+              new Content(id, sessionId, subject, content, variant, format, hint, solution, active, vD, sS, sA, aA, Some(FormatAttributes(fA)), None)
           }
         }
       }}, {
     // part for storing questions in the table
-    q: Question =>
+    q: Content =>
       Some((q.id, q.sessionId, q.subject, q.content, q.variant, q.format, q.hint, q.solution,
         q.active, q.votingDisabled, q.showStatistic, q.showAnswer, q.abstentionAllowed, q.formatAttributes.toJson.toString)):
         Option[(Option[UUID], UUID, String, String, String, String, Option[String], Option[String],

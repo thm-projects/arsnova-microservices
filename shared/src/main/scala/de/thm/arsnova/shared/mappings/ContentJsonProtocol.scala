@@ -1,9 +1,9 @@
 package de.thm.arsnova.shared.mappings
 
 import spray.json._
-import de.thm.arsnova.shared.entities.{Question, FormatAttributes}
+import de.thm.arsnova.shared.entities.{Content, FormatAttributes}
 
-object QuestionJsonProtocol extends DefaultJsonProtocol with UUIDFormat {
+object ContentJsonProtocol extends DefaultJsonProtocol with UUIDFormat {
   import AnswerOptionJsonProtocol._
 
   /*
@@ -30,5 +30,5 @@ object QuestionJsonProtocol extends DefaultJsonProtocol with UUIDFormat {
       }
     }
   }
-  implicit val questionFormat: RootJsonFormat[Question] = jsonFormat15(Question)
+  implicit val questionFormat: RootJsonFormat[Content] = jsonFormat15(Content)
 }

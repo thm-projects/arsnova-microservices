@@ -2,15 +2,15 @@ package de.thm.arsnova.gateway.api
 
 import akka.http.scaladsl.server.Directives._
 
-import de.thm.arsnova.gateway.api.questionservice._
+import de.thm.arsnova.gateway.api.contentservice._
 
-trait QuestionServiceApi
-  extends QuestionApi
+trait ContentServiceApi
+  extends ContentServiceApi
   with ChoiceAnswerApi
   with FreetextAnswerApi {
 
   val questionServiceApi =
-    questionApi ~
+    contentServiceApi ~
     choiceAnswerApi ~
     freetextAnswerApi
 }

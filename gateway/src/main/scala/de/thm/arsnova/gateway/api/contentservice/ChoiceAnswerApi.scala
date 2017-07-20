@@ -1,4 +1,4 @@
-package de.thm.arsnova.gateway.api.questionservice
+package de.thm.arsnova.gateway.api.contentservice
 
 import java.util.UUID
 

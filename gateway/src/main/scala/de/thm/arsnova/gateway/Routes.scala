@@ -5,12 +5,12 @@ import de.thm.arsnova.gateway.api._
 
 trait Routes extends ApiErrorHandler
   with SessionServiceApi
-  with QuestionServiceApi
+  with ContentServiceApi
   with CommentServiceApi
   with AuthApi {
   val routes = {
     sessionApi ~
-    questionServiceApi ~
+    contentServiceApi ~
     commentServiceApi ~
     authApi
   }

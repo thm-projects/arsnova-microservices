@@ -61,7 +61,7 @@ lazy val root = (project in file("."))
     commandservice,
     keywordservice,
     sessionservice,
-    questionservice,
+    contentservice,
     commentservice
   )
 
@@ -106,7 +106,7 @@ lazy val sessionservice = (project in file("sessionservice"))
   )
   .dependsOn(shared, authservice, keywordservice)
 
-lazy val questionservice = (project in file("questionservice"))
+lazy val contentservice = (project in file("contentservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
