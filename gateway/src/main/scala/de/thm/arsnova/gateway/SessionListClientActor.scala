@@ -6,6 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.Cluster
 import akka.util.Timeout
 import akka.pattern.ask
+import de.thm.arsnova.shared.Exceptions.NoSuchSession
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
 import de.thm.arsnova.shared.management.RegistryCommands._
 import de.thm.arsnova.shared.entities.SessionListEntry
@@ -64,10 +65,13 @@ class SessionListClientActor extends Actor with ActorLogging {
       sessionList.get(keyword) match {
         case Some(id) => ret ! id
         // ask keyword service about keyword
-        case None => (sessionLister.get ? m).mapTo[SessionListEntry].map { entry =>
-          // store in cache
-          sessionList += (entry.keyword -> entry.id)
-          ret ! entry.id
+        case None => (sessionLister.get ? m).mapTo[Option[SessionListEntry]].map {
+          case Some(entry) => {
+            // store in cache
+            sessionList += (entry.keyword -> entry.id)
+            ret ! Some(entry.id)
+          }
+          case None => ret ! None
         }
       }
     }) (sender)

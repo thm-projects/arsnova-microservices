@@ -20,5 +20,7 @@ trait ApiErrorHandler {
 
     case e: NoUserException =>
       complete(HttpResponse(Unauthorized, entity = s"No user given: ${e.getMessage}"))
+    case e: NoSuchSession =>
+      complete(HttpResponse(OK, entity = s"No Such Session for: ${e.reason}"))
   }
 }

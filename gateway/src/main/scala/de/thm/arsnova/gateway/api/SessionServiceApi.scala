@@ -20,8 +20,10 @@ import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.StatusCodes._
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
+import de.thm.arsnova.shared.Exceptions.NoSuchSession
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
 
@@ -32,6 +34,7 @@ trait SessionServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.NoSuchSessionJsonProtocol._
 
   ClusterSharding(system).startProxy(
     typeName = SessionActor.shardName,
@@ -61,9 +64,11 @@ trait SessionServiceApi extends BaseApi {
       get {
         parameter("keyword") { keyword =>
           complete {
-            (sessionList ? LookupSession(keyword)).mapTo[UUID].map { sid: UUID =>
-              (sessionRegion ? GetSession(sid))
-                .mapTo[Session].map(_.toJson)
+            (sessionList ? LookupSession(keyword)).mapTo[Option[UUID]].map {
+              case Some(sid) =>
+                (sessionRegion ? GetSession(sid))
+                  .mapTo[Session].map(_.toJson)
+              case None => Future.successful(NoSuchSession(keyword)).map(_.toJson)
             }
           }
         }
