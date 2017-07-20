@@ -13,6 +13,7 @@ import akka.util.Timeout
 import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
+import de.thm.arsnova.questionservice.repositories.ContentRepository
 import de.thm.arsnova.shared.entities.{Content, User}
 import de.thm.arsnova.shared.events.QuestionEvents._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -43,7 +44,8 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
-  private var state: Option[Seq[Content]] = None
+  private val contentlist: collection.mutable.HashMap[UUID, Content] =
+    collection.mutable.HashMap.empty[UUID, Content]
 
   def tokenToUser(tokenstring: String): Future[Option[User]] = {
     (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Option[User]]
@@ -56,12 +58,33 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
       println(event)
   }
 
-  override def receiveCommand: Receive = initial
+  override def receiveCommand: Receive = {
+    case GetContent(sessionid, id) => ((ret: ActorRef) => {
+      contentlist.get(id) match {
+        case Some(c) => ret ! Some(c)
+        case None =>
+          ContentRepository.findById(id) map {
+            case Some(c) => {
+              contentlist += id -> c
+              ret ! Some(c)
+            }
+            case None => ret ! None
+          }
+      }
+    }) (sender)
+    case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
+      token match {
+        case Some(t) => tokenToUser(t) map { user =>
+          val c = ContentRepository.create(content)
+          contentlist += content.id.get -> content
+          ret ! c
+        }
+        case None => ret ! NoUserException
+      }
+    }) (sender)
+  }
 
   def initial: Receive = {
-    case GetContent(sessionid, id) => ((ret: ActorRef) => {
-
-    }) (sender)
   }
 
   def created: Receive = {
