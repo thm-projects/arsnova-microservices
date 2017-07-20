@@ -15,7 +15,7 @@ trait TutorScenario {
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
   val now = Calendar.getInstance.getTime.toString
-  val basicNewSession = Session(None, "12312312", UUID.randomUUID, "A new Session", "ans", now, now, true, false, false)
+  val basicNewSession = Session(None, None, UUID.randomUUID, "A new Session", "ans", now, now, true, false, false)
 
   def createSession(session: de.thm.arsnova.shared.entities.Session) = exec(
     http("Tutor creates session")
