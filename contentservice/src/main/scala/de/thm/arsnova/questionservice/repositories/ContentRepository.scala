@@ -15,14 +15,17 @@ object ContentRepository {
   val db: Database = Database.forConfig("database")
   val questionsTable = TableQuery[ContentListTable]
 
-  def findById(contentId: UUID): Future[Content] = {
-    val contentFuture: Future[Content] = db.run(questionsTable.filter(_.id === contentId).result.head)
-    contentFuture.map((c: Content) =>
-      c.format match {
-        case "mc" => Await.result(AnswerOptionRepository.findByQuestionId(c.id.get).map(a => c.copy(answerOptions = Some(a))), 5.seconds)
-        case _ => c
-      }
-    )
+  def findById(contentId: UUID): Future[Option[Content]] = {
+    val contentFuture: Future[Option[Content]] = db.run(questionsTable.filter(_.id === contentId).result.headOption)
+
+    contentFuture.map {
+      case Some(c) =>
+        c.format match {
+          case "mc" => Await.result(AnswerOptionRepository.findByQuestionId(c.id.get).map(a => Some(c.copy(answerOptions = Some(a)))), 5.seconds)
+          case _ => Some(c)
+        }
+      case None => None
+    }
   }
 
   def findBySessionId(sessionId: UUID): Future[Seq[Content]] = {
