@@ -74,7 +74,7 @@ class SessionListClientActor extends Actor with ActorLogging {
     case m @ LookupSession(keyword) => ((ret: ActorRef) => {
       // check cache
       sessionList.get(keyword) match {
-        case Some(id) => ret ! id
+        case Some(id) => ret ! Some(id)
         // ask keyword service about keyword
         case None => lookupSession(m, ret)
       }
