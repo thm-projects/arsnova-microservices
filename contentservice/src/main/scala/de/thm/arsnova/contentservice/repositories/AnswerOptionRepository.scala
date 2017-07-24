@@ -17,7 +17,7 @@ object AnswerOptionRepository {
   }
 
   def findByQuestionId(id: UUID): Future[Seq[AnswerOption]] = {
-    db.run(answerOptionsTable.filter(_.questionId === id).result)
+    db.run(answerOptionsTable.filter(_.contentId === id).result)
   }
 
   def create(answerOptions: Seq[AnswerOption]): Seq[Future[Int]] = {

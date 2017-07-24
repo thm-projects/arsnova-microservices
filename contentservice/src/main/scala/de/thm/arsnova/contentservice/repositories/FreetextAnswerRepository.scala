@@ -16,8 +16,8 @@ object FreetextAnswerRepository {
     db.run(freetextAnswersTable.filter(_.id === freetextAnswerId).result.head)
   }
 
-  def findByQuestionId(questionId: UUID): Future[Seq[FreetextAnswer]] = {
-    db.run(freetextAnswersTable.filter(_.questionId === questionId).result)
+  def findByQuestionId(contentId: UUID): Future[Seq[FreetextAnswer]] = {
+    db.run(freetextAnswersTable.filter(_.contentId === contentId).result)
   }
 
   def create(freetextAnswer: FreetextAnswer): Future[Int] = {
@@ -34,7 +34,7 @@ object FreetextAnswerRepository {
     db.run(freetextAnswersTable.filter(_.id === freetextAnswerId).delete)
   }
 
-  def deleteAllByQuestionId(questionId: UUID): Future[Int] = {
-    db.run(freetextAnswersTable.filter(_.questionId === questionId).delete)
+  def deleteAllByQuestionId(contentId: UUID): Future[Int] = {
+    db.run(freetextAnswersTable.filter(_.contentId === contentId).delete)
   }
 }

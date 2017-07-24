@@ -16,8 +16,8 @@ object ChoiceAnswerRepository {
     db.run(choiceAnswersTable.filter(_.id === choiceAnswerId).result.head)
   }
 
-  def findByQuestionId(questionId: UUID): Future[Seq[ChoiceAnswer]] = {
-    db.run(choiceAnswersTable.filter(_.questionId === questionId).result)
+  def findByQuestionId(contentId: UUID): Future[Seq[ChoiceAnswer]] = {
+    db.run(choiceAnswersTable.filter(_.contentId === contentId).result)
   }
 
   def create(choiceAnswer: ChoiceAnswer): Future[Int] = {
@@ -35,7 +35,7 @@ object ChoiceAnswerRepository {
     db.run(choiceAnswersTable.filter(_.id === choiceAnswerId).delete)
   }
 
-  def deleteAllByQuestionId(questionId: UUID): Future[Int] = {
-    db.run(choiceAnswersTable.filter(_.questionId === questionId).delete)
+  def deleteAllByQuestionId(contentId: UUID): Future[Int] = {
+    db.run(choiceAnswersTable.filter(_.contentId === contentId).delete)
   }
 }
