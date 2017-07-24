@@ -42,6 +42,6 @@ CREATE TABLE choice_answers (
   session_id uuid NOT NULL,
   answer_option_id uuid NOT NULL,
   PRIMARY KEY(id),
-  CONSTRAINT choice_answer_content_fk FOREIGN KEY (question_id) REFERENCES contentlist(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT choice_answer_content_fk FOREIGN KEY (content_id) REFERENCES contentlist(id) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT choice_answer_answer_option_fk FOREIGN KEY (answer_option_id) REFERENCES answer_options(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
