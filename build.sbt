@@ -74,7 +74,7 @@ lazy val gateway = (project in file("gateway"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ kamonDeps
   )
-  .dependsOn(shared, authservice, sessionservice)
+  .dependsOn(shared, authservice, sessionservice, contentservice)
 
 lazy val managementservice = (project in file("managementservice"))
   .settings(

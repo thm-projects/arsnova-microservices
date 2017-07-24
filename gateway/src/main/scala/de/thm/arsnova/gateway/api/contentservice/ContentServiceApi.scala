@@ -9,8 +9,8 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import spray.json._
-
 import de.thm.arsnova.gateway.api.BaseApi
+import de.thm.arsnova.gateway.sharding.ContentShard
 import de.thm.arsnova.shared.entities.Content
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -18,37 +18,39 @@ import de.thm.arsnova.shared.servicecommands.ContentCommands._
 trait ContentServiceApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
 
+  val questionRegion = ContentShard.getProxy
+
   val contentServiceApi = pathPrefix("session") {
-    optionalHeaderValueByName("X-Session-Token") { tokenstring =>
-      pathPrefix(JavaUUID) { sessionId =>
-        pathPrefix("content") {
-          pathPrefix(JavaUUID) { contentId =>
-            get {
-              complete {
-                (remoteCommander ? CommandWithToken(GetContent(sessionId, contentId), tokenstring))
-                  .mapTo[Content].map(_.toJson)
-              }
-            }
-          } ~
+    pathPrefix(JavaUUID) { sessionId =>
+      pathPrefix("content") {
+        pathPrefix(JavaUUID) { contentId =>
           get {
             complete {
-              (remoteCommander ? CommandWithToken(GetContentListBySessionId(sessionId), tokenstring))
+              (questionRegion ? GetContent(sessionId, contentId))
+                .mapTo[Content].map(_.toJson)
+            }
+          }
+        } ~
+        get {
+          complete {
+            (questionRegion ? GetContentListBySessionId(sessionId))
+              .mapTo[Seq[Content]].map(_.toJson)
+          }
+        } ~
+        get {
+          parameters("variant") { variant =>
+            complete {
+              (questionRegion ? GetContentListBySessionIdAndVariant(sessionId, variant))
                 .mapTo[Seq[Content]].map(_.toJson)
             }
-          } ~
-          get {
-            parameters("variant") { variant =>
-              complete {
-                (remoteCommander ? CommandWithToken(GetContentListBySessionIdAndVariant(sessionId, variant), tokenstring))
-                  .mapTo[Seq[Content]].map(_.toJson)
-              }
-            }
-          } ~
-          post {
+          }
+        } ~
+        post {
+          optionalHeaderValueByName("X-Session-Token") { tokenstring =>
             entity(as[Content]) { content =>
               complete {
-                (remoteCommander ? CommandWithToken(CreateContent(sessionId, content.copy(sessionId = sessionId)), tokenstring))
-                  .mapTo[UUID].map(_.toJson)
+                (questionRegion ? CreateContent(sessionId, content.copy(sessionId = sessionId), tokenstring))
+                  .mapTo[Content].map(_.toJson)
               }
             }
           }
