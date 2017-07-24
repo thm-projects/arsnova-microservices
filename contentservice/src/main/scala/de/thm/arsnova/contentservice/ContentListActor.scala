@@ -83,11 +83,4 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
       }
     }) (sender)
   }
-
-  def initial: Receive = {
-  }
-
-  def created: Receive = {
-
-  }
 }
