@@ -36,17 +36,17 @@ trait ContentApi extends BaseApi {
           }
         } ~
         get {
-          complete {
-            (contentRegion ? GetContentListBySessionId(sessionId))
-              .mapTo[Seq[Content]].map(_.toJson)
-          }
-        } ~
-        get {
           parameters("variant") { variant =>
             complete {
               (contentRegion ? GetContentListBySessionIdAndVariant(sessionId, variant))
                 .mapTo[Seq[Content]].map(_.toJson)
             }
+          }
+        } ~
+        get {
+          complete {
+            (contentRegion ? GetContentListBySessionId(sessionId))
+              .mapTo[Seq[Content]].map(_.toJson)
           }
         } ~
         post {

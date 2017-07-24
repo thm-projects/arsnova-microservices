@@ -77,6 +77,9 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
       // https://stackoverflow.com/questions/32900862/map-can-not-be-serializable-in-scala
       ret ! contentlist.values.map(identity).toSeq
     }) (sender)
+    case GetContentListBySessionIdAndVariant(sessionid, variant) => ((ret: ActorRef) => {
+      ret ! contentlist.values.map(identity).toSeq.filter(_.variant == variant)
+    }) (sender)
     case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
       token match {
         case Some(t) => tokenToUser(t) map { user =>
