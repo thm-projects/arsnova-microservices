@@ -11,6 +11,7 @@ import akka.http.scaladsl.server.Directives._
 import spray.json._
 import de.thm.arsnova.gateway.api.BaseApi
 import de.thm.arsnova.gateway.sharding.ContentShard
+import de.thm.arsnova.shared.Exceptions.NoSuchContent
 import de.thm.arsnova.shared.entities.Content
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -27,7 +28,10 @@ trait ContentApi extends BaseApi {
           get {
             complete {
               (questionRegion ? GetContent(sessionId, contentId))
-                .mapTo[Content].map(_.toJson)
+                .mapTo[Option[Content]].map {
+                case Some(c) => c.toJson
+                case None => NoSuchContent.toJson
+              }
             }
           }
         } ~
