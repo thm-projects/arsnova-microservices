@@ -50,7 +50,7 @@ trait ContentApi extends BaseApi {
           }
         } ~
         post {
-          optionalHeaderValueByName("X-Session-Token") { tokenstring =>
+          headerValueByName("X-Session-Token") { tokenstring =>
             entity(as[Content]) { content =>
               complete {
                 val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
