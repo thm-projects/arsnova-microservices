@@ -26,5 +26,12 @@ object ContentService extends App {
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
 
+  ClusterSharding(system).start(
+    typeName = ContentListActor.shardName,
+    entityProps = ContentListActor.props(authRouter),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = ContentListActor.idExtractor,
+    extractShardId = ContentListActor.shardResolver)
+
   val manager = system.actorOf(ServiceManagementActor.props(Nil), "manager")
 }
