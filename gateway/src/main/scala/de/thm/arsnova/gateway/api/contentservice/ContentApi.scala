@@ -15,12 +15,12 @@ import de.thm.arsnova.shared.entities.Content
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 
-trait ContentServiceApi extends BaseApi {
+trait ContentApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
 
   val questionRegion = ContentShard.getProxy
 
-  val contentServiceApi = pathPrefix("session") {
+  val contentApi = pathPrefix("session") {
     pathPrefix(JavaUUID) { sessionId =>
       pathPrefix("content") {
         pathPrefix(JavaUUID) { contentId =>

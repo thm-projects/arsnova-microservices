@@ -5,12 +5,12 @@ import akka.http.scaladsl.server.Directives._
 import de.thm.arsnova.gateway.api.contentservice._
 
 trait ContentServiceApi
-  extends ContentServiceApi
+  extends ContentApi
   with ChoiceAnswerApi
   with FreetextAnswerApi {
 
-  val questionServiceApi =
-    contentServiceApi ~
+  val contentServiceApi =
+    contentApi ~
     choiceAnswerApi ~
     freetextAnswerApi
 }
