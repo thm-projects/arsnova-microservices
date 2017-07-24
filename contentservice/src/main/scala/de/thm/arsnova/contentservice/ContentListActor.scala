@@ -75,9 +75,10 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
     case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
       token match {
         case Some(t) => tokenToUser(t) map { user =>
-          val c = ContentRepository.create(content)
-          contentlist += content.id.get -> content
-          ret ! c
+          ContentRepository.create(content) map { c =>
+            contentlist += c.id.get -> c
+            ret ! c
+          }
         }
         case None => ret ! NoUserException
       }
