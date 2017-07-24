@@ -19,7 +19,7 @@ import de.thm.arsnova.shared.servicecommands.ContentCommands._
 trait ContentApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
 
-  val questionRegion = ContentShard.getProxy
+  val contentRegion = ContentShard.getProxy
 
   val contentApi = pathPrefix("session") {
     pathPrefix(JavaUUID) { sessionId =>
@@ -27,7 +27,7 @@ trait ContentApi extends BaseApi {
         pathPrefix(JavaUUID) { contentId =>
           get {
             complete {
-              (questionRegion ? GetContent(sessionId, contentId))
+              (contentRegion ? GetContent(sessionId, contentId))
                 .mapTo[Option[Content]].map {
                 case Some(c) => c.toJson
                 case None => NoSuchContent.toJson
@@ -37,14 +37,14 @@ trait ContentApi extends BaseApi {
         } ~
         get {
           complete {
-            (questionRegion ? GetContentListBySessionId(sessionId))
+            (contentRegion ? GetContentListBySessionId(sessionId))
               .mapTo[Seq[Content]].map(_.toJson)
           }
         } ~
         get {
           parameters("variant") { variant =>
             complete {
-              (questionRegion ? GetContentListBySessionIdAndVariant(sessionId, variant))
+              (contentRegion ? GetContentListBySessionIdAndVariant(sessionId, variant))
                 .mapTo[Seq[Content]].map(_.toJson)
             }
           }
@@ -54,7 +54,7 @@ trait ContentApi extends BaseApi {
             entity(as[Content]) { content =>
               complete {
                 val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
-                (questionRegion ? CreateContent(sessionId, withIds, tokenstring))
+                (contentRegion ? CreateContent(sessionId, withIds, tokenstring))
                   .mapTo[Content].map(_.toJson)
               }
             }
