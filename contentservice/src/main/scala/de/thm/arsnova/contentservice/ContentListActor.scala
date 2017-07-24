@@ -81,13 +81,16 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
       ret ! contentlist.values.map(identity).toSeq.filter(_.variant == variant)
     }) (sender)
     case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map { user =>
-        ContentRepository.create(content) map { c =>
-          contentlist += c.id.get -> c
-          ret ! c
-          persist(ContentCreated(c)) {e => e}
+        tokenToUser(token) map {
+          case Some(user) => {
+            ContentRepository.create(content) map { c =>
+              contentlist += c.id.get -> c
+              ret ! c
+              persist(ContentCreated(c)) { e => e }
+            }
+          }
+          case None =>
         }
-      }
     }) (sender)
   }
 }
