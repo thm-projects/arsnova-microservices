@@ -1,4 +1,4 @@
-package de.thm.arsnova.questionservice.repositories
+package de.thm.arsnova.contentservice.repositories
 
 import java.util.UUID
 import scala.concurrent.{Future, Await}
@@ -10,7 +10,7 @@ import definitions.ContentListTable
 import de.thm.arsnova.shared.entities.Content
 
 object ContentRepository {
-  import de.thm.arsnova.questionservice.Context._
+  import de.thm.arsnova.contentservice.Context._
 
   val db: Database = Database.forConfig("database")
   val questionsTable = TableQuery[ContentListTable]

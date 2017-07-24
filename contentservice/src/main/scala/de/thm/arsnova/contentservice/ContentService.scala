@@ -1,4 +1,4 @@
-package de.thm.arsnova.questionservice
+package de.thm.arsnova.contentservice
 
 import akka.actor.{ActorPath, Props}
 import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}

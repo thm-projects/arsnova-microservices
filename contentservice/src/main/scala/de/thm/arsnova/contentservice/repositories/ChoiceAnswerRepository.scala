@@ -1,11 +1,11 @@
-package de.thm.arsnova.questionservice.repositories
+package de.thm.arsnova.contentservice.repositories
 
 import java.util.UUID
 import slick.driver.PostgresDriver.api._
 import slick.lifted.TableQuery
 import scala.concurrent.Future
 
-import de.thm.arsnova.questionservice.repositories.definitions.ChoiceAnswersTable
+import de.thm.arsnova.contentservice.repositories.definitions.ChoiceAnswersTable
 import de.thm.arsnova.shared.entities.ChoiceAnswer
 
 object ChoiceAnswerRepository {

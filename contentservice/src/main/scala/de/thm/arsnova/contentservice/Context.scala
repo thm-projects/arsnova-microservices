@@ -1,4 +1,4 @@
-package de.thm.arsnova.questionservice
+package de.thm.arsnova.contentservice
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}

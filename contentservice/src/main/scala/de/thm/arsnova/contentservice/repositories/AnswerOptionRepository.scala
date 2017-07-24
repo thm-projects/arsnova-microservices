@@ -1,4 +1,4 @@
-package de.thm.arsnova.questionservice.repositories
+package de.thm.arsnova.contentservice.repositories
 
 import java.util.UUID
 import scala.concurrent.Future

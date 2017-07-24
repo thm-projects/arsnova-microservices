@@ -1,4 +1,4 @@
-package de.thm.arsnova.questionservice
+package de.thm.arsnova.contentservice
 
 import java.util.UUID
 
@@ -13,7 +13,7 @@ import akka.util.Timeout
 import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.questionservice.repositories.ContentRepository
+import de.thm.arsnova.contentservice.repositories.ContentRepository
 import de.thm.arsnova.shared.entities.{Content, User}
 import de.thm.arsnova.shared.events.QuestionEvents._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
