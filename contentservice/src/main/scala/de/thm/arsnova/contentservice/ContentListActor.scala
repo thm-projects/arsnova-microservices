@@ -15,7 +15,7 @@ import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import de.thm.arsnova.contentservice.repositories.ContentRepository
 import de.thm.arsnova.shared.entities.{Content, User}
-import de.thm.arsnova.shared.events.QuestionEvents._
+import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
@@ -54,8 +54,8 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
   override def persistenceId: String = self.path.parent.name + "-"  + self.path.name
 
   override def receiveRecover: Receive = {
-    case event: QuestionEvent =>
-      println(event)
+    case ContentCreated(c) =>
+      contentlist += c.id.get -> c
   }
 
   override def receiveCommand: Receive = {
@@ -72,12 +72,18 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
           }
       }
     }) (sender)
+    case GetContentListBySessionId(sessionid) => ((ret: ActorRef) => {
+      // .map(identity) is needed due to serialization bug in scala
+      // https://stackoverflow.com/questions/32900862/map-can-not-be-serializable-in-scala
+      ret ! contentlist.values.map(identity).toSeq
+    }) (sender)
     case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
       token match {
         case Some(t) => tokenToUser(t) map { user =>
           ContentRepository.create(content) map { c =>
             contentlist += c.id.get -> c
             ret ! c
+            persist(ContentCreated(c)) {e => e}
           }
         }
         case None => ret ! NoUserException
