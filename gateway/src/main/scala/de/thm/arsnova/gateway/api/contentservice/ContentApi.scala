@@ -49,7 +49,8 @@ trait ContentApi extends BaseApi {
           optionalHeaderValueByName("X-Session-Token") { tokenstring =>
             entity(as[Content]) { content =>
               complete {
-                (questionRegion ? CreateContent(sessionId, content.copy(sessionId = sessionId), tokenstring))
+                val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
+                (questionRegion ? CreateContent(sessionId, withIds, tokenstring))
                   .mapTo[Content].map(_.toJson)
               }
             }
