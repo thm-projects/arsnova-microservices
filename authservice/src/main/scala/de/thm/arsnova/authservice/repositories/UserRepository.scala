@@ -14,10 +14,8 @@ object UserRepository extends BaseRepository {
     db.run(usersTable.filter(_.id === userId).result.head)
   }
 
-  def create(user: User): Future[UUID] = {
-    val uId = UUID.randomUUID
-    val itemWithId = user.copy(id = Some(uId))
-    db.run(usersTable += itemWithId).map(_ => uId)
+  def create(user: User): Future[User] = {
+    db.run(usersTable += user).map(_ => user)
   }
 
   def update(newUser: User, userId: UUID): Future[Int] = {
