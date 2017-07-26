@@ -4,14 +4,14 @@ import java.util.UUID
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import spray.json._
 import de.thm.arsnova.gateway.api.BaseApi
 import de.thm.arsnova.gateway.sharding.ContentShard
-import de.thm.arsnova.shared.Exceptions.NoSuchContent
+import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.entities.Content
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -55,7 +55,12 @@ trait ContentApi extends BaseApi {
               complete {
                 val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
                 (contentRegion ? CreateContent(sessionId, withIds, tokenstring))
-                  .map(_.toJson)
+                  .mapTo[Try[Content]].map {
+                  case Success(content) => content.toJson
+                  case Failure(e) => e match {
+                    case ae: ARSException => ae.toJson
+                  }
+                }
               }
             }
           }

@@ -3,6 +3,7 @@ package de.thm.arsnova.contentservice
 import java.util.UUID
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.PoisonPill
@@ -82,22 +83,22 @@ class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends Persi
       ret ! contentlist.values.map(identity).toSeq.filter(_.variant == variant)
     }) (sender)
     case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
-        tokenToUser(token) map {
-          case Some(user) => {
-            (userRegion ? GetRoleForSession(user.id.get, sessionid)).mapTo[String] map { role =>
-              if (role != "guest") {
-                ContentRepository.create(content) map { c =>
-                  contentlist += c.id.get -> c
-                  ret ! c
-                  persist(ContentCreated(c)) { e => e }
-                }
-              } else {
-                ret ! InsufficientRights(role, "CreateContent")
+      tokenToUser(token) map {
+        case Some(user) => {
+          (userRegion ? GetRoleForSession(user.id.get, sessionid)).mapTo[String] map { role =>
+            if (role != "guest") {
+              ContentRepository.create(content) map { c =>
+                contentlist += c.id.get -> c
+                ret ! Success(c)
+                persist(ContentCreated(c)) { e => e }
               }
+            } else {
+              ret ! Failure(InsufficientRights(role, "CreateContent"))
             }
           }
-          case None => ret ! NoUserException("CreateContent")
         }
+        case None => ret ! Failure(NoUserException("CreateContent"))
+      }
     }) (sender)
   }
 }
