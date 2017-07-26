@@ -91,7 +91,6 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
     case GetSession(id) => ((ret: ActorRef) => {
       SessionRepository.findById(id) map { session =>
         state = Some(session)
-        context.become(created)
         ret ! session
       }
     }) (sender)
