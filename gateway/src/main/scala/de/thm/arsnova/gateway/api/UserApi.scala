@@ -18,6 +18,7 @@ import de.thm.arsnova.authservice.UserActor
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.entities.User
+import de.thm.arsnova.shared.Exceptions._
 
 trait UserApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.UserJsonProtocol._
@@ -36,7 +37,10 @@ trait UserApi extends BaseApi {
         get {
           complete {
             (userRegion ? GetUser(userId))
-              .mapTo[User].map(_.toJson)
+              .mapTo[Option[User]].map {
+              case Some(user) => user.toJson
+              case None => ResourceNotFound("user").toJson
+            }
           }
         }
       }

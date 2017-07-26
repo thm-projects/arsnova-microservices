@@ -46,34 +46,39 @@ class UserActor extends PersistentActor {
       rolesState += role
   }
 
-  override def receiveCommand: Receive = start
-
-  def start: Receive = {
+  override def receiveCommand: Receive = {
+    case GetUser(userId) => ((ret: ActorRef) => {
+      userState match {
+        case Some(u) => ret ! Some(u)
+        case None => UserRepository.findById(userId) map {
+          case Some(user) => {
+            ret ! Some(user)
+            userState = Some(user)
+          }
+          case None =>
+            ret ! None
+        }
+      }
+    }) (sender)
     case CreateUser(userId, user) => ((ret: ActorRef) => {
       UserRepository.create(user) map { u =>
         ret ! u
         userState = Some(u)
         persist(UserCreated(u))(e => e)
-        context.become(created)
       }
     }) (sender)
-  }
-
-  def created: Receive = {
-    case GetUser(userId) =>
-      sender ! userState.get
-    case MakeUserOwner(userId, sessionId) => {
-      val newRole = SessionRole(userId, sessionId, "owner")
-      rolesState += newRole
-      SessionRoleRepository.addSessionRole(newRole)
-      persist(UserGetsSessionRole(newRole))(e => e)
-    }
-    case GetRoleForSession(userId, sessionId) => {
+    case GetRoleForSession(userId, sessionId) => ((ret: ActorRef) => {
       // need to ensure that there is only one role set per user to use find and not filter
       rolesState.find(r => r.userId == userId && r.sessionId == sessionId) match {
-        case Some(r) => sender() ! r.role
-        case None => sender() ! "guest"
+        case Some(r) => ret ! r.role
+        case None => SessionRoleRepository.getSessionRole(userId, sessionId) map {
+          case Some(r) => {
+            rolesState += r
+            ret ! r.role
+          }
+          case None => ret ! "guest"
+        }
       }
-    }
+    }) (sender)
   }
 }

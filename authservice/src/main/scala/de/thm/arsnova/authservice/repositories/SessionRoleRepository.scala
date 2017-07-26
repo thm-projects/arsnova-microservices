@@ -12,8 +12,8 @@ object SessionRoleRepository extends BaseRepository {
   def addSessionRole(sessionRole: SessionRole): Future[SessionRole] =
     db.run(sessionRolesTables += sessionRole).map(_ => sessionRole)
 
-  def getSessionRole(userId: UUID, sessionId: UUID): Future[SessionRole] = {
+  def getSessionRole(userId: UUID, sessionId: UUID): Future[Option[SessionRole]] = {
     val qry = sessionRolesTables.filter(e => (e.userId === userId) && (e.sessionId === sessionId))
-    db.run(qry.result.head)
+    db.run(qry.result.headOption)
   }
 }

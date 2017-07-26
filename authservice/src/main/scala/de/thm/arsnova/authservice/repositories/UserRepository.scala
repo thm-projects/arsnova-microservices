@@ -10,8 +10,8 @@ import de.thm.arsnova.shared.entities.User
 object UserRepository extends BaseRepository {
   import de.thm.arsnova.authservice.Context._
 
-  def findById(userId: UUID): Future[User] = {
-    db.run(usersTable.filter(_.id === userId).result.head)
+  def findById(userId: UUID): Future[Option[User]] = {
+    db.run(usersTable.filter(_.id === userId).result.headOption)
   }
 
   def create(user: User): Future[User] = {

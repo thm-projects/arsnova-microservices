@@ -9,6 +9,10 @@ object Exceptions {
     def toJson: JsString
   }
 
+  case class ResourceNotFound(resource: String) extends ARSException {
+    def toJson: JsString = JsString(s"Ressource $resource could not be found")
+  }
+
   case class NoUserException(methodName: String) extends ARSException {
     def toJson: JsString = JsString("No user given")
   }
