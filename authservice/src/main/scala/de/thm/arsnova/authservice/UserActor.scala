@@ -6,8 +6,8 @@ import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
 import akka.remote.ContainerFormats.ActorRef
 import akka.actor.Props
-import de.thm.arsnova.authservice.repositories.UserRepository
-import de.thm.arsnova.shared.entities.User
+import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
+import de.thm.arsnova.shared.entities.{User, SessionRole}
 import de.thm.arsnova.shared.events.UserEvents.UserCreated
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 
@@ -59,5 +59,8 @@ class UserActor extends PersistentActor {
   def created: Receive = {
     case GetUser(userId) =>
       sender ! state.get
+    case MakeUserOwner(userId, sessionId) => {
+      SessionRoleRepository.addSessionRole(SessionRole(userId, sessionId, "owner"))
+    }
   }
 }
