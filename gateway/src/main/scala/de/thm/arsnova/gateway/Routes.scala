@@ -7,11 +7,13 @@ trait Routes extends ApiErrorHandler
   with SessionServiceApi
   with ContentServiceApi
   with CommentServiceApi
-  with AuthApi {
+  with AuthApi
+  with UserApi {
   val routes = {
     sessionApi ~
     contentServiceApi ~
     commentServiceApi ~
-    authApi
+    authApi ~
+    userApi
   }
 }
