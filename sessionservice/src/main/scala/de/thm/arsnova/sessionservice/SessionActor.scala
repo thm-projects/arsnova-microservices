@@ -18,6 +18,7 @@ import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionEvent}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
+import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.NoUserException
 
@@ -26,8 +27,8 @@ import scala.concurrent.{ExecutionContext, Future}
 object SessionActor {
   val shardName = "Session"
 
-  def props(authRouter: ActorRef): Props =
-    Props(new SessionActor(authRouter: ActorRef))
+  def props(authRouter: ActorRef, userRegion: ActorRef): Props =
+    Props(new SessionActor(authRouter: ActorRef, userRegion: ActorRef))
 
   val idExtractor: ShardRegion.ExtractEntityId = {
     case cmd: SessionCommand => (cmd.id.toString, cmd)
@@ -38,7 +39,7 @@ object SessionActor {
   }
 }
 
-class SessionActor(authRouter: ActorRef) extends PersistentActor {
+class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
@@ -71,12 +72,13 @@ class SessionActor(authRouter: ActorRef) extends PersistentActor {
       }
     }) (sender)
     case CreateSession(id, session, token) => ((ret: ActorRef) => {
-      token match {
-        case Some(t) => tokenToUser(t) map { user =>
-          SessionRepository.create(session, user) map { sRet =>
+      tokenToUser(token) map {
+        case Some(user) => {
+          SessionRepository.create(session.copy(userId = user.id.get)) map { sRet =>
             state = Some(sRet)
             context.become(created)
             ret ! sRet
+            userRegion ! MakeUserOwner(user.id.get, sRet.id.get)
             persist(SessionCreated(sRet))(e => println(e))
           }
         }

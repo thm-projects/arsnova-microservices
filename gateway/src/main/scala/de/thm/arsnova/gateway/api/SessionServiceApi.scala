@@ -49,7 +49,7 @@ trait SessionServiceApi extends BaseApi {
   val sessionApi = pathPrefix("session") {
     pathEndOrSingleSlash {
       post {
-        optionalHeaderValueByName("X-Session-Token") { tokenstring =>
+        headerValueByName("X-Session-Token") { tokenstring =>
           entity(as[Session]) { session =>
             complete {
               (sessionList ? GenerateEntry).mapTo[SessionListEntry].map { s =>

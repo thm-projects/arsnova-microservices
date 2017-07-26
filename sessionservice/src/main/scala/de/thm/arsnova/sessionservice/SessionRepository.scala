@@ -19,13 +19,8 @@ object SessionRepository {
     db.run(sessionsTable.filter(_.id === id).result.head)
   }
 
-  def create(session: Session, user: Option[User]): Future[Session] = {
-    user match {
-      case None => Future.failed(NoUserException("createSession"))
-      case Some(user) => {
-        db.run(sessionsTable += session).map(_ => session)
-      }
-    }
+  def create(session: Session): Future[Session] = {
+    db.run(sessionsTable += session).map(_ => session)
   }
 
   def getKeywordList(): Future[Seq[(String, UUID)]] = {
