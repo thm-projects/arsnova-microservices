@@ -55,7 +55,7 @@ trait ContentApi extends BaseApi {
               complete {
                 val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
                 (contentRegion ? CreateContent(sessionId, withIds, tokenstring))
-                  .mapTo[Content].map(_.toJson)
+                  .map(_.toJson)
               }
             }
           }

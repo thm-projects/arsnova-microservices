@@ -91,10 +91,12 @@ class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends Persi
                   ret ! c
                   persist(ContentCreated(c)) { e => e }
                 }
+              } else {
+                ret ! InsufficientRights(role, "CreateContent")
               }
             }
           }
-          case None =>
+          case None => ret ! NoUserException("CreateContent")
         }
     }) (sender)
   }
