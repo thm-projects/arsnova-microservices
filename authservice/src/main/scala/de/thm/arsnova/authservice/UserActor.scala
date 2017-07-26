@@ -4,8 +4,7 @@ package de.thm.arsnova.authservice
 import scala.concurrent.duration._
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
-import akka.remote.ContainerFormats.ActorRef
-import akka.actor.Props
+import akka.actor.{Props, ActorRef}
 import akka.pattern.pipe
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
 import de.thm.arsnova.shared.entities.{SessionRole, User}
@@ -54,7 +53,7 @@ class UserActor extends PersistentActor {
       UserRepository.create(user) map { u =>
         ret ! u
         userState = Some(u)
-        persist(UserCreated(u))
+        persist(UserCreated(u))(e => e)
         context.become(created)
       }
     }) (sender)
@@ -67,13 +66,13 @@ class UserActor extends PersistentActor {
       val newRole = SessionRole(userId, sessionId, "owner")
       rolesState += newRole
       SessionRoleRepository.addSessionRole(newRole)
-      persist(UserGetsSessionRole(newRole))
+      persist(UserGetsSessionRole(newRole))(e => e)
     }
     case GetRoleForSession(userId, sessionId) => {
       // need to ensure that there is only one role set per user to use find and not filter
       rolesState.find(r => r.userId == userId && r.sessionId == sessionId) match {
         case Some(r) => sender() ! r.role
-        case None => "guest"
+        case None => sender() ! "guest"
       }
     }
   }
