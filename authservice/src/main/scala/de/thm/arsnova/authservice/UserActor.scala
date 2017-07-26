@@ -6,6 +6,7 @@ import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
 import akka.remote.ContainerFormats.ActorRef
 import akka.actor.Props
+import akka.pattern.pipe
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
 import de.thm.arsnova.shared.entities.{User, SessionRole}
 import de.thm.arsnova.shared.events.UserEvents.UserCreated
@@ -61,6 +62,9 @@ class UserActor extends PersistentActor {
       sender ! state.get
     case MakeUserOwner(userId, sessionId) => {
       SessionRoleRepository.addSessionRole(SessionRole(userId, sessionId, "owner"))
+    }
+    case GetRoleForSession(userId, sessionId) => {
+      SessionRoleRepository.getSessionRole(userId, sessionId) pipeTo sender()
     }
   }
 }
