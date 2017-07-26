@@ -17,6 +17,7 @@ import de.thm.arsnova.contentservice.repositories.ContentRepository
 import de.thm.arsnova.shared.entities.{Content, User}
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
+import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 
@@ -83,10 +84,14 @@ class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends Persi
     case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
         tokenToUser(token) map {
           case Some(user) => {
-            ContentRepository.create(content) map { c =>
-              contentlist += c.id.get -> c
-              ret ! c
-              persist(ContentCreated(c)) { e => e }
+            (userRegion ? GetRoleForSession(user.id.get, sessionid)).mapTo[String] map { role =>
+              if (role != "guest") {
+                ContentRepository.create(content) map { c =>
+                  contentlist += c.id.get -> c
+                  ret ! c
+                  persist(ContentCreated(c)) { e => e }
+                }
+              }
             }
           }
           case None =>
