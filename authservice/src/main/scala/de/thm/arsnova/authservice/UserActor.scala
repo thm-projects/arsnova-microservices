@@ -8,8 +8,8 @@ import akka.remote.ContainerFormats.ActorRef
 import akka.actor.Props
 import akka.pattern.pipe
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
-import de.thm.arsnova.shared.entities.{User, SessionRole}
-import de.thm.arsnova.shared.events.UserEvents.UserCreated
+import de.thm.arsnova.shared.entities.{SessionRole, User}
+import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole}
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 
 import scala.concurrent.ExecutionContext
@@ -37,11 +37,14 @@ class UserActor extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
-  private var state: Option[User] = None
+  private var userState: Option[User] = None
+  private val rolesState: collection.mutable.Set[SessionRole] = collection.mutable.Set.empty[SessionRole]
 
   override def receiveRecover: Receive = {
     case UserCreated(user) =>
-      state = Some(user)
+      userState = Some(user)
+    case UserGetsSessionRole(role) =>
+      rolesState += role
   }
 
   override def receiveCommand: Receive = start
@@ -50,7 +53,7 @@ class UserActor extends PersistentActor {
     case CreateUser(userId, user) => ((ret: ActorRef) => {
       UserRepository.create(user) map { u =>
         ret ! u
-        state = Some(u)
+        userState = Some(u)
         persist(UserCreated(u))
         context.become(created)
       }
@@ -59,12 +62,19 @@ class UserActor extends PersistentActor {
 
   def created: Receive = {
     case GetUser(userId) =>
-      sender ! state.get
+      sender ! userState.get
     case MakeUserOwner(userId, sessionId) => {
-      SessionRoleRepository.addSessionRole(SessionRole(userId, sessionId, "owner"))
+      val newRole = SessionRole(userId, sessionId, "owner")
+      rolesState += newRole
+      SessionRoleRepository.addSessionRole(newRole)
+      persist(UserGetsSessionRole(newRole))
     }
     case GetRoleForSession(userId, sessionId) => {
-      SessionRoleRepository.getSessionRole(userId, sessionId) pipeTo sender()
+      // need to ensure that there is only one role set per user to use find and not filter
+      rolesState.find(r => r.userId == userId && r.sessionId == sessionId) match {
+        case Some(r) => sender() ! r.role
+        case None => "guest"
+      }
     }
   }
 }
