@@ -43,7 +43,7 @@ object SessionService extends App with MigrationConfig {
     entityProps = SessionActor.props(authRouter, userRegion),
     settings = ClusterShardingSettings(system),
     extractEntityId = SessionActor.idExtractor,
-    extractShardId = SessionActor.shardResolver)
+    extractShardId = SessionActor.shardResolver
   )
 
   if (args.contains("kamon")) {
