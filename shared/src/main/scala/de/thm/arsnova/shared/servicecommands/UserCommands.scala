@@ -13,5 +13,7 @@ object UserCommands {
 
   case class CreateUser(userId: UUID, user: User) extends UserCommand
 
-  case class MakeUserOwner(userId: UUID, sessionId: UUID)
+  case class MakeUserOwner(userId: UUID, sessionId: UUID) extends UserCommand
+
+  case class GetRoleForSession(userId: UUID, sessionId: UUID) extends UserCommand
 }
