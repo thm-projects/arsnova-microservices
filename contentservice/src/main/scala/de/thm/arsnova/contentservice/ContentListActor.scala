@@ -25,8 +25,8 @@ import scala.concurrent.{ExecutionContext, Future}
 object ContentListActor {
   val shardName = "Question"
 
-  def props(authRouter: ActorRef): Props =
-    Props(new ContentListActor(authRouter: ActorRef))
+  def props(authRouter: ActorRef, userRegion: ActorRef): Props =
+    Props(new ContentListActor(authRouter: ActorRef, userRegion: ActorRef))
 
   val idExtractor: ShardRegion.ExtractEntityId = {
     case cmd: ContentCommand => (cmd.sessionid.toString, cmd)
@@ -37,7 +37,7 @@ object ContentListActor {
   }
 }
 
-class ContentListActor(authRouter: ActorRef) extends PersistentActor {
+class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
