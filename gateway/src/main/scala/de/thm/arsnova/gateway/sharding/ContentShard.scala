@@ -2,7 +2,7 @@ package de.thm.arsnova.gateway.sharding
 
 import akka.cluster.sharding.ClusterSharding
 import akka.actor.ActorRef
-import de.thm.arsnova.contentservice.ContentListActor
+import de.thm.arsnova.shared.shards.ContentListShard
 
 object ContentShard {
   import de.thm.arsnova.gateway.Context.system
@@ -10,10 +10,10 @@ object ContentShard {
   var proxy: Option[ActorRef] = None
 
   def startProxy: ActorRef = ClusterSharding(system).startProxy(
-    typeName = ContentListActor.shardName,
+    typeName = ContentListShard.shardName,
     role = Some("content"),
-    extractEntityId = ContentListActor.idExtractor,
-    extractShardId = ContentListActor.shardResolver)
+    extractEntityId = ContentListShard.idExtractor,
+    extractShardId = ContentListShard.shardResolver)
 
   def getProxy: ActorRef = {
     proxy match {

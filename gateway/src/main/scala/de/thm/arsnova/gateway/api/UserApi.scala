@@ -19,18 +19,19 @@ import spray.json._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.entities.{User, Session}
 import de.thm.arsnova.shared.Exceptions._
+import de.thm.arsnova.shared.shards.UserShard
 
 trait UserApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.UserJsonProtocol._
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
   ClusterSharding(system).startProxy(
-    typeName = UserActor.shardName,
+    typeName = UserShard.shardName,
     role = Some("auth"),
-    extractEntityId = UserActor.idExtractor,
-    extractShardId = UserActor.shardResolver)
+    extractEntityId = UserShard.idExtractor,
+    extractShardId = UserShard.shardResolver)
 
-  val userRegion = ClusterSharding(system).shardRegion(UserActor.shardName)
+  val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
 
   val userApi = pathPrefix("user") {
     pathPrefix(JavaUUID) { userId =>

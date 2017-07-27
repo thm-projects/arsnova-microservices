@@ -25,18 +25,8 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import scala.concurrent.{ExecutionContext, Future}
 
 object ContentListActor {
-  val shardName = "Question"
-
   def props(authRouter: ActorRef, userRegion: ActorRef): Props =
     Props(new ContentListActor(authRouter: ActorRef, userRegion: ActorRef))
-
-  val idExtractor: ShardRegion.ExtractEntityId = {
-    case cmd: ContentCommand => (cmd.sessionid.toString, cmd)
-  }
-
-  val shardResolver: ShardRegion.ExtractShardId = {
-    case cmd: ContentCommand => math.abs(cmd.sessionid.hashCode() % 100).toString
-  }
 }
 
 class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {

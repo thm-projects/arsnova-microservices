@@ -25,18 +25,8 @@ import de.thm.arsnova.shared.Exceptions.NoUserException
 import scala.concurrent.{ExecutionContext, Future}
 
 object SessionActor {
-  val shardName = "Session"
-
   def props(authRouter: ActorRef, userRegion: ActorRef): Props =
     Props(new SessionActor(authRouter: ActorRef, userRegion: ActorRef))
-
-  val idExtractor: ShardRegion.ExtractEntityId = {
-    case cmd: SessionCommand => (cmd.id.toString, cmd)
-  }
-
-  val shardResolver: ShardRegion.ExtractShardId = {
-    case cmd: SessionCommand => math.abs(cmd.id.hashCode() % 100).toString
-  }
 }
 
 class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {

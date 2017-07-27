@@ -26,6 +26,7 @@ import akka.routing.RandomGroup
 import de.thm.arsnova.shared.Exceptions.NoSuchSession
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
+import de.thm.arsnova.shared.shards.SessionShard
 
 /*
 The API Interface regarding sessions, the core component for arsnova.voting.
@@ -37,12 +38,12 @@ trait SessionServiceApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.NoSuchSessionJsonProtocol._
 
   ClusterSharding(system).startProxy(
-    typeName = SessionActor.shardName,
+    typeName = SessionShard.shardName,
     role = Some("session"),
-    extractEntityId = SessionActor.idExtractor,
-    extractShardId = SessionActor.shardResolver)
+    extractEntityId = SessionShard.idExtractor,
+    extractShardId = SessionShard.shardResolver)
 
-  val sessionRegion = ClusterSharding(system).shardRegion(SessionActor.shardName)
+  val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
 
   val sessionList = system.actorOf(Props[SessionListClientActor], name = "sessionlist")
 

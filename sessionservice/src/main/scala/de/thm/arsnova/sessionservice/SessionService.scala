@@ -13,6 +13,7 @@ import scala.concurrent.duration._
 import kamon.Kamon
 import de.thm.arsnova.authservice.{AuthServiceActor, UserActor}
 import de.thm.arsnova.shared.actors.ServiceManagementActor
+import de.thm.arsnova.shared.shards.{SessionShard, UserShard}
 
 object SessionService extends App with MigrationConfig {
   import Context._
@@ -27,23 +28,23 @@ object SessionService extends App with MigrationConfig {
   )
 
   ClusterSharding(system).startProxy(
-    typeName = UserActor.shardName,
+    typeName = UserShard.shardName,
     role = Some("auth"),
-    extractEntityId = UserActor.idExtractor,
-    extractShardId = UserActor.shardResolver
+    extractEntityId = UserShard.idExtractor,
+    extractShardId = UserShard.shardResolver
   )
 
-  val userRegion = ClusterSharding(system).shardRegion(UserActor.shardName)
+  val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
 
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
 
   ClusterSharding(system).start(
-    typeName = SessionActor.shardName,
+    typeName = SessionShard.shardName,
     entityProps = SessionActor.props(authRouter, userRegion),
     settings = ClusterShardingSettings(system),
-    extractEntityId = SessionActor.idExtractor,
-    extractShardId = SessionActor.shardResolver
+    extractEntityId = SessionShard.idExtractor,
+    extractShardId = SessionShard.shardResolver
   )
 
   if (args.contains("kamon")) {

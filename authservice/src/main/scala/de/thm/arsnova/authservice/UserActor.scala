@@ -14,18 +14,8 @@ import de.thm.arsnova.shared.servicecommands.UserCommands._
 import scala.concurrent.ExecutionContext
 
 object UserActor {
-  val shardName = "User"
-
   def props(): Props =
     Props(new UserActor())
-
-  val idExtractor: ShardRegion.ExtractEntityId = {
-    case cmd: UserCommand => (cmd.userId.toString, cmd)
-  }
-
-  val shardResolver: ShardRegion.ExtractShardId = {
-    case cmd: UserCommand => math.abs(cmd.userId.hashCode() % 100).toString
-  }
 }
 
 class UserActor extends PersistentActor {
