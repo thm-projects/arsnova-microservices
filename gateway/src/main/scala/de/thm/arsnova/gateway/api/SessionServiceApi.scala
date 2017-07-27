@@ -35,7 +35,6 @@ trait SessionServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
-  import de.thm.arsnova.shared.mappings.NoSuchSessionJsonProtocol._
 
   ClusterSharding(system).startProxy(
     typeName = SessionShard.shardName,
@@ -68,7 +67,10 @@ trait SessionServiceApi extends BaseApi {
             (sessionList ? LookupSession(keyword)).mapTo[Option[UUID]].map {
               case Some(sid) =>
                 (sessionRegion ? GetSession(sid))
-                  .mapTo[Session].map(_.toJson)
+                  .mapTo[Option[Session]].map {
+                  case Some(s) => s.toJson
+                  case None => NoSuchSession(Left(sid)).toJson
+                }
               case None => Future.successful(NoSuchSession(Right(keyword))).map(_.toJson)
             }
           }
@@ -80,7 +82,10 @@ trait SessionServiceApi extends BaseApi {
         get {
           complete {
             (sessionRegion ? GetSession(sessionId))
-              .mapTo[Session].map(_.toJson)
+              .mapTo[Option[Session]].map {
+              case Some(s) => s.toJson
+              case None => NoSuchSession(Left(sessionId)).toJson
+            }
           }
         }
       }

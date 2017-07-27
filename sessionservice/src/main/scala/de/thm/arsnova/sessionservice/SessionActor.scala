@@ -55,10 +55,13 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
 
   def initial: Receive = {
     case GetSession(id) => ((ret: ActorRef) => {
-      SessionRepository.findById(id) map { session =>
-        state = Some(session)
-        context.become(created)
-        ret ! session
+      SessionRepository.findById(id) map {
+        case Some(session) => {
+          state = Some(session)
+          context.become(created)
+          ret ! Some(session)
+        }
+        case None => ret ! None
       }
     }) (sender)
     case CreateSession(id, session, token) => ((ret: ActorRef) => {
