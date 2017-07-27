@@ -80,5 +80,12 @@ class UserActor extends PersistentActor {
         }
       }
     }) (sender)
+    case GetUserSessions(userId, withRole) => ((ret: ActorRef) => {
+      withRole match {
+        case Some(r) => {
+
+        }
+      }
+    }) (sender)
   }
 }

@@ -17,11 +17,12 @@ import de.thm.arsnova.gateway.Context._
 import de.thm.arsnova.authservice.UserActor
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
-import de.thm.arsnova.shared.entities.User
+import de.thm.arsnova.shared.entities.{User, Session}
 import de.thm.arsnova.shared.Exceptions._
 
 trait UserApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.UserJsonProtocol._
+  import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
 
   ClusterSharding(system).startProxy(
     typeName = UserActor.shardName,
@@ -41,6 +42,14 @@ trait UserApi extends BaseApi {
               case Some(user) => user.toJson
               case None => ResourceNotFound("user").toJson
             }
+          }
+        }
+      } ~
+      pathPrefix("sessions") {
+        get {
+          complete {
+            (userRegion ? GetUserSessions(userId))
+              .mapTo[Seq[Session]].map.(_.toJson)
           }
         }
       }
