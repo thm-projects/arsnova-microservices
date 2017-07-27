@@ -2,24 +2,28 @@ package de.thm.arsnova.authservice
 
 
 import scala.concurrent.duration._
+import scala.concurrent.Future
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
-import akka.actor.{Props, ActorRef}
-import akka.pattern.pipe
+import akka.actor.{ActorRef, Props}
+import akka.pattern.{ask, pipe}
+import akka.util.Timeout
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
-import de.thm.arsnova.shared.entities.{SessionRole, User}
+import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole}
 import de.thm.arsnova.shared.servicecommands.UserCommands._
+import de.thm.arsnova.shared.servicecommands.SessionCommands._
 
 import scala.concurrent.ExecutionContext
 
 object UserActor {
-  def props(): Props =
-    Props(new UserActor())
+  def props(sessionShards: ActorRef): Props =
+    Props(new UserActor(sessionShards: ActorRef))
 }
 
-class UserActor extends PersistentActor {
+class UserActor(sessionShards: ActorRef) extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
+  implicit val timeout: Timeout = 5.seconds
 
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
 
@@ -71,10 +75,26 @@ class UserActor extends PersistentActor {
       }
     }) (sender)
     case GetUserSessions(userId, withRole) => ((ret: ActorRef) => {
-      withRole match {
+      val futureRoles: Future[Seq[SessionRole]] = withRole match {
         case Some(r) => {
-
+          SessionRoleRepository.getAllSessionsByRole(userId, r)
         }
+        case None => {
+          SessionRoleRepository.getAllSessionRoles(userId)
+        }
+      }
+      futureRoles.map { roles =>
+        val askFutures = roles map { sr =>
+          sessionShards ? GetSession(sr.sessionId)
+        }
+        var sessionList: collection.mutable.Seq[Session] = collection.mutable.Seq.empty[Session]
+        askFutures map {
+          _.mapTo[Option[Session]].map {
+            case Some(s) => sessionList = sessionList.+:(s)
+            case None => //TODO: delete those old entries
+          }
+        }
+        ret ! sessionList
       }
     }) (sender)
   }

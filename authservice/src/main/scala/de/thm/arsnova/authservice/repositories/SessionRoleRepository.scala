@@ -16,4 +16,14 @@ object SessionRoleRepository extends BaseRepository {
     val qry = sessionRolesTables.filter(e => (e.userId === userId) && (e.sessionId === sessionId))
     db.run(qry.result.headOption)
   }
+
+  def getAllSessionRoles(userId: UUID): Future[Seq[SessionRole]] = {
+    val qry = sessionRolesTables.filter(_.userId === userId)
+    db.run(qry.result)
+  }
+
+  def getAllSessionsByRole(userId: UUID, role: String): Future[Seq[SessionRole]] = {
+    val qry = sessionRolesTables.filter(e => e.userId === userId && e.role === role)
+    db.run(qry.result)
+  }
 }
