@@ -2,6 +2,7 @@ package de.thm.arsnova.sessionservice
 
 import java.util.UUID
 
+import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
@@ -70,12 +71,12 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
           SessionRepository.create(session.copy(userId = user.id.get)) map { sRet =>
             state = Some(sRet)
             context.become(created)
-            ret ! sRet
+            ret ! Success(sRet)
             userRegion ! MakeUserOwner(user.id.get, sRet.id.get)
             persist(SessionCreated(sRet))(e => println(e))
           }
         }
-        case None => ret ! NoUserException
+        case None => ret ! Failure(NoUserException("CreateSession"))
       }
     }) (sender)
   }

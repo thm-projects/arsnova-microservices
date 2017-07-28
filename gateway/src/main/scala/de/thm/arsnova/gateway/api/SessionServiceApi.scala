@@ -14,7 +14,7 @@ import akka.cluster.sharding.ClusterSharding
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
@@ -24,7 +24,7 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
 import de.thm.arsnova.gateway.sharding.UserShard
-import de.thm.arsnova.shared.Exceptions.NoSuchSession
+import de.thm.arsnova.shared.Exceptions._
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -58,7 +58,12 @@ trait SessionServiceApi extends BaseApi {
               (sessionList ? GenerateEntry).mapTo[SessionListEntry].map { s =>
                 val completeSession = session.copy(id = Some(s.id), keyword = Some(s.keyword))
                 (sessionRegion ? CreateSession(completeSession.id.get, completeSession, tokenstring))
-                  .mapTo[Session].map(_.toJson)
+                  .mapTo[Try[Session]].map {
+                  case Success(session) => session.toJson
+                  case Failure(e) => e match {
+                    case ae: ARSException => ae.toJson
+                  }
+                }
               }
             }
           }
