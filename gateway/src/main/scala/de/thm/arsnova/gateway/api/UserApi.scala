@@ -16,22 +16,17 @@ import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.gateway.Context._
 import de.thm.arsnova.authservice.UserActor
 import spray.json._
+import de.thm.arsnova.gateway.sharding.UserShard
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.entities.{User, Session}
 import de.thm.arsnova.shared.Exceptions._
-import de.thm.arsnova.shared.shards.UserShard
 
 trait UserApi extends BaseApi {
-  import de.thm.arsnova.shared.mappings.UserJsonProtocol._
+  import de.thm.arsnova.gateway.Context._
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.UserJsonProtocol._
 
-  ClusterSharding(system).startProxy(
-    typeName = UserShard.shardName,
-    role = Some("auth"),
-    extractEntityId = UserShard.idExtractor,
-    extractShardId = UserShard.shardResolver)
-
-  val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
+  val userRegion = UserShard.getProxy
 
   val userApi = pathPrefix("user") {
     pathPrefix(JavaUUID) { userId =>
@@ -43,14 +38,6 @@ trait UserApi extends BaseApi {
               case Some(user) => user.toJson
               case None => ResourceNotFound("user").toJson
             }
-          }
-        }
-      } ~
-      pathPrefix("sessions") {
-        get {
-          complete {
-            (userRegion ? GetUserSessions(userId))
-              .mapTo[Seq[Session]].map.(_.toJson)
           }
         }
       }

@@ -23,9 +23,11 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes._
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
+import de.thm.arsnova.gateway.sharding.UserShard
 import de.thm.arsnova.shared.Exceptions.NoSuchSession
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
+import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.shards.SessionShard
 
 /*
@@ -43,6 +45,7 @@ trait SessionServiceApi extends BaseApi {
     extractShardId = SessionShard.shardResolver)
 
   val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
+  val sessionsUserRegion = UserShard.getProxy
 
   val sessionList = system.actorOf(Props[SessionListClientActor], name = "sessionlist")
 
@@ -73,6 +76,12 @@ trait SessionServiceApi extends BaseApi {
                 }
               case None => Future.successful(NoSuchSession(Right(keyword))).map(_.toJson)
             }
+          }
+        } ~
+        parameter("userid") { userId =>
+          complete {
+            (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId)))
+              .mapTo[Seq[Session]].map(_.toJson)
           }
         }
       }

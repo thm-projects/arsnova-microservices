@@ -16,7 +16,7 @@ object SessionRepository {
   val sessionsTable = TableQuery[SessionsTable]
 
   def findById(id: UUID): Future[Option[Session]] = {
-    db.run(sessionsTable.filter(_.id === id).result.head)
+    db.run(sessionsTable.filter(_.id === id).result.headOption)
   }
 
   def create(session: Session): Future[Session] = {
