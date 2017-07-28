@@ -3,6 +3,7 @@ package de.thm.arsnova.authservice
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.util.Success
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
 import akka.actor.{ActorRef, Props}
@@ -84,18 +85,21 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
         }
       }
       futureRoles.map { roles =>
+        var sessionList: collection.mutable.Seq[Session] = collection.mutable.Seq.empty[Session]
         val askFutures = roles map { sr =>
           sessionShards ? GetSession(sr.sessionId)
-        }
-        var sessionList: collection.mutable.Seq[Session] = collection.mutable.Seq.empty[Session]
-        askFutures map {
+        } map {
           _.mapTo[Option[Session]].map {
-            case Some(s) => sessionList = sessionList.+:(s)
+            case Some(s) => sessionList = sessionList:+(s)
             case None => //TODO: delete those old entries
           }
+        } onComplete {
+          case Success(s) => ret ! sessionList
         }
-        ret ! sessionList
       }
+    }) (sender)
+    case MakeUserOwner(userId, sessionId) => ((ret: ActorRef) => {
+      SessionRoleRepository.addSessionRole(SessionRole(userId, sessionId, "owner"))
     }) (sender)
   }
 }
