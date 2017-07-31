@@ -30,4 +30,7 @@ object Exceptions {
   case class InsufficientRights(role: String, action: String) extends ARSException {
     def getMsg: String = s"Insufficient rights for action $action with role: $role"
   }
+  case class InvalidToken(token: String) extends ARSException {
+    def getMsg: String = s"Invalid token: $token"
+  }
 }

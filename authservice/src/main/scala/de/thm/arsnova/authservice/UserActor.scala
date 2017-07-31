@@ -3,13 +3,14 @@ package de.thm.arsnova.authservice
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.Success
+import scala.util.{Failure, Success, Try}
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
 import akka.actor.{ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
+import de.thm.arsnova.shared.Exceptions.ResourceNotFound
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole}
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -44,14 +45,14 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
   override def receiveCommand: Receive = {
     case GetUser(userId) => ((ret: ActorRef) => {
       userState match {
-        case Some(u) => ret ! Some(u)
+        case Some(u) => ret ! Success(u)
         case None => UserRepository.findById(userId) map {
           case Some(user) => {
-            ret ! Some(user)
+            ret ! Success(user)
             userState = Some(user)
           }
           case None =>
-            ret ! None
+            ret ! Failure(ResourceNotFound("user"))
         }
       }
     }) (sender)
@@ -87,7 +88,13 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
       futureRoles.map { roles =>
         var sessionList: collection.mutable.Seq[Session] = collection.mutable.Seq.empty[Session]
         val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
-          (sessionShards ? GetSession(sr.sessionId)).mapTo[Option[Session]]
+          (sessionShards ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
+            case Success(session) => Some(session)
+            case Failure(t) => {
+              // TODO: handle dead entries in roles set / Exceptions?
+              None
+            }
+          }
         }
         // The "None" elements are just skipped.
         // the useractor should get notified when a session is deleted

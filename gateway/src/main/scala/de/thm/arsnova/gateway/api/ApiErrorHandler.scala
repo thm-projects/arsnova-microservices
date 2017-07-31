@@ -26,5 +26,7 @@ trait ApiErrorHandler {
       complete(HttpResponse(NotFound, entity = e.getMsg))
     case e: InsufficientRights =>
       complete(HttpResponse(Forbidden, entity = e.getMsg))
+    case e: InvalidToken =>
+      complete(HttpResponse(Unauthorized, entity = e.getMsg))
   }
 }

@@ -39,8 +39,8 @@ class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends Persi
   private val contentlist: collection.mutable.HashMap[UUID, Content] =
     collection.mutable.HashMap.empty[UUID, Content]
 
-  def tokenToUser(tokenstring: String): Future[Option[User]] = {
-    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Option[User]]
+  def tokenToUser(tokenstring: String): Future[Try[User]] = {
+    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]
   }
 
   override def persistenceId: String = self.path.parent.name + "-"  + self.path.name
@@ -74,7 +74,7 @@ class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends Persi
     }) (sender)
     case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
       tokenToUser(token) map {
-        case Some(user) => {
+        case Success(user) => {
           (userRegion ? GetRoleForSession(user.id.get, sessionid)).mapTo[String] map { role =>
             if (role != "guest") {
               ContentRepository.create(content) map { c =>
@@ -87,7 +87,7 @@ class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends Persi
             }
           }
         }
-        case None => ret ! Failure(NoUserException("CreateContent"))
+        case Failure(t) => ret ! Failure(NoUserException("CreateContent"))
       }
     }) (sender)
   }

@@ -21,7 +21,7 @@ import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
-import de.thm.arsnova.shared.Exceptions.NoUserException
+import de.thm.arsnova.shared.Exceptions.{NoSuchSession, NoUserException}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,8 +35,8 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
-  def tokenToUser(tokenstring: String): Future[Option[User]] = {
-    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Option[User]]
+  def tokenToUser(tokenstring: String): Future[Try[User]] = {
+    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]
   }
 
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
@@ -60,14 +60,14 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
         case Some(session) => {
           state = Some(session)
           context.become(created)
-          ret ! Some(session)
+          ret ! Success(session)
         }
-        case None => ret ! None
+        case None => ret ! Failure(NoSuchSession(Left(id)))
       }
     }) (sender)
     case CreateSession(id, session, token) => ((ret: ActorRef) => {
       tokenToUser(token) map {
-        case Some(user) => {
+        case Success(user) => {
           SessionRepository.create(session.copy(userId = user.id.get)) map { sRet =>
             state = Some(sRet)
             context.become(created)
@@ -76,7 +76,10 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
             persist(SessionCreated(sRet))(e => println(e))
           }
         }
-        case None => ret ! Failure(NoUserException("CreateSession"))
+        case Failure(t) => {
+          // can't pipe exception 't', since it would be "ressource not found"
+          ret ! Failure(NoUserException("CreateSession"))
+        }
       }
     }) (sender)
   }
@@ -86,9 +89,9 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
       SessionRepository.findById(id) map {
         case Some(session) => {
           state = Some(session)
-          ret ! Some(session)
+          ret ! Success(session)
         }
-        case None => ret ! None
+        case None => ret ! Failure(NoSuchSession(Left(id)))
       }
     }) (sender)
   }

@@ -70,10 +70,7 @@ trait SessionServiceApi extends BaseApi {
             (sessionList ? LookupSession(keyword)).mapTo[Option[UUID]].map {
               case Some(sid) =>
                 (sessionRegion ? GetSession(sid))
-                  .mapTo[Option[Session]].map {
-                  case Some(s) => Success(s)
-                  case None => Failure(NoSuchSession(Left(sid)))
-                }
+                  .mapTo[Try[Session]]
               case None => Future.successful(Failure(NoSuchSession(Right(keyword))))
             }
           }
@@ -93,10 +90,7 @@ trait SessionServiceApi extends BaseApi {
         get {
           complete {
             (sessionRegion ? GetSession(sessionId))
-              .mapTo[Option[Session]].map {
-              case Some(s) => Success(s)
-              case None => Failure(NoSuchSession(Left(sessionId)))
-            }
+              .mapTo[Try[Session]]
           }
         }
       }
