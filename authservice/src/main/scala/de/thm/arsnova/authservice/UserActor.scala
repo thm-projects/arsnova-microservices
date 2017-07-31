@@ -10,7 +10,7 @@ import akka.actor.{ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
-import de.thm.arsnova.shared.Exceptions.ResourceNotFound
+import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole}
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -76,31 +76,37 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetUserSessions(userId, withRole) => ((ret: ActorRef) => {
-      val futureRoles: Future[Seq[SessionRole]] = withRole match {
-        case Some(r) => {
-          SessionRoleRepository.getAllSessionsByRole(userId, r)
-        }
-        case None => {
-          SessionRoleRepository.getAllSessionRoles(userId)
-        }
-      }
-      futureRoles.map { roles =>
-        var sessionList: collection.mutable.Seq[Session] = collection.mutable.Seq.empty[Session]
-        val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
-          (sessionShards ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
-            case Success(session) => Some(session)
-            case Failure(t) => {
-              // TODO: handle dead entries in roles set / Exceptions?
-              None
+    case GetUserSessions(userId, tokenstring, withRole) => ((ret: ActorRef) => {
+      UserRepository.getUserByTokenString(tokenstring) map {
+        case Some(user) => {
+          if (user.id.get == userId) {
+            val futureRoles: Future[Seq[SessionRole]] = withRole match {
+              case Some(r) => {
+                SessionRoleRepository.getAllSessionsByRole(userId, r)
+              }
+              case None => {
+                SessionRoleRepository.getAllSessionRoles(userId)
+              }
             }
+            futureRoles.map { roles =>
+              val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
+                (sessionShards ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
+                  case Success(session) => Some(session)
+                  case Failure(t) => {
+                    // TODO: handle dead entries in roles set / Exceptions?
+                    None
+                  }
+                }
+              }
+              Future.sequence(askFutures).map { list =>
+                ret ! Success(list.flatten)
+              }
+            }
+          } else {
+            ret ! Failure(InvalidToken(tokenstring))
           }
         }
-        // The "None" elements are just skipped.
-        // the useractor should get notified when a session is deleted
-        Future.sequence(askFutures).map {
-          ret ! _.flatten
-        }
+        case None => ret ! Failure(InvalidToken(tokenstring))
       }
     }) (sender)
     case MakeUserOwner(userId, sessionId) => ((ret: ActorRef) => {

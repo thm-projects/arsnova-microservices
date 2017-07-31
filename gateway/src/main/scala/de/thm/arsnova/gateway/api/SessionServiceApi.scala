@@ -78,8 +78,8 @@ trait SessionServiceApi extends BaseApi {
         headerValueByName("X-Session-Token") { tokenstring =>
           parameter("userid") { userId =>
             complete {
-              (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId)))
-                .mapTo[Seq[Session]].map(_.toJson)
+              (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId), tokenstring))
+                .mapTo[Try[Seq[Session]]]
             }
           }
         }
