@@ -76,10 +76,7 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
             persist(SessionCreated(sRet))(e => println(e))
           }
         }
-        case Failure(t) => {
-          // can't pipe exception 't', since it would be "ressource not found"
-          ret ! Failure(NoUserException("CreateSession"))
-        }
+        case Failure(t) => ret ! t
       }
     }) (sender)
   }

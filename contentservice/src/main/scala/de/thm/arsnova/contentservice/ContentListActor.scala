@@ -87,7 +87,7 @@ class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends Persi
             }
           }
         }
-        case Failure(t) => ret ! Failure(NoUserException("CreateContent"))
+        case Failure(t) => ret ! t
       }
     }) (sender)
   }
