@@ -18,7 +18,7 @@ object Exceptions {
   }
   case class NoSuchSession(reason: Either[UUID, String]) extends ARSException {
     def getMsg: String = {
-      val parsedReason = reason match {
+      reason match {
         case Left(id) => s"Could not get session. So such id: $id"
         case Right(keyword) => s"Could not get session. So such keyword: $keyword"
       }
