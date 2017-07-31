@@ -35,8 +35,8 @@ trait UserApi extends BaseApi {
           complete {
             (userRegion ? GetUser(userId))
               .mapTo[Option[User]].map {
-              case Some(user) => user.toJson
-              case None => ResourceNotFound("user").toJson
+              case Some(user) => Success(user)
+              case None => Failure(ResourceNotFound("user"))
             }
           }
         }

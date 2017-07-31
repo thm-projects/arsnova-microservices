@@ -29,8 +29,8 @@ trait ContentApi extends BaseApi {
             complete {
               (contentRegion ? GetContent(sessionId, contentId))
                 .mapTo[Option[Content]].map {
-                case Some(c) => c.toJson
-                case None => NoSuchContent.toJson
+                case Some(c) => Success(c)
+                case None => Failure(NoSuchContent)
               }
             }
           }
@@ -55,12 +55,7 @@ trait ContentApi extends BaseApi {
               complete {
                 val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
                 (contentRegion ? CreateContent(sessionId, withIds, tokenstring))
-                  .mapTo[Try[Content]].map {
-                  case Success(content) => content.toJson
-                  case Failure(e) => e match {
-                    case ae: ARSException => ae.toJson
-                  }
-                }
+                  .mapTo[Try[Content]]
               }
             }
           }

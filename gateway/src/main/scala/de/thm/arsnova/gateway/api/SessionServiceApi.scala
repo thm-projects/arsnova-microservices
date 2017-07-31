@@ -58,12 +58,7 @@ trait SessionServiceApi extends BaseApi {
               (sessionList ? GenerateEntry).mapTo[SessionListEntry].map { s =>
                 val completeSession = session.copy(id = Some(s.id), keyword = Some(s.keyword))
                 (sessionRegion ? CreateSession(completeSession.id.get, completeSession, tokenstring))
-                  .mapTo[Try[Session]].map {
-                  case Success(session) => session.toJson
-                  case Failure(e) => e match {
-                    case ae: ARSException => ae.toJson
-                  }
-                }
+                  .mapTo[Try[Session]]
               }
             }
           }
@@ -76,17 +71,19 @@ trait SessionServiceApi extends BaseApi {
               case Some(sid) =>
                 (sessionRegion ? GetSession(sid))
                   .mapTo[Option[Session]].map {
-                  case Some(s) => s.toJson
-                  case None => NoSuchSession(Left(sid)).toJson
+                  case Some(s) => Success(s)
+                  case None => Failure(NoSuchSession(Left(sid)))
                 }
-              case None => Future.successful(NoSuchSession(Right(keyword))).map(_.toJson)
+              case None => Future.successful(Failure(NoSuchSession(Right(keyword))))
             }
           }
         } ~
-        parameter("userid") { userId =>
-          complete {
-            (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId)))
-              .mapTo[Seq[Session]].map(_.toJson)
+        headerValueByName("X-Session-Token") { tokenstring =>
+          parameter("userid") { userId =>
+            complete {
+              (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId)))
+                .mapTo[Seq[Session]].map(_.toJson)
+            }
           }
         }
       }
@@ -97,8 +94,8 @@ trait SessionServiceApi extends BaseApi {
           complete {
             (sessionRegion ? GetSession(sessionId))
               .mapTo[Option[Session]].map {
-              case Some(s) => s.toJson
-              case None => NoSuchSession(Left(sessionId)).toJson
+              case Some(s) => Success(s)
+              case None => Failure(NoSuchSession(Left(sessionId)))
             }
           }
         }
