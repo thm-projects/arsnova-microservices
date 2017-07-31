@@ -18,9 +18,13 @@ trait ApiErrorHandler {
         complete(HttpResponse(NotFound, entity = s"Invalid id: ${e.getMessage}"))
       }
 
+    case e: ResourceNotFound =>
+      complete(HttpResponse(NotFound, entity = e.getMsg))
     case e: NoUserException =>
-      complete(HttpResponse(Unauthorized, entity = s"No user given: ${e.getMessage}"))
+      complete(HttpResponse(Unauthorized, entity = e.getMsg))
     case e: NoSuchSession =>
-      complete(HttpResponse(OK, entity = s"No Such Session for: ${e.reason}"))
+      complete(HttpResponse(NotFound, entity = e.getMsg))
+    case e: InsufficientRights =>
+      complete(HttpResponse(Forbidden, entity = e.getMsg))
   }
 }
