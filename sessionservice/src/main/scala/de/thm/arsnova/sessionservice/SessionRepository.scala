@@ -27,4 +27,17 @@ object SessionRepository {
     val qry = sessionsTable.map(s => (s.key, s.id)).result
     db.run(qry)
   }
+
+  def update(session: Session): Future[Session] = {
+    val qry = sessionsTable.filter(_.id === session.id.get)
+      .map(ns => (ns.title, ns.shortName, ns.active, ns.feedbackLock, ns.flipFlashcards))
+      .update((session.title, session.shortName, session.active, session.feedbackLock, session.flipFlashcards))
+    db.run(qry)
+    session
+  }
+
+  def delete(id: UUID): Future[Int] = {
+    val qry = sessionsTable.filter(_.id === id).delete
+    db.run(qry)
+  }
 }

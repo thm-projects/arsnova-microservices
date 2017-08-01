@@ -25,4 +25,8 @@ object SessionCommands {
   object CreateSessionFormat extends DefaultJsonProtocol {
     implicit val format: RootJsonFormat[CreateSession] = jsonFormat3(CreateSession)
   }
+
+  case class UpdateSession(id: UUID, session: Session, token: String) extends SessionCommand
+
+  case class DeleteSession(id: UUID, token: String) extends SessionCommand
 }

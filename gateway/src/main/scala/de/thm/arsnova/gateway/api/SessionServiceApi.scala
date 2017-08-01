@@ -92,6 +92,24 @@ trait SessionServiceApi extends BaseApi {
             (sessionRegion ? GetSession(sessionId))
               .mapTo[Try[Session]]
           }
+        } ~
+        put {
+          headerValueByName("X-Session-Token") { tokenstring =>
+            entity(as[Session]) { session =>
+              complete {
+                (sessionRegion ? UpdateSession(sessionId, session, tokenstring))
+                  .mapTo[Try[Session]]
+              }
+            }
+          }
+        } ~
+        delete {
+          headerValueByName("X-Session-Token") { tokenstring =>
+            complete {
+              (sessionRegion ? DeleteSession(sessionId, tokenstring))
+                .mapTo[Try[Session]]
+            }
+          }
         }
       }
     }

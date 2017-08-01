@@ -21,7 +21,7 @@ import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
-import de.thm.arsnova.shared.Exceptions.{NoSuchSession, NoUserException}
+import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchSession, NoUserException}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -89,6 +89,42 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
           ret ! Success(session)
         }
         case None => ret ! Failure(NoSuchSession(Left(id)))
+      }
+    }) (sender)
+    case UpdateSession(id, session, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
+            if (role == "owner") {
+              SessionRepository.update(session) map { s =>
+                state = Some(s)
+                ret ! Success(s)
+              }
+            } else {
+              ret ! Failure(InsufficientRights(role, "Update Session"))
+            }
+          }
+        }
+      }
+    }) (sender)
+    case DeleteSession(id, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
+            if (role == "owner") {
+              SessionRepository.delete(id) onComplete {
+                case Success(i) => {
+                  ret ! Success(state.get)
+                  state = None
+                  context.become(initial)
+                }
+                case Failure(t) => ret ! Failure(t)
+              }
+            } else {
+              ret ! Failure(InsufficientRights(role, "Update Session"))
+            }
+          }
+        }
       }
     }) (sender)
   }
