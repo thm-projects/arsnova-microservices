@@ -58,6 +58,7 @@ lazy val root = (project in file("."))
   .aggregate(
     gateway,
     managementservice,
+    eventservice,
     commandservice,
     keywordservice,
     sessionservice,
@@ -77,6 +78,12 @@ lazy val gateway = (project in file("gateway"))
   .dependsOn(shared, authservice, sessionservice, contentservice)
 
 lazy val managementservice = (project in file("managementservice"))
+  .settings(
+    libraryDependencies ++= akkaDependencies
+  )
+  .dependsOn(shared)
+
+lazy val eventservice = (project in file("eventservice"))
   .settings(
     libraryDependencies ++= akkaDependencies
   )
