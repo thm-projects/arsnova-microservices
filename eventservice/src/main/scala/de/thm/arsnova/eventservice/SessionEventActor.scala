@@ -10,6 +10,7 @@ import akka.util.Timeout
 import akka.actor.Props
 import akka.actor.ActorRef
 import de.thm.arsnova.shared.events.SessionEventPackage
+import de.thm.arsnova.shared.servicecommands.EventCommands._
 
 import scala.concurrent.ExecutionContext
 
@@ -28,11 +29,23 @@ class SessionEventActor extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
+  // (sessionid, eventname) -> ref
+  private val subs: collection.mutable.HashMap[(UUID, String), ActorRef] =
+    collection.mutable.HashMap.empty[(UUID, String), ActorRef]
+
+  def broadcast(sep: SessionEventPackage) = {
+    subs.filter(_ == (sep.id, sep.event.getClass.toString)) foreach { sub =>
+      sub._2 ! sep.event
+    }
+  }
+
   override def receiveRecover: Receive = {
     case _ =>
   }
 
   override def receiveCommand: Receive = {
-    case SessionEventPackage(id, event) =>
+    case Sub(id, eventName) => subs += (id, eventName) -> sender()
+    case UnSub(id, eventName) => subs -= ((id, eventName))
+    case sep: SessionEventPackage => broadcast(sep)
   }
 }
