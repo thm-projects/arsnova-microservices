@@ -44,8 +44,6 @@ class SessionEventActor extends PersistentActor {
   }
 
   override def receiveCommand: Receive = {
-    case Sub(id, eventName) => subs += (id, eventName) -> sender()
-    case UnSub(id, eventName) => subs -= ((id, eventName))
     case sep: SessionEventPackage => broadcast(sep)
   }
 }
