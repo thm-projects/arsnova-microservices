@@ -33,7 +33,7 @@ object SessionRepository {
       .map(ns => (ns.title, ns.shortName, ns.active, ns.feedbackLock, ns.flipFlashcards))
       .update((session.title, session.shortName, session.active, session.feedbackLock, session.flipFlashcards))
     db.run(qry)
-    session
+    Future { session }
   }
 
   def delete(id: UUID): Future[Int] = {
