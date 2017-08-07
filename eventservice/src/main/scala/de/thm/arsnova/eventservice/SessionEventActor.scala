@@ -9,7 +9,8 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import akka.actor.Props
 import akka.actor.ActorRef
-import de.thm.arsnova.shared.events.SessionEventPackage
+import de.thm.arsnova.shared.events.SessionEvents.SessionCreated
+import de.thm.arsnova.shared.events.{ServiceEvent, SessionEventPackage}
 import de.thm.arsnova.shared.servicecommands.EventCommands._
 
 import scala.concurrent.ExecutionContext
@@ -21,6 +22,8 @@ object SessionEventActor {
 }
 
 class SessionEventActor extends PersistentActor {
+  import ShardRegions._
+
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
@@ -29,21 +32,14 @@ class SessionEventActor extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
-  // (sessionid, eventname) -> ref
-  private val subs: collection.mutable.HashMap[(UUID, String), ActorRef] =
-    collection.mutable.HashMap.empty[(UUID, String), ActorRef]
-
-  def broadcast(sep: SessionEventPackage) = {
-    subs.filter(_ == (sep.id, sep.event.getClass.toString)) foreach { sub =>
-      sub._2 ! sep.event
-    }
-  }
-
   override def receiveRecover: Receive = {
     case _ =>
   }
 
   override def receiveCommand: Receive = {
-    case sep: SessionEventPackage => broadcast(sep)
+    case sep: SessionEventPackage => {
+      println(sep)
+      BasicEventRouting.broadcast(sep)
+    }
   }
 }

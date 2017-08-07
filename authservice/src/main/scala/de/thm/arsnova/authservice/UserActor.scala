@@ -12,6 +12,7 @@ import akka.util.Timeout
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
+import de.thm.arsnova.shared.events.SessionEvents.SessionCreated
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole}
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
@@ -112,5 +113,6 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
     case MakeUserOwner(userId, sessionId) => ((ret: ActorRef) => {
       SessionRoleRepository.addSessionRole(SessionRole(userId, sessionId, "owner"))
     }) (sender)
+    case SessionCreated(session) => println(session)
   }
 }

@@ -25,11 +25,11 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import scala.concurrent.{ExecutionContext, Future}
 
 object ContentListActor {
-  def props(authRouter: ActorRef, userRegion: ActorRef): Props =
-    Props(new ContentListActor(authRouter: ActorRef, userRegion: ActorRef))
+  def props(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef): Props =
+    Props(new ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef))
 }
 
-class ContentListActor(authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
+class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 

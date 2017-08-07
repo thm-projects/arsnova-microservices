@@ -7,7 +7,7 @@ import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStor
 import akka.routing.RandomPool
 import de.thm.arsnova.authservice.{AuthServiceActor, UserActor}
 import de.thm.arsnova.shared.actors.ServiceManagementActor
-import de.thm.arsnova.shared.shards.{ContentListShard, UserShard}
+import de.thm.arsnova.shared.shards.{ContentListShard, EventShard, UserShard}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -31,14 +31,23 @@ object ContentService extends App {
     extractShardId = UserShard.shardResolver
   )
 
+  ClusterSharding(system).startProxy(
+    typeName = EventShard.shardName,
+    role = Some("event"),
+    extractEntityId = EventShard.idExtractor,
+    extractShardId = EventShard.shardResolver
+  )
+
   val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
+
+  val eventRegion = ClusterSharding(system).shardRegion(EventShard.shardName)
 
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
 
   ClusterSharding(system).start(
     typeName = ContentListShard.shardName,
-    entityProps = ContentListActor.props(authRouter, userRegion),
+    entityProps = ContentListActor.props(eventRegion, authRouter, userRegion),
     settings = ClusterShardingSettings(system),
     extractEntityId = ContentListShard.idExtractor,
     extractShardId = ContentListShard.shardResolver)

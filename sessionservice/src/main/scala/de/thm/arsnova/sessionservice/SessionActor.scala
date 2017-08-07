@@ -22,15 +22,16 @@ import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchSession, NoUserException}
+import de.thm.arsnova.shared.events.SessionEventPackage
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object SessionActor {
-  def props(authRouter: ActorRef, userRegion: ActorRef): Props =
-    Props(new SessionActor(authRouter: ActorRef, userRegion: ActorRef))
+  def props(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef): Props =
+    Props(new SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef))
 }
 
-class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
+class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
@@ -72,6 +73,7 @@ class SessionActor(authRouter: ActorRef, userRegion: ActorRef) extends Persisten
             state = Some(sRet)
             context.become(created)
             ret ! Success(sRet)
+            eventRegion ! SessionEventPackage(user.id.get, SessionCreated(sRet))
             userRegion ! MakeUserOwner(user.id.get, sRet.id.get)
             persist(SessionCreated(sRet))(e => println(e))
           }
