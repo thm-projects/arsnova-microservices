@@ -48,8 +48,10 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
   private var state: Option[Session] = None
 
   override def receiveRecover: Receive = {
-    case event: SessionEvent =>
-      println(event)
+    case SessionCreated(session) => {
+      state = Some(session)
+      context.become(sessionCreated)
+    }
     case s: Any => println(s)
   }
 
