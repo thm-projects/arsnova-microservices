@@ -74,7 +74,6 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
             context.become(created)
             ret ! Success(sRet)
             eventRegion ! SessionEventPackage(user.id.get, SessionCreated(sRet))
-            userRegion ! MakeUserOwner(user.id.get, sRet.id.get)
             persist(SessionCreated(sRet))(e => println(e))
           }
         }

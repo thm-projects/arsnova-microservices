@@ -6,10 +6,6 @@ import de.thm.arsnova.shared.events.SessionEvents.SessionCreated
 
 object BasicEventRouting {
   import ShardRegions._
-  val routing: collection.mutable.HashMap[String, Seq[ActorRef]] =
-    collection.mutable.HashMap(
-      "SessionCreated" -> Seq(userRegion)
-    )
 
   def broadcast(sep: SessionEventPackage) = {
     sep.event match {

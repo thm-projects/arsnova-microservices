@@ -38,7 +38,6 @@ class SessionEventActor extends PersistentActor {
 
   override def receiveCommand: Receive = {
     case sep: SessionEventPackage => {
-      println(sep)
       BasicEventRouting.broadcast(sep)
     }
   }
