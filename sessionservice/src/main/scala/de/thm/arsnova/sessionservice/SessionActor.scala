@@ -57,21 +57,14 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
 
   def initial: Receive = {
     case GetSession(id) => ((ret: ActorRef) => {
-      SessionRepository.findById(id) map {
-        case Some(session) => {
-          state = Some(session)
-          context.become(created)
-          ret ! Success(session)
-        }
-        case None => ret ! Failure(NoSuchSession(Left(id)))
-      }
+      ret ! Failure(NoSuchSession(Left(id)))
     }) (sender)
     case CreateSession(id, session, token) => ((ret: ActorRef) => {
       tokenToUser(token) map {
         case Success(user) => {
           SessionRepository.create(session.copy(userId = user.id.get)) map { sRet =>
             state = Some(sRet)
-            context.become(created)
+            context.become(sessionCreated)
             ret ! Success(sRet)
             eventRegion ! SessionEventPackage(user.id.get, SessionCreated(sRet))
             persist(SessionCreated(sRet))(e => println(e))
@@ -82,7 +75,7 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
     }) (sender)
   }
 
-  def created: Receive = {
+  def sessionCreated: Receive = {
     case GetSession(id) => ((ret: ActorRef) => {
       SessionRepository.findById(id) map {
         case Some(session) => {
