@@ -2,6 +2,7 @@ package de.thm.arsnova.shared.shards
 
 import akka.actor.{ActorRef, Props}
 import akka.cluster.sharding.ShardRegion
+import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.servicecommands.ContentCommands.ContentCommand
 
 object ContentListShard {
@@ -9,9 +10,11 @@ object ContentListShard {
 
   val idExtractor: ShardRegion.ExtractEntityId = {
     case cmd: ContentCommand => (cmd.sessionid.toString, cmd)
+    case event: SessionEventPackage => (event.id.toString, event)
   }
 
   val shardResolver: ShardRegion.ExtractShardId = {
     case cmd: ContentCommand => math.abs(cmd.sessionid.hashCode() % 100).toString
+    case event: SessionEventPackage => math.abs(event.id.hashCode() % 100).toString
   }
 }
