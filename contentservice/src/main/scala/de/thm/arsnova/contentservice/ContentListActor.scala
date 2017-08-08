@@ -57,6 +57,10 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
   def handleEvents(sep: SessionEventPackage) = {
     sep.event match {
       case SessionCreated(session) => context.become(sessionCreated)
+      case SessionDeleted(id) => {
+
+        context.become(initial)
+      }
     }
   }
 
