@@ -15,7 +15,7 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import de.thm.arsnova.shared.entities.{Session, User}
-import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionEvent, SessionUpdated}
+import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
@@ -54,6 +54,10 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
     }
     case SessionUpdated(session) => {
       state = Some(session)
+    }
+    case SessionDeleted(id) => {
+      state = None
+      context.become(initial)
     }
     case s: Any => println(s)
   }
@@ -116,8 +120,11 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
               SessionRepository.delete(id) onComplete {
                 case Success(i) => {
                   ret ! Success(state.get)
+                  val e = SessionDeleted(id)
                   state = None
                   context.become(initial)
+                  eventRegion ! SessionEventPackage(id, e)
+                  persist(e)(e => e)
                 }
                 case Failure(t) => ret ! Failure(t)
               }

@@ -1,5 +1,7 @@
 package de.thm.arsnova.shared.events
 
+import java.util.UUID
+
 import de.thm.arsnova.shared.entities.Session
 
 object SessionEvents {
@@ -8,4 +10,6 @@ object SessionEvents {
   case class SessionCreated(session: Session) extends SessionEvent
 
   case class SessionUpdated(session: Session) extends SessionEvent
+
+  case class SessionDeleted(id: UUID) extends SessionEvent
 }
