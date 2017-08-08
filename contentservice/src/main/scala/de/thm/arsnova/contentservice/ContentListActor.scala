@@ -20,6 +20,8 @@ import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions._
+import de.thm.arsnova.shared.events.SessionEventPackage
+import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,7 +52,21 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
       contentlist += c.id.get -> c
   }
 
-  override def receiveCommand: Receive = {
+  override def receiveCommand: Receive = initial
+
+  def handleEvents(sep: SessionEventPackage) = {
+    sep.event match {
+      case SessionCreated(session) => context.become(sessionCreated)
+    }
+  }
+
+  def initial: Receive = {
+    case sep: SessionEventPackage => handleEvents(sep)
+    case cmd: ContentCommand =>
+      sender() ! Failure(NoSuchSession(Left(cmd.sessionid)))
+  }
+
+  def sessionCreated: Receive = {
     case GetContent(sessionid, id) => ((ret: ActorRef) => {
       contentlist.get(id) match {
         case Some(c) => ret ! Some(c)
@@ -90,5 +106,7 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
         case Failure(t) => ret ! t
       }
     }) (sender)
+
+    case sep: SessionEventPackage => handleEvents(sep)
   }
 }
