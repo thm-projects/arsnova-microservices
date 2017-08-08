@@ -15,7 +15,7 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import de.thm.arsnova.shared.entities.{Session, User}
-import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionEvent}
+import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionEvent, SessionUpdated}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
@@ -51,6 +51,9 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
     case SessionCreated(session) => {
       state = Some(session)
       context.become(sessionCreated)
+    }
+    case SessionUpdated(session) => {
+      state = Some(session)
     }
     case s: Any => println(s)
   }
@@ -95,6 +98,8 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
               SessionRepository.update(session) map { s =>
                 state = Some(s)
                 ret ! Success(s)
+                eventRegion ! SessionEventPackage(id, SessionUpdated(s))
+                persist(SessionUpdated(s))(e => println(e))
               }
             } else {
               ret ! Failure(InsufficientRights(role, "Update Session"))
