@@ -57,7 +57,10 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
 
   def handleEvents(sep: SessionEventPackage) = {
     sep.event match {
-      case SessionCreated(session) => context.become(sessionCreated)
+      case SessionCreated(session) => {
+        context.become(sessionCreated)
+        persist(SessionCreated(session))(e => e)
+      }
       case SessionDeleted(id) => {
         ContentRepository.deleteAllSessionContent(id)
         contentlist.clear()
@@ -74,6 +77,7 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
         case Success(session) => {
           context.become(sessionCreated)
           context.self ! cmd
+          persist(SessionCreated(session))(e => e)
         }
         case Failure(t) => sender() ! Failure(NoSuchSession(Left(cmd.sessionid)))
       }
