@@ -48,10 +48,6 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
 
   def handleSessionEvents(sep: SessionEventPackage) = {
     sep.event match {
-      case UserCreated(user) => {
-        userState = Some(user)
-        context.become(userCreated)
-      }
       case SessionCreated(session) => {
         val newRole = SessionRole(session.userId, session.id.get, "owner")
         SessionRoleRepository.addSessionRole(newRole)
