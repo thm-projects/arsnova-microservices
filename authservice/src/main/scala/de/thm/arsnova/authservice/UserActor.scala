@@ -40,6 +40,7 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
   override def receiveRecover: Receive = {
     case UserCreated(user) =>
       userState = Some(user)
+      context.become(userCreated)
     case UserGetsSessionRole(role) =>
       rolesState += role
   }
@@ -47,6 +48,7 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
   override def receiveCommand: Receive = initial
 
   def handleSessionEvents(sep: SessionEventPackage) = {
+    println(sep)
     sep.event match {
       case SessionCreated(session) => {
         val newRole = SessionRole(session.userId, session.id.get, "owner")

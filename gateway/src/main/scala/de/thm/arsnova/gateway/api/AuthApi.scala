@@ -52,8 +52,9 @@ trait AuthApi extends BaseApi {
     post {
       entity(as[User]) { user =>
         complete {
-          (authRouter ? CreateUser(user))
-            .mapTo[UUID].map(_.toJson)
+          val userWithId = user.copy(id = Some(UUID.randomUUID()))
+          (authRouter ? CreateUser(userWithId))
+            .mapTo[User].map(_.toJson)
         }
       }
     }
