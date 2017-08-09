@@ -44,25 +44,24 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
       rolesState += role
   }
 
-  override def receiveCommand: Receive = {
-    case GetUser(userId) => ((ret: ActorRef) => {
-      userState match {
-        case Some(u) => ret ! Success(u)
-        case None => UserRepository.findById(userId) map {
-          case Some(user) => {
-            ret ! Success(user)
-            userState = Some(user)
-          }
-          case None =>
-            ret ! Failure(ResourceNotFound("user"))
-        }
-      }
-    }) (sender)
+  override def receiveCommand: Receive = initial
+
+  def initial: Receive = {
     case CreateUser(userId, user) => ((ret: ActorRef) => {
       UserRepository.create(user) map { u =>
         ret ! u
         userState = Some(u)
+        context.become(userCreated)
         persist(UserCreated(u))(e => e)
+      }
+    }) (sender)
+  }
+
+  def userCreated: Receive = {
+    case GetUser(userId) => ((ret: ActorRef) => {
+      userState match {
+        case Some(u) => ret ! Success(u)
+        case None => ret ! Failure(ResourceNotFound("user"))
       }
     }) (sender)
     case GetRoleForSession(userId, sessionId) => ((ret: ActorRef) => {
