@@ -22,9 +22,6 @@ class AuthServiceActor extends Actor {
         case None => Future { "not found" } pipeTo ret
       }
     }) (sender)
-    case CreateUser(user) => ((ret: ActorRef) => {
-      UserRepository.create(user) pipeTo ret
-    }) (sender)
     case GetUserFromTokenString(tokenstring) => ((ret: ActorRef) => {
       UserRepository.getUserByTokenString(tokenstring) map {
         case Some(u) => ret ! Success(u)

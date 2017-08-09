@@ -18,7 +18,7 @@ import de.thm.arsnova.authservice.UserActor
 import spray.json._
 import de.thm.arsnova.gateway.sharding.UserShard
 import de.thm.arsnova.shared.servicecommands.UserCommands._
-import de.thm.arsnova.shared.entities.{User, Session}
+import de.thm.arsnova.shared.entities.{Session, User}
 import de.thm.arsnova.shared.Exceptions._
 
 trait UserApi extends BaseApi {
@@ -36,6 +36,16 @@ trait UserApi extends BaseApi {
             (userRegion ? GetUser(userId))
               .mapTo[Try[User]]
           }
+        }
+      }
+    } ~
+    post {
+      entity(as[User]) { user =>
+        complete {
+          val newId = UUID.randomUUID()
+          val userWithId = user.copy(id = Some(newId))
+          (userRegion ? CreateUser(newId, userWithId))
+            .mapTo[User].map(_.toJson)
         }
       }
     }

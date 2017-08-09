@@ -48,7 +48,6 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
   override def receiveCommand: Receive = initial
 
   def handleSessionEvents(sep: SessionEventPackage) = {
-    println(sep)
     sep.event match {
       case SessionCreated(session) => {
         val newRole = SessionRole(session.userId, session.id.get, "owner")
@@ -67,6 +66,9 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
         persist(UserCreated(u))(e => e)
       }
     }) (sender)
+    case GetUser(userId) => {
+      sender() ! Failure(ResourceNotFound("user"))
+    }
   }
 
   def userCreated: Receive = {
