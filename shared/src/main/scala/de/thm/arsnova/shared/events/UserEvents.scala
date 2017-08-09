@@ -3,7 +3,7 @@ package de.thm.arsnova.shared.events
 import de.thm.arsnova.shared.entities.{User, SessionRole}
 
 object UserEvents {
-  trait UserEvent
+  trait UserEvent extends ServiceEvent
 
   case class UserCreated(user: User) extends UserEvent
 
