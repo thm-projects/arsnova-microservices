@@ -12,7 +12,7 @@ import akka.util.Timeout
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
-import de.thm.arsnova.shared.events.SessionEvents.SessionCreated
+import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole}
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -45,6 +45,20 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
   }
 
   override def receiveCommand: Receive = initial
+
+  def handleSessionEvents(sep: SessionEventPackage) = {
+    sep.event match {
+      case UserCreated(user) => {
+        userState = Some(user)
+        context.become(userCreated)
+      }
+      case SessionCreated(session) => {
+        val newRole = SessionRole(session.userId, session.id.get, "owner")
+        SessionRoleRepository.addSessionRole(newRole)
+        persist(UserGetsSessionRole(newRole)) { e => e}
+      }
+    }
+  }
 
   def initial: Receive = {
     case CreateUser(userId, user) => ((ret: ActorRef) => {
@@ -110,10 +124,6 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
         case None => ret ! Failure(InvalidToken(tokenstring))
       }
     }) (sender)
-    case SessionEventPackage(userId, event) => event match {
-      case SessionCreated(session) => {
-        SessionRoleRepository.addSessionRole(SessionRole(userId, session.id.get, "owner"))
-      }
-    }
+    case sep: SessionEventPackage => handleSessionEvents(sep)
   }
 }
