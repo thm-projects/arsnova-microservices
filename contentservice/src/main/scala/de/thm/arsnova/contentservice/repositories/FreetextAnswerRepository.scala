@@ -34,7 +34,7 @@ object FreetextAnswerRepository {
     db.run(freetextAnswersTable.filter(_.id === freetextAnswerId).delete)
   }
 
-  def deleteAllByQuestionId(contentId: UUID): Future[Int] = {
+  def deleteAllByContentId(contentId: UUID): Future[Int] = {
     db.run(freetextAnswersTable.filter(_.contentId === contentId).delete)
   }
 }

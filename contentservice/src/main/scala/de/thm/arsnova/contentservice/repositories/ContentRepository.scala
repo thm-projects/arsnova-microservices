@@ -49,4 +49,9 @@ object ContentRepository {
       newContent
     }
   }
+
+  def deleteAllSessionContent(sessionId: UUID): Future[Int] = {
+    val qry = questionsTable.filter(_.sessionId === sessionId).delete
+    db.run(qry)
+  }
 }

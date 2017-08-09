@@ -26,4 +26,9 @@ object AnswerOptionRepository {
       db.run(answerOptionsTable += itemWithId)
     }
   }
+
+  def deleteByContentId(contentId: UUID): Future[Int] = {
+    val qry = answerOptionsTable.filter(_.contentId === contentId).delete
+    db.run(qry)
+  }
 }

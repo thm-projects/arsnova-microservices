@@ -35,7 +35,7 @@ object ChoiceAnswerRepository {
     db.run(choiceAnswersTable.filter(_.id === choiceAnswerId).delete)
   }
 
-  def deleteAllByQuestionId(contentId: UUID): Future[Int] = {
+  def deleteAllByContentId(contentId: UUID): Future[Int] = {
     db.run(choiceAnswersTable.filter(_.contentId === contentId).delete)
   }
 }
