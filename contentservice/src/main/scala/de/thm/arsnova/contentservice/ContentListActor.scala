@@ -15,7 +15,7 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import de.thm.arsnova.contentservice.repositories.ContentRepository
-import de.thm.arsnova.shared.entities.{Content, User}
+import de.thm.arsnova.shared.entities.{Content, User, Session}
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -23,15 +23,16 @@ import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
+import de.thm.arsnova.shared.servicecommands.SessionCommands.GetSession
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object ContentListActor {
-  def props(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef): Props =
-    Props(new ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef))
+  def props(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef, sessionRegion: ActorRef): Props =
+    Props(new ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef, sessionRegion: ActorRef))
 }
 
-class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
+class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef, sessionRegion: ActorRef) extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
@@ -67,8 +68,16 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
 
   def initial: Receive = {
     case sep: SessionEventPackage => handleEvents(sep)
-    case cmd: ContentCommand =>
-      sender() ! Failure(NoSuchSession(Left(cmd.sessionid)))
+    case cmd: ContentCommand => {
+      // query session service just in case the session creation event got lost
+      (sessionRegion ? GetSession(cmd.sessionid)).mapTo[Try[Session]] map {
+        case Success(session) => {
+          context.become(sessionCreated)
+          context.self ! cmd
+        }
+        case Failure(t) => sender() ! Failure(NoSuchSession(Left(cmd.sessionid)))
+      }
+    }
   }
 
   def sessionCreated: Receive = {
