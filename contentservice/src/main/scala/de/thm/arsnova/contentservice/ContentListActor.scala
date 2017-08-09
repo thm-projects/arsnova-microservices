@@ -49,6 +49,12 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
   override def persistenceId: String = self.path.parent.name + "-"  + self.path.name
 
   override def receiveRecover: Receive = {
+    case SessionCreated(session) => {
+      context.become(sessionCreated)
+    }
+    case SessionDeleted(id) => {
+      context.become(initial)
+    }
     case ContentCreated(c) =>
       contentlist += c.id.get -> c
   }
@@ -65,6 +71,7 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
         ContentRepository.deleteAllSessionContent(id)
         contentlist.clear()
         context.become(initial)
+        persist(SessionDeleted(id))(e => e)
       }
     }
   }
