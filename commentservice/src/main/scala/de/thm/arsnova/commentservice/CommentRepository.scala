@@ -14,17 +14,18 @@ object CommentRepository {
   val commentsTable = TableQuery[CommentsTable]
 
   def findById(id: UUID): Future[Option[Comment]] = {
-    db.run(commentsTable.filter(_.id === id).result.headOption)
+    val qry = commentsTable.filter(_.id === id).result.headOption
+    db.run(qry)
   }
 
   def findBySessionId(sessionId: UUID): Future[Seq[Comment]] = {
-    db.run(commentsTable.filter(_.sessionId === sessionId).result)
+    val qry = commentsTable.filter(_.sessionId === sessionId).result
+    db.run(qry)
   }
 
-  def create(comment: Comment): Future[UUID] = {
-    val cId = UUID.randomUUID
-    val itemWithId = comment.copy(id = Some(cId))
-    db.run(commentsTable += itemWithId).map(_ => cId)
+  def create(comment: Comment): Future[Comment] = {
+    val qry = commentsTable += comment
+    db.run(qry).map(_ => comment)
   }
 
   def delete(id: UUID): Future[Int] = {
