@@ -123,7 +123,7 @@ lazy val commentservice = (project in file("commentservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies
   )
-  .dependsOn(shared)
+  .dependsOn(shared, authservice)
 
 lazy val stresstest = (project in file("stresstest"))
   .settings(

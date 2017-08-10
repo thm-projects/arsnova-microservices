@@ -13,17 +13,35 @@ object CommentRepository {
   val db: Database = Database.forConfig("database")
   val commentsTable = TableQuery[CommentsTable]
 
-  def findById(id: UUID): Future[Comment] = {
-    db.run(commentsTable.filter(_.id === id).result.head)
+  def findById(id: UUID): Future[Option[Comment]] = {
+    val qry = commentsTable.filter(_.id === id).result.headOption
+    db.run(qry)
   }
 
   def findBySessionId(sessionId: UUID): Future[Seq[Comment]] = {
-    db.run(commentsTable.filter(_.sessionId === sessionId).result)
+    val qry = commentsTable.filter(_.sessionId === sessionId).result
+    db.run(qry)
   }
 
-  def create(comment: Comment): Future[UUID] = {
-    val cId = UUID.randomUUID
-    val itemWithId = comment.copy(id = Some(cId))
-    db.run(commentsTable += itemWithId).map(_ => cId)
+  def create(comment: Comment): Future[Comment] = {
+    val qry = commentsTable += comment
+    db.run(qry).map(_ => comment)
+  }
+
+  def delete(id: UUID): Future[Int] = {
+    val qry = commentsTable.filter(_.id === id).delete
+    db.run(qry)
+  }
+
+  def deleteAllSessionContent(sessionId: UUID): Future[Int] = {
+    val qry = commentsTable.filter(_.sessionId === sessionId).delete
+    db.run(qry)
+  }
+
+  def markAsRead(ids: Seq[UUID]): Future[Seq[Int]] = {
+    val qrys = ids.map { id =>
+      commentsTable.filter(_.id === id).map(_.isRead).update(true)
+    }
+    db.run(DBIO.sequence(qrys))
   }
 }
