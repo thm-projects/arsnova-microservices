@@ -10,7 +10,7 @@ import akka.actor.Props
 import akka.util.Timeout
 import akka.pattern.ask
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.Exceptions.NoSuchSession
+import de.thm.arsnova.shared.Exceptions.{NoSuchSession, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Comment, Session, User}
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.CommentEvents._
@@ -91,9 +91,9 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
           CommentRepository.findById(id) map {
             case Some(c) => {
               commentlist += id -> c
-              ret ! Some(c)
+              ret ! Success(c)
             }
-            case None => ret ! None
+            case None => ret ! Failure(ResourceNotFound(s"comment with id: $id"))
           }
       }
     }) (sender)

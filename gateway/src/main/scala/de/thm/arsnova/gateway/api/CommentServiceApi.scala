@@ -27,7 +27,7 @@ trait CommentServiceApi extends BaseApi {
           get {
             complete {
               (commentRegion ? GetComment(sessionId, commentId))
-                .mapTo[Comment].map(_.toJson)
+                .mapTo[Try[Comment]]
             }
           }
         } ~
