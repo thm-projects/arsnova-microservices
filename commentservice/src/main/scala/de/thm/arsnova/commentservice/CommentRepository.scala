@@ -37,4 +37,11 @@ object CommentRepository {
     val qry = commentsTable.filter(_.sessionId === sessionId).delete
     db.run(qry)
   }
+
+  def markAsRead(ids: Seq[UUID]): Future[Seq[Int]] = {
+    val qrys = ids.map { id =>
+      commentsTable.filter(_.id === id).map(_.isRead).update(true)
+    }
+    db.run(DBIO.sequence(qrys))
+  }
 }

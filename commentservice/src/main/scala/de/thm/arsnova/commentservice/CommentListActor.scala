@@ -97,6 +97,11 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
           }
       }
     }) (sender)
+    case GetUnreadComments(sessionId) => ((ret: ActorRef) => {
+      val unreads = commentlist.values.map(identity).toSeq.filter(_.isRead == false)
+      ret ! unreads
+      CommentRepository.markAsRead(unreads.map(_.id.get))
+    }) (sender)
     case DeleteComment(sessionId, id) => ((ret: ActorRef) => {
       commentlist.remove(id)
       CommentRepository.delete(id)
