@@ -1,7 +1,7 @@
 package de.thm.arsnova.eventservice
 
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
-import de.thm.arsnova.shared.shards.{UserShard, ContentListShard, SessionShard}
+import de.thm.arsnova.shared.shards._
 
 object ShardRegions {
   import Context._
@@ -32,4 +32,13 @@ object ShardRegions {
   )
 
   val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
+
+  ClusterSharding(system).startProxy(
+    typeName = CommentShard.shardName,
+    role = Some("comment"),
+    extractEntityId = CommentShard.idExtractor,
+    extractShardId = CommentShard.shardResolver
+  )
+
+  val commentRegion = ClusterSharding(system).shardRegion(CommentShard.shardName)
 }
