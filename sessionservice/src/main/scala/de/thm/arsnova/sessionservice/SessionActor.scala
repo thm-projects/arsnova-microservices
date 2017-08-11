@@ -55,7 +55,7 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
     case SessionUpdated(session) => {
       state = Some(session)
     }
-    case SessionDeleted(id) => {
+    case SessionDeleted(session) => {
       state = None
       context.become(initial)
     }
@@ -120,7 +120,7 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
               SessionRepository.delete(id) onComplete {
                 case Success(i) => {
                   ret ! Success(state.get)
-                  val e = SessionDeleted(id)
+                  val e = SessionDeleted(state.get)
                   state = None
                   context.become(initial)
                   eventRegion ! SessionEventPackage(id, e)

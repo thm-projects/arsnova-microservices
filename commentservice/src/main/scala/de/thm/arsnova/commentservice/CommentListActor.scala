@@ -44,6 +44,9 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
     case SessionCreated(session) => {
       context.become(sessionCreated)
     }
+    case SessionDeleted(session) => {
+      context.become(initial)
+    }
     case CommentCreated(comment) => {
       commentlist += comment.id.get -> comment
     }
@@ -60,10 +63,11 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
         context.become(sessionCreated)
         persist(SessionCreated(session))(e => e)
       }
-      case SessionDeleted(id) => {
-        CommentRepository.deleteAllSessionContent(id)
+      case SessionDeleted(session) => {
+        CommentRepository.deleteAllSessionContent(session.id.get)
         commentlist.clear()
         context.become(initial)
+        persist(SessionDeleted(session))(e => e)
       }
     }
   }

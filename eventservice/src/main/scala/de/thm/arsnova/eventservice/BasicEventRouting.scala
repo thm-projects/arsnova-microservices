@@ -16,6 +16,8 @@ object BasicEventRouting {
         commentRegion ! sep
       }
       case SessionDeleted(session) => {
+        // usershard is based on userId
+        userRegion ! SessionEventPackage(session.userId, sep.event)
         contentListRegion ! sep
         commentRegion ! sep
       }

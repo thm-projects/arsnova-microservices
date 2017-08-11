@@ -67,11 +67,11 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
         context.become(sessionCreated)
         persist(SessionCreated(session))(e => e)
       }
-      case SessionDeleted(id) => {
-        ContentRepository.deleteAllSessionContent(id)
+      case SessionDeleted(session) => {
+        ContentRepository.deleteAllSessionContent(session.id.get)
         contentlist.clear()
         context.become(initial)
-        persist(SessionDeleted(id))(e => e)
+        persist(SessionDeleted(session))(e => e)
       }
     }
   }

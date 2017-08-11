@@ -11,5 +11,5 @@ object SessionEvents {
 
   case class SessionUpdated(session: Session) extends SessionEvent
 
-  case class SessionDeleted(id: UUID) extends SessionEvent
+  case class SessionDeleted(session: Session) extends SessionEvent
 }
