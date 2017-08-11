@@ -26,4 +26,9 @@ object SessionRoleRepository extends BaseRepository {
     val qry = sessionRolesTables.filter(e => e.userId === userId && e.role === role)
     db.run(qry.result)
   }
+
+  def deleteSessionRole(role: SessionRole): Future[Int] = {
+    val qry = sessionRolesTables.filter(r => r.sessionId === role.sessionId && r.userId === role.userId).delete
+    db.run(qry)
+  }
 }

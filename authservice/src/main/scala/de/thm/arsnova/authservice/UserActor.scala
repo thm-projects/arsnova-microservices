@@ -13,7 +13,7 @@ import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepos
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
-import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole}
+import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole, UserLosesSessionRole}
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
@@ -43,6 +43,8 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
       context.become(userCreated)
     case UserGetsSessionRole(role) =>
       rolesState += role
+    case UserLosesSessionRole(role) =>
+      rolesState -= role
   }
 
   override def receiveCommand: Receive = initial
@@ -53,6 +55,11 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
         val newRole = SessionRole(session.userId, session.id.get, "owner")
         SessionRoleRepository.addSessionRole(newRole)
         persist(UserGetsSessionRole(newRole)) { e => e}
+      }
+      case SessionDeleted(session) => {
+        val oldRole = SessionRole(session.userId, session.id.get, "owner")
+        SessionRoleRepository.deleteSessionRole(oldRole)
+        persist(UserLosesSessionRole(oldRole))(e => e)
       }
     }
   }

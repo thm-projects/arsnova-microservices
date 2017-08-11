@@ -8,4 +8,6 @@ object UserEvents {
   case class UserCreated(user: User) extends UserEvent
 
   case class UserGetsSessionRole(sessionRole: SessionRole) extends UserEvent
+
+  case class UserLosesSessionRole(sessionRole: SessionRole) extends UserEvent
 }
