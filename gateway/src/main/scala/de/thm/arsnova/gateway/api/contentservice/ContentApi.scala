@@ -33,6 +33,12 @@ trait ContentApi extends BaseApi {
                 case None => Failure(NoSuchContent)
               }
             }
+          } ~
+          delete {
+            complete {
+              (contentRegion ? DeleteContent(sessionId, contentId))
+                .mapTo[Int].map(_.toJson)
+            }
           }
         } ~
         get {
