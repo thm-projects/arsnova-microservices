@@ -35,9 +35,11 @@ trait ContentApi extends BaseApi {
             }
           } ~
           delete {
-            complete {
-              (contentRegion ? DeleteContent(sessionId, contentId))
-                .mapTo[Int].map(_.toJson)
+            headerValueByName("X-Session-Token") { tokenstring =>
+              complete {
+                (contentRegion ? DeleteContent(sessionId, contentId, tokenstring))
+                  .mapTo[Int].map(_.toJson)
+              }
             }
           }
         } ~

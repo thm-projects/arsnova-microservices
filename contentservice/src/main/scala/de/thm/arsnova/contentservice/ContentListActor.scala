@@ -105,11 +105,19 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
           }
       }
     }) (sender)
-    case DeleteContent(sessionId, id) => ((ret: ActorRef) => {
-      val c = contentlist.remove(id)
-      ContentRepository.delete(id) pipeTo ret
-      eventRegion ! SessionEventPackage(sessionId, ContentDeleted(c.get))
-      persist(ContentDeleted(c.get))(e => e)
+    case DeleteContent(sessionId, id, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
+            if (role == "owner") {
+              val c = contentlist.remove(id)
+              ContentRepository.delete(id) pipeTo ret
+              eventRegion ! SessionEventPackage(sessionId, ContentDeleted(c.get))
+              persist(ContentDeleted(c.get))(e => e)
+            }
+          }
+        }
+      }
     }) (sender)
     case GetContentListBySessionId(sessionid) => ((ret: ActorRef) => {
       // .map(identity) is needed due to serialization bug in scala

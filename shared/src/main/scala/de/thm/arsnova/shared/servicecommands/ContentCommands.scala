@@ -18,5 +18,5 @@ object ContentCommands {
 
   case class CreateContent(sessionId: UUID, content: Content, token: String) extends ContentCommand
 
-  case class DeleteContent(sessionId: UUID, id: UUID) extends ContentCommand
+  case class DeleteContent(sessionId: UUID, id: UUID, token: String) extends ContentCommand
 }
