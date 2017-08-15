@@ -17,4 +17,6 @@ object ContentCommands {
   case class GetContentListBySessionIdAndVariant(sessionId: UUID, variant: String) extends ContentCommand
 
   case class CreateContent(sessionId: UUID, content: Content, token: String) extends ContentCommand
+
+  case class DeleteContent(sessionId: UUID, content: Content) extends ContentCommand
 }
