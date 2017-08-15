@@ -41,4 +41,13 @@ object ShardRegions {
   )
 
   val commentRegion = ClusterSharding(system).shardRegion(CommentShard.shardName)
+
+  ClusterSharding(system).startProxy(
+    typeName = AnswerListShard.shardName,
+    role = Some("content"),
+    extractEntityId = AnswerListShard.idExtractor,
+    extractShardId = AnswerListShard.shardResolver
+  )
+
+  val answerListRegion = ClusterSharding(system).shardRegion(AnswerListShard.shardName)
 }
