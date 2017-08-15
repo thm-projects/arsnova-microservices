@@ -138,6 +138,7 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
               ContentRepository.create(content) map { c =>
                 contentlist += c.id.get -> c
                 ret ! Success(c)
+                eventRegion ! SessionEventPackage(c.sessionId, ContentCreated(c))
                 persist(ContentCreated(c)) { e => e }
               }
             } else {
