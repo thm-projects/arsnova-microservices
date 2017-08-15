@@ -111,9 +111,12 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
           (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
             if (role == "owner") {
               val c = contentlist.remove(id)
-              ContentRepository.delete(id) pipeTo ret
+              ContentRepository.delete(id)
+              ret ! Success(c.get)
               eventRegion ! SessionEventPackage(sessionId, ContentDeleted(c.get))
               persist(ContentDeleted(c.get))(e => e)
+            } else {
+              ret ! Failure(InsufficientRights(role, "Delete Content"))
             }
           }
         }
