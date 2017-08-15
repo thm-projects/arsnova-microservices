@@ -10,7 +10,7 @@ object Exceptions {
   }
 
   case class ResourceNotFound(resource: String) extends ARSException {
-    def getMsg: String = s"Ressource $resource could not be found"
+    def getMsg: String = s"Resource $resource could not be found"
   }
 
   case class NoUserException(methodName: String) extends ARSException {
