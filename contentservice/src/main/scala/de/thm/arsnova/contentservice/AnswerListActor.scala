@@ -15,6 +15,7 @@ import akka.util.Timeout
 import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
+import de.thm.arsnova.contentservice.repositories.{ChoiceAnswerRepository, FreetextAnswerRepository}
 import de.thm.arsnova.shared.entities.{Content, Session, User}
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
@@ -55,6 +56,10 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
         case "freetext" => context.become(freetextContentCreated)
       }
     }
+    case ContentDeleted(content) => {
+      context.become(initial)
+      answerList = Nil
+    }
   }
 
   override def receiveCommand: Receive = initial
@@ -67,6 +72,18 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
           case "freetext" => context.become(freetextContentCreated)
         }
         persist(ContentCreated(content))(e => e)
+      }
+      case ContentDeleted(content) => {
+        contentToType(content) match {
+          case "choice" => {
+            ChoiceAnswerRepository.deleteAllByContentId(content.id.get)
+          }
+          case "freetext" => {
+            FreetextAnswerRepository.deleteAllByContentId(content.id.get)
+          }
+        }
+        answerList = Nil
+        persist(ContentDeleted(content))(e => e)
       }
     }
   }
