@@ -80,13 +80,13 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
     case sep: SessionEventPackage => handleEvents(sep)
     case cmd: ContentCommand => {
       // query session service just in case the session creation event got lost
-      (sessionRegion ? GetSession(cmd.sessionid)).mapTo[Try[Session]] map {
+      (sessionRegion ? GetSession(cmd.sessionId)).mapTo[Try[Session]] map {
         case Success(session) => {
           context.become(sessionCreated)
           context.self ! cmd
           persist(SessionCreated(session))(e => e)
         }
-        case Failure(t) => sender() ! Failure(NoSuchSession(Left(cmd.sessionid)))
+        case Failure(t) => sender() ! Failure(NoSuchSession(Left(cmd.sessionId)))
       }
     }
   }

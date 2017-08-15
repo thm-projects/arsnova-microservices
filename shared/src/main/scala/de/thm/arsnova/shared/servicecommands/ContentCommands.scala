@@ -7,14 +7,14 @@ import de.thm.arsnova.shared.entities.Content
 
 object ContentCommands {
   sealed trait ContentCommand extends ServiceCommand {
-    def sessionid: UUID
+    def sessionId: UUID
   }
 
-  case class GetContent(sessionid: UUID, id: UUID) extends ContentCommand
+  case class GetContent(sessionId: UUID, id: UUID) extends ContentCommand
 
-  case class GetContentListBySessionId(sessionid: UUID) extends ContentCommand
+  case class GetContentListBySessionId(sessionId: UUID) extends ContentCommand
 
-  case class GetContentListBySessionIdAndVariant(sessionid: UUID, variant: String) extends ContentCommand
+  case class GetContentListBySessionIdAndVariant(sessionId: UUID, variant: String) extends ContentCommand
 
-  case class CreateContent(sessionid: UUID, content: Content, token: String) extends ContentCommand
+  case class CreateContent(sessionId: UUID, content: Content, token: String) extends ContentCommand
 }

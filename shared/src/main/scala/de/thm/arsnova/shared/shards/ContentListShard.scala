@@ -9,12 +9,12 @@ object ContentListShard {
   val shardName = "Question"
 
   val idExtractor: ShardRegion.ExtractEntityId = {
-    case cmd: ContentCommand => (cmd.sessionid.toString, cmd)
+    case cmd: ContentCommand => (cmd.sessionId.toString, cmd)
     case event: SessionEventPackage => (event.id.toString, event)
   }
 
   val shardResolver: ShardRegion.ExtractShardId = {
-    case cmd: ContentCommand => math.abs(cmd.sessionid.hashCode() % 100).toString
+    case cmd: ContentCommand => math.abs(cmd.sessionId.hashCode() % 100).toString
     case event: SessionEventPackage => math.abs(event.id.hashCode() % 100).toString
   }
 }
