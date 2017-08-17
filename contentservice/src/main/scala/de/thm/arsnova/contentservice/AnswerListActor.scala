@@ -15,8 +15,9 @@ import akka.util.Timeout
 import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
+import akka.routing.RoundRobinPool
 import de.thm.arsnova.contentservice.repositories.{ChoiceAnswerRepository, FreetextAnswerRepository}
-import de.thm.arsnova.shared.entities.{Content, Session, User}
+import de.thm.arsnova.shared.entities.{Content, Session, User, ChoiceAnswer, FreetextAnswer}
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
@@ -47,18 +48,33 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
-  private var answerList: Seq[UUID] = Nil
+  private val choiceAnswerList: collection.mutable.HashMap[UUID, ChoiceAnswer] =
+    collection.mutable.HashMap.empty[UUID, ChoiceAnswer]
+  private val freetextAnswerList: collection.mutable.HashMap[UUID, FreetextAnswer] =
+    collection.mutable.HashMap.empty[UUID, FreetextAnswer]
+
+  private var workRouter: Option[ActorRef] = None
 
   override def receiveRecover: Receive = {
     case ContentCreated(content) => {
-      content.format match {
-        case "mc" => context.become(choiceContentCreated)
-        case "freetext" => context.become(freetextContentCreated)
+      contentToType(content) match {
+        case "choice" => {
+          workRouter = Some(context.actorOf(RoundRobinPool(10)
+            .props(ChoiceAnswerActor.props(authRouter))))
+          context.become(choiceContentCreated)
+        }
+        case "freetext" => {
+          workRouter = Some(context.actorOf(RoundRobinPool(10)
+            .props(FreetextAnswerActor.props(authRouter))))
+          context.become(freetextContentCreated)
+        }
       }
     }
     case ContentDeleted(content) => {
       context.become(initial)
-      answerList = Nil
+      choiceAnswerList.clear()
+      freetextAnswerList.clear()
+      workRouter = None
     }
   }
 
@@ -82,7 +98,8 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
             FreetextAnswerRepository.deleteAllByContentId(content.id.get)
           }
         }
-        answerList = Nil
+        choiceAnswerList.clear()
+        freetextAnswerList.clear()
         persist(ContentDeleted(content))(e => e)
       }
     }
@@ -116,9 +133,29 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
 
   def choiceContentCreated: Receive = {
     case sep: SessionEventPackage => handleEvents(sep)
+    case c: CreateChoiceAnswer => ((ret: ActorRef) => {
+      (workRouter.get ? c).mapTo[Try[ChoiceAnswer]] map { res =>
+        ret ! res
+        res match {
+          case Success(a) => {
+            choiceAnswerList += a.id.get -> a
+          }
+        }
+      }
+    }) (sender)
   }
 
   def freetextContentCreated: Receive = {
     case sep: SessionEventPackage => handleEvents(sep)
+    case c: CreateFreetextAnswer => ((ret: ActorRef) => {
+      (workRouter.get ? c).mapTo[Try[FreetextAnswer]] map { res =>
+        ret ! res
+        res match {
+          case Success(a) => {
+            freetextAnswerList += a.id.get -> a
+          }
+        }
+      }
+    }) (sender)
   }
 }

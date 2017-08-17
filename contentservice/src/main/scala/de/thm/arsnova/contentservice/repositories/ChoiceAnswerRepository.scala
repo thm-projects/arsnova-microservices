@@ -20,9 +20,8 @@ object ChoiceAnswerRepository {
     db.run(choiceAnswersTable.filter(_.contentId === contentId).result)
   }
 
-  def create(choiceAnswer: ChoiceAnswer): Future[Int] = {
-    val itemWithId = choiceAnswer.copy(id = Some(UUID.randomUUID))
-    db.run(choiceAnswersTable += itemWithId)
+  def create(choiceAnswer: ChoiceAnswer): Future[ChoiceAnswer] = {
+    db.run(choiceAnswersTable += choiceAnswer).map(_ => choiceAnswer)
   }
 
   def update(choiceAnswer: ChoiceAnswer): Future[Int] = {
