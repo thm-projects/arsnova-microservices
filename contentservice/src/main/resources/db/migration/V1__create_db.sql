@@ -28,6 +28,7 @@ CREATE TABLE answer_options (
 
 CREATE TABLE freetext_answers (
   id uuid NOT NULL,
+  user_id uuid NOT NULL,
   content_id uuid NOT NULL,
   session_id uuid NOT NULL,
   subject TEXT NOT NULL,
@@ -38,6 +39,7 @@ CREATE TABLE freetext_answers (
 
 CREATE TABLE choice_answers (
   id uuid NOT NULL,
+  user_id uuid NOT NULL,
   content_id uuid NOT NULL,
   session_id uuid NOT NULL,
   answer_option_id uuid NOT NULL,
