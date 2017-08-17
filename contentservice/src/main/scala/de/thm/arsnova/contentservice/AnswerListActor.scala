@@ -17,7 +17,7 @@ import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import akka.routing.RoundRobinPool
 import de.thm.arsnova.contentservice.repositories.{ChoiceAnswerRepository, FreetextAnswerRepository}
-import de.thm.arsnova.shared.entities.{Content, Session, User, ChoiceAnswer, FreetextAnswer}
+import de.thm.arsnova.shared.entities.{ChoiceAnswer, Content, FreetextAnswer, Session, User}
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
@@ -25,6 +25,7 @@ import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchSession, NoUserException, ResourceNotFound}
+import de.thm.arsnova.shared.events.ChoiceAnswerEvents.ChoiceAnswerCreated
 import de.thm.arsnova.shared.events.FreetextAnswerEvents._
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.SessionEventPackage
@@ -138,6 +139,7 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
         ret ! res
         res match {
           case Success(a) => {
+            eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerCreated(a))
             choiceAnswerList += a.id.get -> a
           }
         }
@@ -152,6 +154,7 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
         ret ! res
         res match {
           case Success(a) => {
+            eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerCreated(a))
             freetextAnswerList += a.id.get -> a
           }
         }
