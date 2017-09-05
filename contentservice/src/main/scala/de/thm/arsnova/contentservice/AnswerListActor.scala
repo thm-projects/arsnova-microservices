@@ -119,7 +119,7 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
             case "freetext" => context.become(freetextContentCreated)
           }
           context.self ! cmd
-          persist(ContentCreated(c))
+          persist(ContentCreated(c)) { e => e }
         }
         case Failure(t) => sender() ! Failure(ResourceNotFound("question"))
       }

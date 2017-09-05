@@ -20,8 +20,8 @@ object ChoiceAnswerRepository {
     db.run(choiceAnswersTable.filter(_.contentId === contentId).result)
   }
 
-  def create(choiceAnswer: ChoiceAnswer): Future[ChoiceAnswer] = {
-    db.run(choiceAnswersTable += choiceAnswer).map(_ => choiceAnswer)
+  def create(choiceAnswer: ChoiceAnswer): Future[Int] = {
+    db.run(choiceAnswersTable += choiceAnswer)
   }
 
   def update(choiceAnswer: ChoiceAnswer): Future[Int] = {
