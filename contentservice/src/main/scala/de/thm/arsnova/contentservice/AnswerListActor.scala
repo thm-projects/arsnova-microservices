@@ -141,6 +141,7 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
           ret ! Success(awu)
           eventRegion ! SessionEventPackage(awu.sessionId, ChoiceAnswerCreated(awu))
           choiceAnswerList += awu.id.get -> awu
+          persist(ChoiceAnswerCreated(awu)) { e => e }
         }
       }
     }) (sender)
@@ -153,12 +154,14 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
                 choiceAnswerList -= id
                 eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerDeleted(a))
                 ret ! Success(a)
+                persist(ChoiceAnswerDeleted(a)) { e => e }
               } else {
                 (userRegion ? GetRoleForSession(user.id.get, sessionId)).mapTo[String] map { role =>
                   if (role == "owner") {
                     choiceAnswerList -= id
                     eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerDeleted(a))
                     ret ! Success(a)
+                    persist(ChoiceAnswerDeleted(a)) { e => e }
                   } else {
                     ret ! Failure(InsufficientRights(role, "DeleteChoiceAnswer"))
                   }
@@ -186,6 +189,7 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
           ret ! Success(awu)
           eventRegion ! SessionEventPackage(awu.sessionId, FreetextAnswerCreated(awu))
           freetextAnswerList += awu.id.get -> awu
+          persist(FreetextAnswerCreated(awu)) { e => e }
         }
       }
     }) (sender)
@@ -198,12 +202,14 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
                 freetextAnswerList -= id
                 eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerDeleted(a))
                 ret ! Success(a)
+                persist(FreetextAnswerDeleted(a)) { e => e }
               } else {
                 (userRegion ? GetRoleForSession(user.id.get, sessionId)).mapTo[String] map { role =>
                   if (role == "owner") {
                     freetextAnswerList -= id
                     eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerDeleted(a))
                     ret ! Success(a)
+                    persist(FreetextAnswerDeleted(a)) { e => e }
                   } else {
                     ret ! Failure(InsufficientRights(role, "DeleteFreetextAnswer"))
                   }
