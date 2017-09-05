@@ -30,14 +30,22 @@ trait ChoiceAnswerApi extends BaseApi {
               get {
                 complete {
                   (choiceAnswerListRegion ? GetChoiceAnswer(sessionId, questionId, answerId))
-                    .mapTo[Try[ChoiceAnswer]]
+                    .mapTo[Option[ChoiceAnswer]]
+                }
+              } ~
+              delete {
+                headerValueByName("X-Session-Token") { token =>
+                  complete {
+                    (choiceAnswerListRegion ? DeleteChoiceAnswer(sessionId, questionId, answerId, token))
+                      .mapTo[Try[ChoiceAnswer]]
+                  }
                 }
               }
             } ~
             get {
               complete {
                 (choiceAnswerListRegion ? GetChoiceAnswers(sessionId, questionId))
-                  .mapTo[Seq[ChoiceAnswer]].map(_.toJson)
+                  .mapTo[Seq[ChoiceAnswer]]
               }
             } ~
             post {
@@ -45,7 +53,7 @@ trait ChoiceAnswerApi extends BaseApi {
                 entity(as[ChoiceAnswer]) { answer =>
                   complete {
                     (choiceAnswerListRegion ? CreateChoiceAnswer(sessionId, questionId, answer, tokenstring))
-                      .mapTo[Try[ChoiceAnswer]].map(_.toJson)
+                      .mapTo[Try[ChoiceAnswer]]
                   }
                 }
               }
