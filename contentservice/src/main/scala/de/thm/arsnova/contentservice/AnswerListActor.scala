@@ -25,17 +25,18 @@ import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchSession, NoUserException, ResourceNotFound}
-import de.thm.arsnova.shared.events.ChoiceAnswerEvents.ChoiceAnswerCreated
+import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
 import de.thm.arsnova.shared.events.FreetextAnswerEvents._
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.SessionEventPackage
+import de.thm.arsnova.shared.servicecommands.UserCommands.GetRoleForSession
 
 object AnswerListActor {
-  def props(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef): Props =
-    Props(new AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef))
+  def props(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef, userRegion: ActorRef): Props =
+    Props(new AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef, userRegion: ActorRef))
 }
 
-class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef) extends PersistentActor {
+class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef, userRegion: ActorRef) extends PersistentActor {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
@@ -54,19 +55,13 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
   private val freetextAnswerList: collection.mutable.HashMap[UUID, FreetextAnswer] =
     collection.mutable.HashMap.empty[UUID, FreetextAnswer]
 
-  private var workRouter: Option[ActorRef] = None
-
   override def receiveRecover: Receive = {
     case ContentCreated(content) => {
       contentToType(content) match {
         case "choice" => {
-          workRouter = Some(context.actorOf(RoundRobinPool(10)
-            .props(ChoiceAnswerActor.props(authRouter))))
           context.become(choiceContentCreated)
         }
         case "freetext" => {
-          workRouter = Some(context.actorOf(RoundRobinPool(10)
-            .props(FreetextAnswerActor.props(authRouter))))
           context.become(freetextContentCreated)
         }
       }
@@ -75,7 +70,6 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
       context.become(initial)
       choiceAnswerList.clear()
       freetextAnswerList.clear()
-      workRouter = None
     }
   }
 
@@ -134,13 +128,37 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
 
   def choiceContentCreated: Receive = {
     case sep: SessionEventPackage => handleEvents(sep)
-    case c: CreateChoiceAnswer => ((ret: ActorRef) => {
-      (workRouter.get ? c).mapTo[Try[ChoiceAnswer]] map { res =>
-        ret ! res
-        res match {
-          case Success(a) => {
-            eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerCreated(a))
-            choiceAnswerList += a.id.get -> a
+    case CreateChoiceAnswer(sessionId, questionId, answer, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          val awu = answer.copy(userId = user.id.get)
+          ret ! awu
+          eventRegion ! SessionEventPackage(awu.sessionId, ChoiceAnswerCreated(awu))
+          choiceAnswerList += awu.id.get -> awu
+        }
+      }
+    }) (sender)
+    case DeleteChoiceAnswer(sessionId, questionId, id, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          choiceAnswerList.get(id) match {
+            case Some(a) => {
+              if (a.userId == user.id.get) {
+                choiceAnswerList -= id
+                eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerDeleted(a))
+                ret ! a
+              } else {
+                (userRegion ? GetRoleForSession(user.id.get, sessionId)).mapTo[String] map { role =>
+                  if (role == "owner") {
+                    choiceAnswerList -= id
+                    eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerDeleted(a))
+                    ret ! a
+                  } else {
+                    ret ! InsufficientRights(role, "DeleteChoiceAnswer")
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -149,13 +167,37 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
 
   def freetextContentCreated: Receive = {
     case sep: SessionEventPackage => handleEvents(sep)
-    case c: CreateFreetextAnswer => ((ret: ActorRef) => {
-      (workRouter.get ? c).mapTo[Try[FreetextAnswer]] map { res =>
-        ret ! res
-        res match {
-          case Success(a) => {
-            eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerCreated(a))
-            freetextAnswerList += a.id.get -> a
+    case CreateFreetextAnswer(sessionId, questionId, answer, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          val awu = answer.copy(userId = user.id.get)
+          ret ! awu
+          eventRegion ! SessionEventPackage(awu.sessionId, FreetextAnswerCreated(awu))
+          freetextAnswerList += awu.id.get -> awu
+        }
+      }
+    }) (sender)
+    case DeleteFreetextAnswer(sessionId, questionId, id, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          freetextAnswerList.get(id) match {
+            case Some(a) => {
+              if (a.userId == user.id.get) {
+                freetextAnswerList -= id
+                eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerDeleted(a))
+                ret ! a
+              } else {
+                (userRegion ? GetRoleForSession(user.id.get, sessionId)).mapTo[String] map { role =>
+                  if (role == "owner") {
+                    freetextAnswerList -= id
+                    eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerDeleted(a))
+                    ret ! a
+                  } else {
+                    ret ! InsufficientRights(role, "DeleteFreetextAnswer")
+                  }
+                }
+              }
+            }
           }
         }
       }

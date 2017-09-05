@@ -8,4 +8,6 @@ object FreetextAnswerEvents {
   trait FreetextAnswerEvent extends ServiceEvent
 
   case class FreetextAnswerCreated(answer: FreetextAnswer) extends FreetextAnswerEvent
+
+  case class FreetextAnswerDeleted(answer: FreetextAnswer) extends FreetextAnswerEvent
 }
