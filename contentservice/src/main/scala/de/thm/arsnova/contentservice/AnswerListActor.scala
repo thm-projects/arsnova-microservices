@@ -128,6 +128,12 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
 
   def choiceContentCreated: Receive = {
     case sep: SessionEventPackage => handleEvents(sep)
+    case GetChoiceAnswers(sessionId, questionId) => {
+      sender() ! choiceAnswerList.values.map(identity).toSeq
+    }
+    case GetChoiceAnswer(sessionId, questionId, id) => {
+      sender() ! choiceAnswerList.get(id)
+    }
     case CreateChoiceAnswer(sessionId, questionId, answer, token) => ((ret: ActorRef) => {
       tokenToUser(token) map {
         case Success(user) => {
@@ -167,6 +173,12 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
 
   def freetextContentCreated: Receive = {
     case sep: SessionEventPackage => handleEvents(sep)
+    case GetFreetextAnswers(sessionId, questionId) => {
+      sender() ! freetextAnswerList.values.map(identity).toSeq
+    }
+    case GetFreetextAnswer(sessionId, questionId, id) => {
+      sender() ! freetextAnswerList.get(id)
+    }
     case CreateFreetextAnswer(sessionId, questionId, answer, token) => ((ret: ActorRef) => {
       tokenToUser(token) map {
         case Success(user) => {
