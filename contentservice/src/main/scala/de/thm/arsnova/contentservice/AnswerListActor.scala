@@ -71,6 +71,20 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
       choiceAnswerList.clear()
       freetextAnswerList.clear()
     }
+
+    case ChoiceAnswerCreated(answer) => {
+      choiceAnswerList += answer.id.get -> answer
+    }
+    case ChoiceAnswerDeleted(answer) => {
+      choiceAnswerList -= answer.id.get
+    }
+
+    case FreetextAnswerCreated(answer) => {
+      freetextAnswerList += answer.id.get -> answer
+    }
+    case FreetextAnswerDeleted(answer) => {
+      freetextAnswerList -= answer.id.get
+    }
   }
 
   override def receiveCommand: Receive = initial
