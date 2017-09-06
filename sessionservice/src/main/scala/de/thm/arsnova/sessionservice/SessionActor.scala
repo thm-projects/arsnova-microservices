@@ -17,7 +17,6 @@ import akka.persistence.PersistentActor
 import de.thm.arsnova.shared.entities.{Session, User}
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
-import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
@@ -71,13 +70,11 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
     case CreateSession(id, session, token) => ((ret: ActorRef) => {
       tokenToUser(token) map {
         case Success(user) => {
-          SessionRepository.create(session.copy(userId = user.id.get)) map { sRet =>
-            state = Some(sRet)
-            context.become(sessionCreated)
-            ret ! Success(sRet)
-            eventRegion ! SessionEventPackage(id, SessionCreated(sRet))
-            persist(SessionCreated(sRet))(e => println(e))
-          }
+          state = Some(session)
+          context.become(sessionCreated)
+          ret ! Success(session)
+          eventRegion ! SessionEventPackage(id, SessionCreated(session))
+          persist(SessionCreated(session))(e => println(e))
         }
         case Failure(t) => ret ! t
       }
@@ -86,11 +83,8 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
 
   def sessionCreated: Receive = {
     case GetSession(id) => ((ret: ActorRef) => {
-      SessionRepository.findById(id) map {
-        case Some(session) => {
-          state = Some(session)
-          ret ! Success(session)
-        }
+      state match {
+        case Some(session) => ret ! Success(session)
         case None => ret ! Failure(NoSuchSession(Left(id)))
       }
     }) (sender)
@@ -99,12 +93,10 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
         case Success(user) => {
           (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
             if (role == "owner") {
-              SessionRepository.update(session) map { s =>
-                state = Some(s)
-                ret ! Success(s)
-                eventRegion ! SessionEventPackage(id, SessionUpdated(s))
-                persist(SessionUpdated(s))(e => println(e))
-              }
+              state = Some(session)
+              ret ! Success(session)
+              eventRegion ! SessionEventPackage(id, SessionUpdated(session))
+              persist(SessionUpdated(session))(e => println(e))
             } else {
               ret ! Failure(InsufficientRights(role, "Update Session"))
             }
@@ -117,17 +109,12 @@ class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: Acto
         case Success(user) => {
           (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
             if (role == "owner") {
-              SessionRepository.delete(id) onComplete {
-                case Success(i) => {
-                  ret ! Success(state.get)
-                  val e = SessionDeleted(state.get)
-                  state = None
-                  context.become(initial)
-                  eventRegion ! SessionEventPackage(id, e)
-                  persist(e)(e => e)
-                }
-                case Failure(t) => ret ! Failure(t)
-              }
+              ret ! Success(state.get)
+              val e = SessionDeleted(state.get)
+              state = None
+              context.become(initial)
+              eventRegion ! SessionEventPackage(id, e)
+              persist(e)(e => e)
             } else {
               ret ! Failure(InsufficientRights(role, "Update Session"))
             }

@@ -59,7 +59,6 @@ lazy val root = (project in file("."))
     gateway,
     managementservice,
     eventservice,
-    commandservice,
     keywordservice,
     sessionservice,
     contentservice,
@@ -89,12 +88,6 @@ lazy val eventservice = (project in file("eventservice"))
   )
   .dependsOn(shared)
 
-lazy val commandservice = (project in file("commandservice"))
-  .settings(
-    libraryDependencies ++= akkaDependencies
-  )
-  .dependsOn(shared)
-
 lazy val authservice = (project in file("authservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ slickDependencies
@@ -109,19 +102,19 @@ lazy val keywordservice = (project in file("keywordservice"))
 
 lazy val sessionservice = (project in file("sessionservice"))
   .settings(
-    libraryDependencies ++= akkaDependencies ++ slickDependencies ++ kamonDeps
+    libraryDependencies ++= akkaDependencies ++ kamonDeps
   )
   .dependsOn(shared, authservice, keywordservice)
 
 lazy val contentservice = (project in file("contentservice"))
   .settings(
-    libraryDependencies ++= akkaDependencies ++ slickDependencies
+    libraryDependencies ++= akkaDependencies
   )
   .dependsOn(shared, authservice)
 
 lazy val commentservice = (project in file("commentservice"))
   .settings(
-    libraryDependencies ++= akkaDependencies ++ slickDependencies
+    libraryDependencies ++= akkaDependencies
   )
   .dependsOn(shared, authservice)
 

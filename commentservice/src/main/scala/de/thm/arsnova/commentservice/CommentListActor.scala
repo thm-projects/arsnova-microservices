@@ -64,7 +64,6 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
         persist(SessionCreated(session))(e => e)
       }
       case SessionDeleted(session) => {
-        CommentRepository.deleteAllSessionContent(session.id.get)
         commentlist.clear()
         context.become(initial)
         persist(SessionDeleted(session))(e => e)
@@ -91,24 +90,15 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
     case GetComment(sessionId, id) => ((ret: ActorRef) => {
       commentlist.get(id) match {
         case Some(c) => ret ! Some(c)
-        case None =>
-          CommentRepository.findById(id) map {
-            case Some(c) => {
-              commentlist += id -> c
-              ret ! Success(c)
-            }
-            case None => ret ! Failure(ResourceNotFound(s"comment with id: $id"))
-          }
+        case None => ret ! Failure(ResourceNotFound(s"comment with id: $id"))
       }
     }) (sender)
     case GetUnreadComments(sessionId) => ((ret: ActorRef) => {
       val unreads = commentlist.values.map(identity).toSeq.filter(_.isRead == false)
       ret ! Success(unreads)
-      CommentRepository.markAsRead(unreads.map(_.id.get))
     }) (sender)
     case DeleteComment(sessionId, id) => ((ret: ActorRef) => {
       commentlist.remove(id)
-      CommentRepository.delete(id)
     }) (sender)
 
     case sep: SessionEventPackage => handleEvents(sep)

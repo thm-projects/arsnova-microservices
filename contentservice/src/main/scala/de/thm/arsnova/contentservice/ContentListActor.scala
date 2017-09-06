@@ -14,7 +14,6 @@ import akka.util.Timeout
 import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.contentservice.repositories.ContentRepository
 import de.thm.arsnova.shared.entities.{Content, User, Session}
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -68,7 +67,6 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
         persist(SessionCreated(session))(e => e)
       }
       case SessionDeleted(session) => {
-        ContentRepository.deleteAllSessionContent(session.id.get)
         contentlist.clear()
         context.become(initial)
         persist(SessionDeleted(session))(e => e)
@@ -95,14 +93,7 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
     case GetContent(sessionid, id) => ((ret: ActorRef) => {
       contentlist.get(id) match {
         case Some(c) => ret ! Some(c)
-        case None =>
-          ContentRepository.findById(id) map {
-            case Some(c) => {
-              contentlist += id -> c
-              ret ! Some(c)
-            }
-            case None => ret ! None
-          }
+        case None => ret ! None
       }
     }) (sender)
     case DeleteContent(sessionId, id, token) => ((ret: ActorRef) => {
@@ -111,7 +102,6 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
           (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
             if (role == "owner") {
               val c = contentlist.remove(id)
-              ContentRepository.delete(id)
               ret ! Success(c.get)
               eventRegion ! SessionEventPackage(sessionId, ContentDeleted(c.get))
               persist(ContentDeleted(c.get))(e => e)
@@ -135,12 +125,10 @@ class ContentListActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: 
         case Success(user) => {
           (userRegion ? GetRoleForSession(user.id.get, sessionid)).mapTo[String] map { role =>
             if (role != "guest") {
-              ContentRepository.create(content) map { c =>
-                contentlist += c.id.get -> c
-                ret ! Success(c)
-                eventRegion ! SessionEventPackage(c.sessionId, ContentCreated(c))
-                persist(ContentCreated(c)) { e => e }
-              }
+              contentlist += content.id.get -> content
+              ret ! Success(content)
+              eventRegion ! SessionEventPackage(content.sessionId, ContentCreated(content))
+              persist(ContentCreated(content)) { e => e }
             } else {
               ret ! Failure(InsufficientRights(role, "CreateContent"))
             }

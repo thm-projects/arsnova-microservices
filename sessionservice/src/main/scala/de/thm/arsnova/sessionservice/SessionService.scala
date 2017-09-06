@@ -15,7 +15,7 @@ import de.thm.arsnova.authservice.{AuthServiceActor, UserActor}
 import de.thm.arsnova.shared.actors.ServiceManagementActor
 import de.thm.arsnova.shared.shards.{EventShard, SessionShard, UserShard}
 
-object SessionService extends App with MigrationConfig {
+object SessionService extends App {
   import Context._
 
   val authRouter = system.actorOf(
@@ -55,17 +55,4 @@ object SessionService extends App with MigrationConfig {
     extractEntityId = SessionShard.idExtractor,
     extractShardId = SessionShard.shardResolver
   )
-
-  if (args.contains("kamon")) {
-    Kamon.start()
-  }
-
-  if (args.contains("migrate")) {
-    migrate()
-  }
-  if (args.contains("cleanDB")) {
-    reloadSchema()
-  }
-
-  // val manager = system.actorOf(ServiceManagementActor.props("session", dispatcher), "manager")
 }
