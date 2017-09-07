@@ -41,7 +41,7 @@ trait CommentServiceApi extends BaseApi {
                 }
                 case false => {
                   (commentRegion ? GetCommentsBySessionId(sessionId))
-                    .mapTo[Seq[Comment]].map(_.toJson)
+                    .mapTo[Seq[Comment]]
                 }
               }
             }
@@ -52,7 +52,7 @@ trait CommentServiceApi extends BaseApi {
             entity(as[Comment]) { comment =>
               complete {
                 (commentRegion ? CreateComment(sessionId, comment, token))
-                  .mapTo[UUID].map(_.toJson)
+                  .mapTo[UUID]
               }
             }
           }
