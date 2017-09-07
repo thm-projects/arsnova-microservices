@@ -93,8 +93,8 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
           commentlist += comment.id.get -> comment
           ret ! Success(comment)
           val e = CommentCreated(comment)
-          persist(e) { e => e }
           eventRegion ! SessionEventPackage(comment.sessionId, e)
+          persist(e) { e => e }
         }
         case Failure(t) => ret ! t
       }
@@ -110,7 +110,13 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
       ret ! Success(unreads)
     }) (sender)
     case DeleteComment(sessionId, id) => ((ret: ActorRef) => {
-      commentlist.remove(id)
+      commentlist.remove(id) match {
+        case Some(c) => {
+          val e = CommentDeleted(c)
+          eventRegion ! SessionEventPackage(c.sessionId, e)
+          persist(e) { e => e }
+        }
+      }
     }) (sender)
 
     case sep: SessionEventPackage => handleEvents(sep)
