@@ -93,6 +93,7 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
           commentlist += comment.id.get -> comment
           ret ! Success(comment)
         }
+        case Failure(t) => ret ! t
       }
     }) (sender)
     case GetComment(sessionId, id) => ((ret: ActorRef) => {
