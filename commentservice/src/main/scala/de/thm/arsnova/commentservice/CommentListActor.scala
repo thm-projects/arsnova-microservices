@@ -92,6 +92,9 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
         case Success(user) => {
           commentlist += comment.id.get -> comment
           ret ! Success(comment)
+          val e = CommentCreated(comment)
+          persist(e) { e => e }
+          eventRegion ! SessionEventPackage(comment.sessionId, e)
         }
         case Failure(t) => ret ! t
       }
