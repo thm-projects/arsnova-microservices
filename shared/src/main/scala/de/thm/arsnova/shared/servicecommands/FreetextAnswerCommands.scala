@@ -19,3 +19,4 @@ object FreetextAnswerCommands {
 
   case class DeleteFreetextAnswer(sessionId: UUID, questionId: UUID, id: UUID, token: String) extends FreetextAnswerCommand
 }
+#

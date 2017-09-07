@@ -7,5 +7,7 @@ object CommentEvents {
 
   case class CommentCreated(comment: Comment) extends CommentEvent
 
+  case class CommentUpdated(comment: Comment) extends CommentEvent
+
   case class CommentDeleted(comment: Comment) extends CommentEvent
 }

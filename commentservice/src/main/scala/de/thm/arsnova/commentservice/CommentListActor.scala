@@ -47,7 +47,11 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
     case SessionDeleted(session) => {
       context.become(initial)
     }
+
     case CommentCreated(comment) => {
+      commentlist += comment.id.get -> comment
+    }
+    case CommentUpdated(comment) => {
       commentlist += comment.id.get -> comment
     }
     case CommentDeleted(comment) => {
@@ -106,8 +110,14 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
       }
     }) (sender)
     case GetUnreadComments(sessionId) => ((ret: ActorRef) => {
-      val unreads = commentlist.values.map(identity).toSeq.filter(_.isRead == false)
+      val unreads: Seq[Comment] = commentlist.values.map(identity).toSeq.filter(_.isRead == false)
       ret ! Success(unreads)
+      unreads foreach { c =>
+        commentlist += c.id.get -> c
+        val e = CommentUpdated(c)
+        eventRegion ! SessionEventPackage(c.sessionId, e)
+        persist(e) { e => e }
+      }
     }) (sender)
     case DeleteComment(sessionId, id) => ((ret: ActorRef) => {
       commentlist.remove(id) match {
