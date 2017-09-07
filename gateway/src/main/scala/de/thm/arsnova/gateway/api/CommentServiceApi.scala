@@ -52,7 +52,7 @@ trait CommentServiceApi extends BaseApi {
             entity(as[Comment]) { comment =>
               complete {
                 (commentRegion ? CreateComment(sessionId, comment, token))
-                  .mapTo[UUID]
+                  .mapTo[Try[Comment]]
               }
             }
           }
