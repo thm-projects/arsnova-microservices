@@ -48,10 +48,10 @@ trait CommentServiceApi extends BaseApi {
           }
         } ~
         post {
-          optionalHeaderValueByName("X-Session-Token") { tokenstring =>
+          headerValueByName("X-Session-Token") { token =>
             entity(as[Comment]) { comment =>
               complete {
-                (commentRegion ? CreateComment(sessionId, comment))
+                (commentRegion ? CreateComment(sessionId, comment, token))
                   .mapTo[UUID].map(_.toJson)
               }
             }

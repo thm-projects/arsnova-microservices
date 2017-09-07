@@ -87,6 +87,14 @@ class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegio
   }
 
   def sessionCreated: Receive = {
+    case CreateComment(sessionId, comment, token) => ((ret: ActorRef) => {
+      tokenToUser(token) map {
+        case Success(user) => {
+          commentlist += comment.id.get -> comment
+          ret ! Success(comment)
+        }
+      }
+    }) (sender)
     case GetComment(sessionId, id) => ((ret: ActorRef) => {
       commentlist.get(id) match {
         case Some(c) => ret ! Some(c)

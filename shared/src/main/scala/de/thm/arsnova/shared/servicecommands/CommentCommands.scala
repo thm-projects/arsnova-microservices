@@ -16,7 +16,7 @@ object CommentCommands {
 
   case class GetUnreadComments(sessionId: UUID) extends CommentCommand
 
-  case class CreateComment(sessionId: UUID, comment: Comment) extends CommentCommand
+  case class CreateComment(sessionId: UUID, comment: Comment, token: String) extends CommentCommand
 
   case class DeleteComment(sessionId: UUID, commentId: UUID) extends CommentCommand
 }
