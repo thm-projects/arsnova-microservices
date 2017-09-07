@@ -9,11 +9,17 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.cluster.Cluster
-import akka.pattern.pipe
+import akka.pattern.{pipe, ask}
+import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, NoUserException}
+import de.thm.arsnova.shared.shards.UserShard
+import de.thm.arsnova.shared.servicecommands.UserCommands._
 
 class AuthServiceActor extends Actor {
+  import Context.system
+
   implicit val ex: ExecutionContext = context.system.dispatcher
+  val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
 
   def receive = {
     case LoginUser(username, password) => ((ret: ActorRef) => {
@@ -23,9 +29,10 @@ class AuthServiceActor extends Actor {
       }
     }) (sender)
     case GetUserFromTokenString(tokenstring) => ((ret: ActorRef) => {
-      UserRepository.getUserByTokenString(tokenstring) map {
-        case Some(u) => ret ! Success(u)
-        case None => ret ! Failure(InvalidToken(tokenstring))
+      TokenRepository.getByToken(tokenstring) map {
+        case Some(token) => {
+          (userRegion ? GetUser(token.userId)) pipeTo ret
+        }
       }
     }) (sender)
 

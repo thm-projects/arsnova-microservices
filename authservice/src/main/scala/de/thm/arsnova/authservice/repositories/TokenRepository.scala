@@ -15,4 +15,9 @@ object TokenRepository extends BaseRepository {
     val token = Token(UUID.randomUUID.toString, userId, now.toString, None, now.toString)
     db.run(tokensTable += token).map(_ => token.token)
   }
+
+  def getByToken(token: String): Future[Option[Token]] = {
+    val qry = tokensTable.filter(_.token === token)
+    db.run(qry.result.headOption)
+  }
 }

@@ -8,6 +8,7 @@ import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
+import scala.util.Try
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
@@ -35,8 +36,8 @@ trait AuthApi extends BaseApi {
       get {
         headerValueByName("X-Session-Token") { tokenstring =>
           complete {
-            (authRouter ? CheckTokenString(tokenstring))
-              .mapTo[Boolean].map(_.toJson)
+            (authRouter ? GetUserFromTokenString(tokenstring))
+              .mapTo[Try[User]]
           }
         }
       }
