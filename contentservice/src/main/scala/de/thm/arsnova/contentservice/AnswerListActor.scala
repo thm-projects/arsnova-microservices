@@ -16,7 +16,6 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import akka.routing.RoundRobinPool
-import de.thm.arsnova.contentservice.repositories.{ChoiceAnswerRepository, FreetextAnswerRepository}
 import de.thm.arsnova.shared.entities.{ChoiceAnswer, Content, FreetextAnswer, Session, User}
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
@@ -99,14 +98,6 @@ class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion
         persist(ContentCreated(content))(e => e)
       }
       case ContentDeleted(content) => {
-        contentToType(content) match {
-          case "choice" => {
-            ChoiceAnswerRepository.deleteAllByContentId(content.id.get)
-          }
-          case "freetext" => {
-            FreetextAnswerRepository.deleteAllByContentId(content.id.get)
-          }
-        }
         choiceAnswerList.clear()
         freetextAnswerList.clear()
         persist(ContentDeleted(content))(e => e)
