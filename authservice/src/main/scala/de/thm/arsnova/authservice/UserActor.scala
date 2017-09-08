@@ -25,7 +25,7 @@ object UserActor {
     Props(new UserActor(sessionShards: ActorRef))
 }
 
-class UserActor(sessionShards: ActorRef) extends PersistentActor {
+class UserActor(sessionRegion: ActorRef) extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
@@ -112,7 +112,7 @@ class UserActor(sessionShards: ActorRef) extends PersistentActor {
             }
             futureRoles.map { roles =>
               val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
-                (sessionShards ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
+                (sessionRegion ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
                   case Success(session) => Some(session)
                   case Failure(t) => {
                     // TODO: handle dead entries in roles set / Exceptions?
