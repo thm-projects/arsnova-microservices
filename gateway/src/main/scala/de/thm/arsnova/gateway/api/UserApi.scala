@@ -36,6 +36,18 @@ trait UserApi extends BaseApi {
             (userRegion ? GetUser(userId))
               .mapTo[Try[User]]
           }
+        } ~
+        pathPrefix("sessions") {
+          get {
+            headerValueByName("X-Session-Token") { token =>
+              parameter("role".?) { role =>
+                complete {
+                  (userRegion ? GetUserSessions(userId, token, role))
+                    .mapTo[Seq[Session]]
+                }
+              }
+            }
+          }
         }
       }
     } ~
