@@ -11,7 +11,7 @@ object CommentListShard {
 
   def startProxy: ActorRef = ClusterSharding(system).startProxy(
     typeName = CommentShard.shardName,
-    role = Some("comment"),
+    role = Some("session"),
     extractEntityId = CommentShard.idExtractor,
     extractShardId = CommentShard.shardResolver)
 

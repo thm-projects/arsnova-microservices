@@ -1,23 +1,23 @@
-package de.thm.arsnova.commentservice
+package de.thm.arsnova.sessionservice
 
 import java.util.UUID
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
-import akka.actor.ActorRef
-import akka.actor.Props
-import akka.util.Timeout
+import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.persistence.PersistentActor
+import akka.util.Timeout
 import de.thm.arsnova.shared.Exceptions.{NoSuchSession, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Comment, Session, User}
-import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.CommentEvents._
+import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.CommentCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands.GetSession
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 object CommentListActor {
   def props(eventRegion: ActorRef, authRouter: ActorRef, sessionRegion: ActorRef): Props =

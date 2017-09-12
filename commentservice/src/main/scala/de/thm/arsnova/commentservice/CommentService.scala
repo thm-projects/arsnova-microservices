@@ -8,6 +8,7 @@ import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import akka.persistence.journal.leveldb.SharedLeveldbJournal
 import akka.routing.RandomPool
 import de.thm.arsnova.authservice.AuthServiceActor
+import de.thm.arsnova.sessionservice.CommentListActor
 import de.thm.arsnova.shared.shards.{CommentShard, EventShard, SessionShard, UserShard}
 
 import scala.concurrent.Await
@@ -52,11 +53,4 @@ object CommentService extends App {
 
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
-
-  ClusterSharding(system).start(
-    typeName = CommentShard.shardName,
-    entityProps = CommentListActor.props(eventRegion, authRouter, sessionRegion),
-    settings = ClusterShardingSettings(system),
-    extractEntityId = CommentShard.idExtractor,
-    extractShardId = CommentShard.shardResolver)
 }

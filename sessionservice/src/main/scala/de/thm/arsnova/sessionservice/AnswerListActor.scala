@@ -1,34 +1,26 @@
-package de.thm.arsnova.contentservice
+package de.thm.arsnova.sessionservice
 
 import java.util.UUID
 
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.PoisonPill
-import akka.actor.Props
-import akka.actor.ReceiveTimeout
-import akka.pattern.{ask, pipe}
-import akka.util.Timeout
-import akka.cluster.sharding.ShardRegion
-import akka.cluster.sharding.ShardRegion.Passivate
+import akka.actor.{ActorRef, Props}
+import akka.pattern.ask
 import akka.persistence.PersistentActor
-import akka.routing.RoundRobinPool
-import de.thm.arsnova.shared.entities.{ChoiceAnswer, Content, FreetextAnswer, Session, User}
-import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
+import akka.util.Timeout
+import de.thm.arsnova.shared.Exceptions.{InsufficientRights, ResourceNotFound}
+import de.thm.arsnova.shared.entities.{ChoiceAnswer, Content, FreetextAnswer, User}
+import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
+import de.thm.arsnova.shared.events.ContentEvents._
+import de.thm.arsnova.shared.events.FreetextAnswerEvents._
+import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
-import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
-import de.thm.arsnova.shared.Exceptions
-import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchSession, NoUserException, ResourceNotFound}
-import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
-import de.thm.arsnova.shared.events.FreetextAnswerEvents._
-import de.thm.arsnova.shared.events.ContentEvents._
-import de.thm.arsnova.shared.events.SessionEventPackage
+import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands.GetRoleForSession
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 object AnswerListActor {
   def props(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef, userRegion: ActorRef): Props =

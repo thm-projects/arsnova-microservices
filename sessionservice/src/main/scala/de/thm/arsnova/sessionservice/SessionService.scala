@@ -11,9 +11,9 @@ import akka.pattern.ask
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import kamon.Kamon
-import de.thm.arsnova.authservice.{AuthServiceActor, UserActor}
+import de.thm.arsnova.authservice.AuthServiceActor
 import de.thm.arsnova.shared.actors.ServiceManagementActor
-import de.thm.arsnova.shared.shards.{EventShard, SessionShard, UserShard}
+import de.thm.arsnova.shared.shards._
 
 object SessionService extends App {
   import Context._
@@ -29,12 +29,10 @@ object SessionService extends App {
 
   ClusterSharding(system).startProxy(
     typeName = UserShard.shardName,
-    role = Some("auth"),
+    role = Some("session"),
     extractEntityId = UserShard.idExtractor,
     extractShardId = UserShard.shardResolver
   )
-
-  val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
 
   ClusterSharding(system).startProxy(
     typeName = EventShard.shardName,
@@ -43,10 +41,35 @@ object SessionService extends App {
     extractShardId = EventShard.shardResolver
   )
 
+  ClusterSharding(system).startProxy(
+    typeName = SessionShard.shardName,
+    role = Some("session"),
+    extractEntityId = SessionShard.idExtractor,
+    extractShardId = SessionShard.shardResolver)
+
+  ClusterSharding(system).startProxy(
+    typeName = ContentListShard.shardName,
+    role = Some("session"),
+    extractEntityId = ContentListShard.idExtractor,
+    extractShardId = ContentListShard.shardResolver)
+
   val eventRegion = ClusterSharding(system).shardRegion(EventShard.shardName)
+
+  val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
+
+  val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
+
+  val contentRegion = ClusterSharding(system).shardRegion(ContentListShard.shardName)
 
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
+
+  ClusterSharding(system).start(
+    typeName = UserShard.shardName,
+    entityProps = UserActor.props(sessionRegion),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = UserShard.idExtractor,
+    extractShardId = UserShard.shardResolver)
 
   ClusterSharding(system).start(
     typeName = SessionShard.shardName,
@@ -55,4 +78,25 @@ object SessionService extends App {
     extractEntityId = SessionShard.idExtractor,
     extractShardId = SessionShard.shardResolver
   )
+
+  ClusterSharding(system).start(
+    typeName = ContentListShard.shardName,
+    entityProps = ContentListActor.props(eventRegion, authRouter, userRegion, sessionRegion),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = ContentListShard.idExtractor,
+    extractShardId = ContentListShard.shardResolver)
+
+  ClusterSharding(system).start(
+    typeName = CommentShard.shardName,
+    entityProps = CommentListActor.props(eventRegion, authRouter, sessionRegion),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = CommentShard.idExtractor,
+    extractShardId = CommentShard.shardResolver)
+
+  ClusterSharding(system).start(
+    typeName = CommentShard.shardName,
+    entityProps = AnswerListActor.props(eventRegion, authRouter, contentRegion, userRegion),
+    settings = ClusterShardingSettings(system),
+    extractEntityId = CommentShard.idExtractor,
+    extractShardId = CommentShard.shardResolver)
 }

@@ -1,24 +1,21 @@
-package de.thm.arsnova.authservice
+package de.thm.arsnova.sessionservice
 
-
-import scala.concurrent.duration._
-import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-import akka.cluster.sharding.ShardRegion
-import akka.persistence.PersistentActor
 import akka.actor.{ActorRef, Props}
-import akka.pattern.{ask, pipe}
+import akka.pattern.ask
+import akka.persistence.PersistentActor
 import akka.util.Timeout
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
+import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole, UserLosesSessionRole}
-import de.thm.arsnova.shared.events.SessionEventPackage
-import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
+import de.thm.arsnova.shared.servicecommands.UserCommands._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 object UserActor {
   def props(sessionShards: ActorRef): Props =

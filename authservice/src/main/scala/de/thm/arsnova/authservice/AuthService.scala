@@ -23,13 +23,6 @@ object AuthService extends App with MigrationConfig {
 
   val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
 
-  ClusterSharding(system).start(
-    typeName = UserShard.shardName,
-    entityProps = UserActor.props(sessionRegion),
-    settings = ClusterShardingSettings(system),
-    extractEntityId = UserShard.idExtractor,
-    extractShardId = UserShard.shardResolver)
-
   val auth = system.actorOf(Props[AuthServiceActor], name = "auth")
   val manager = system.actorOf(ServiceManagementActor.props(Seq(("auth", auth))), "manager")
 

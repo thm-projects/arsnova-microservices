@@ -14,9 +14,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.routing.RandomPool
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.gateway.Context._
-import de.thm.arsnova.authservice.UserActor
 import spray.json._
 import de.thm.arsnova.gateway.sharding.UserShard
+import de.thm.arsnova.sessionservice.UserActor
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.entities.{Session, User}
 import de.thm.arsnova.shared.Exceptions._

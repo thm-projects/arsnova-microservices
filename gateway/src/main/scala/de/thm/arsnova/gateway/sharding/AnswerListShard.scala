@@ -11,7 +11,7 @@ object AnswerListShard {
 
   def startProxy: ActorRef = ClusterSharding(system).startProxy(
     typeName = de.thm.arsnova.shared.shards.AnswerListShard.shardName,
-    role = Some("content"),
+    role = Some("session"),
     extractEntityId = de.thm.arsnova.shared.shards.AnswerListShard.idExtractor,
     extractShardId = de.thm.arsnova.shared.shards.AnswerListShard.shardResolver)
 

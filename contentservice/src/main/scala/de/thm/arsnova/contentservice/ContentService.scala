@@ -5,7 +5,8 @@ import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStore}
 import akka.routing.RandomPool
-import de.thm.arsnova.authservice.{AuthServiceActor, UserActor}
+import de.thm.arsnova.authservice.AuthServiceActor
+import de.thm.arsnova.sessionservice.ContentListActor
 import de.thm.arsnova.shared.actors.ServiceManagementActor
 import de.thm.arsnova.shared.shards.{ContentListShard, EventShard, SessionShard, UserShard}
 
@@ -52,13 +53,6 @@ object ContentService extends App {
 
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
-
-  ClusterSharding(system).start(
-    typeName = ContentListShard.shardName,
-    entityProps = ContentListActor.props(eventRegion, authRouter, userRegion, sessionRegion),
-    settings = ClusterShardingSettings(system),
-    extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver)
 
   val manager = system.actorOf(ServiceManagementActor.props(Nil), "manager")
 }

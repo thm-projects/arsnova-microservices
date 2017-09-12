@@ -1,30 +1,24 @@
-package de.thm.arsnova.contentservice
+package de.thm.arsnova.sessionservice
 
 import java.util.UUID
 
-import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.PoisonPill
-import akka.actor.Props
-import akka.actor.ReceiveTimeout
-import akka.pattern.{ask, pipe}
-import akka.util.Timeout
-import akka.cluster.sharding.ShardRegion
-import akka.cluster.sharding.ShardRegion.Passivate
+import akka.actor.{ActorRef, Props}
+import akka.pattern.ask
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.entities.{Content, User, Session}
-import de.thm.arsnova.shared.events.ContentEvents._
-import de.thm.arsnova.shared.servicecommands.ContentCommands._
-import de.thm.arsnova.shared.servicecommands.UserCommands._
+import akka.util.Timeout
 import de.thm.arsnova.shared.Exceptions._
+import de.thm.arsnova.shared.entities.{Content, Session, User}
+import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
+import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands.GetSession
+import de.thm.arsnova.shared.servicecommands.UserCommands._
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 object ContentListActor {
   def props(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef, sessionRegion: ActorRef): Props =
