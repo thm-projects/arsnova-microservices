@@ -9,6 +9,8 @@ import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.ChoiceAnswerCo
 object AnswerListShard {
   val shardName = "AnswerList"
 
+  val serviceRole = Some("session")
+
   val idExtractor: ShardRegion.ExtractEntityId = {
     case cmd: FreetextAnswerCommand => (cmd.questionId.toString, cmd)
     case cmd: ChoiceAnswerCommand => (cmd.questionId.toString, cmd)

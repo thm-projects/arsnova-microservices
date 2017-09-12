@@ -17,7 +17,7 @@ object AuthService extends App with MigrationConfig {
 
   ClusterSharding(system).startProxy(
     typeName = SessionShard.shardName,
-    role = Some("session"),
+    role = SessionShard.serviceRole,
     extractEntityId = SessionShard.idExtractor,
     extractShardId = SessionShard.shardResolver)
 

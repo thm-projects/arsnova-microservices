@@ -11,7 +11,7 @@ object UserShard {
 
   def startProxy: ActorRef = ClusterSharding(system).startProxy(
       typeName = shards.UserShard.shardName,
-      role = Some("session"),
+      role = shards.UserShard.serviceRole,
       extractEntityId = shards.UserShard.idExtractor,
       extractShardId = shards.UserShard.shardResolver)
 

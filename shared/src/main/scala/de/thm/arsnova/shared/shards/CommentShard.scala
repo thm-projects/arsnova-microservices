@@ -6,6 +6,8 @@ import de.thm.arsnova.shared.servicecommands.CommentCommands.CommentCommand
 object CommentShard {
   val shardName = "Comment"
 
+  val serviceRole = Some("session")
+
   val idExtractor: ShardRegion.ExtractEntityId = {
     case cmd: CommentCommand => (cmd.sessionId.toString, cmd)
     case event: SessionEventPackage => (event.id.toString, event)

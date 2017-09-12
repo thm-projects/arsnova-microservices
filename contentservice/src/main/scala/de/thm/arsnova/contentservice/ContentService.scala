@@ -27,21 +27,21 @@ object ContentService extends App {
 
   ClusterSharding(system).startProxy(
     typeName = UserShard.shardName,
-    role = Some("auth"),
+    role = UserShard.serviceRole,
     extractEntityId = UserShard.idExtractor,
     extractShardId = UserShard.shardResolver
   )
 
   ClusterSharding(system).startProxy(
     typeName = EventShard.shardName,
-    role = Some("event"),
+    role = EventShard.serviceRole,
     extractEntityId = EventShard.idExtractor,
     extractShardId = EventShard.shardResolver
   )
 
   ClusterSharding(system).startProxy(
     typeName = SessionShard.shardName,
-    role = Some("session"),
+    role = SessionShard.serviceRole,
     extractEntityId = SessionShard.idExtractor,
     extractShardId = SessionShard.shardResolver)
 

@@ -40,7 +40,7 @@ trait SessionServiceApi extends BaseApi {
 
   ClusterSharding(system).startProxy(
     typeName = SessionShard.shardName,
-    role = Some("session"),
+    role = SessionShard.serviceRole,
     extractEntityId = SessionShard.idExtractor,
     extractShardId = SessionShard.shardResolver)
 

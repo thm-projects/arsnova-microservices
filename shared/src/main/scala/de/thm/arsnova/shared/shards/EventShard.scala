@@ -8,6 +8,8 @@ import de.thm.arsnova.shared.servicecommands.EventCommands.EventCommand
 object EventShard {
   val shardName = "event"
 
+  val serviceRole = Some("event")
+
   val idExtractor: ShardRegion.ExtractEntityId = {
     case cmd: EventCommand => (cmd.id.toString, cmd)
     case sep: SessionEventPackage => (sep.id.toString, sep)

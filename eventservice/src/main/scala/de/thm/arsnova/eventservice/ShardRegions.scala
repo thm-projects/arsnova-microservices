@@ -8,7 +8,7 @@ object ShardRegions {
 
   ClusterSharding(system).startProxy(
     typeName = UserShard.shardName,
-    role = Some("auth"),
+    role = UserShard.serviceRole,
     extractEntityId = UserShard.idExtractor,
     extractShardId = UserShard.shardResolver
   )
@@ -17,7 +17,7 @@ object ShardRegions {
 
   ClusterSharding(system).startProxy(
     typeName = ContentListShard.shardName,
-    role = Some("content"),
+    role = ContentListShard.serviceRole,
     extractEntityId = ContentListShard.idExtractor,
     extractShardId = ContentListShard.shardResolver
   )
@@ -26,7 +26,7 @@ object ShardRegions {
 
   ClusterSharding(system).startProxy(
     typeName = SessionShard.shardName,
-    role = Some("session"),
+    role = SessionShard.serviceRole,
     extractEntityId = SessionShard.idExtractor,
     extractShardId = SessionShard.shardResolver
   )
@@ -35,7 +35,7 @@ object ShardRegions {
 
   ClusterSharding(system).startProxy(
     typeName = CommentShard.shardName,
-    role = Some("comment"),
+    role = CommentShard.serviceRole,
     extractEntityId = CommentShard.idExtractor,
     extractShardId = CommentShard.shardResolver
   )
@@ -44,7 +44,7 @@ object ShardRegions {
 
   ClusterSharding(system).startProxy(
     typeName = AnswerListShard.shardName,
-    role = Some("content"),
+    role = AnswerListShard.serviceRole,
     extractEntityId = AnswerListShard.idExtractor,
     extractShardId = AnswerListShard.shardResolver
   )
