@@ -14,7 +14,7 @@ import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import akka.routing.RandomPool
 import de.thm.arsnova.gateway.Context._
-import de.thm.arsnova.authservice.AuthServiceActor
+import de.thm.arsnova.gateway.AuthServiceClientActor
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import de.thm.arsnova.shared.entities.{Token, User}
@@ -22,21 +22,14 @@ import de.thm.arsnova.shared.entities.{Token, User}
 trait AuthApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.UserJsonProtocol._
 
-  val authRouter = system.actorOf(
-    ClusterRouterPool(RandomPool(10), ClusterRouterPoolSettings(
-      totalInstances = 2000,
-      maxInstancesPerNode = 1000,
-      allowLocalRoutees = false,
-      useRole = Some("auth")
-    )).props(Props[AuthServiceActor]), "AuthRouter"
-  )
+  val authClient = system.actorOf(Props[AuthServiceClientActor], name = "authClient")
 
   val authApi = pathPrefix("auth") {
     pathPrefix("whoami") {
       get {
         headerValueByName("X-Session-Token") { tokenstring =>
           complete {
-            (authRouter ? GetUserFromTokenString(tokenstring))
+            (authClient ? GetUserFromTokenString(tokenstring))
               .mapTo[Try[User]]
           }
         }
@@ -45,7 +38,7 @@ trait AuthApi extends BaseApi {
     get {
       parameters("username", "password") { (username, password) =>
         complete {
-          (authRouter ? LoginUser(username, password))
+          (authClient ? LoginUser(username, password))
             .mapTo[String].map(_.toJson)
         }
       }
