@@ -9,6 +9,8 @@ object AuthCommands {
 
   case class LoginUser(username: String, password: String) extends AuthCommand
 
+  case class AuthenticateUser(token: String) extends AuthCommand
+
   case class GetUserFromTokenString(tokenstring: String) extends AuthCommand
 
   case class CheckTokenString(tokenstring: String) extends AuthCommand
