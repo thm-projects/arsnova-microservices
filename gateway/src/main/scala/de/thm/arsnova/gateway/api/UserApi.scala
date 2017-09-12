@@ -36,18 +36,6 @@ trait UserApi extends BaseApi {
             (userRegion ? GetUser(userId))
               .mapTo[Try[User]]
           }
-        } ~
-        pathPrefix("sessions") {
-          get {
-            headerValueByName("X-Session-Token") { token =>
-              parameter("role".?) { role =>
-                complete {
-                  (userRegion ? GetUserSessions(userId, token, role))
-                    .mapTo[Seq[Session]]
-                }
-              }
-            }
-          }
         }
       }
     } ~
@@ -57,7 +45,7 @@ trait UserApi extends BaseApi {
           val newId = UUID.randomUUID()
           val userWithId = user.copy(id = Some(newId))
           (userRegion ? CreateUser(newId, userWithId))
-            .mapTo[User].map(_.toJson)
+            .mapTo[User]
         }
       }
     }
