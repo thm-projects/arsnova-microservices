@@ -139,38 +139,30 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case GetChoiceAnswer(sessionId, questionId, id) => {
       sender() ! choiceAnswerList.get(id)
     }
-    case CreateChoiceAnswer(sessionId, questionId, answer, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          val awu = answer.copy(userId = user.id.get)
-          ret ! Success(awu)
-          eventRegion ! SessionEventPackage(awu.sessionId, ChoiceAnswerCreated(awu))
-          choiceAnswerList += awu.id.get -> awu
-          persist(ChoiceAnswerCreated(awu)) { e => e }
-        }
-      }
+    case CreateChoiceAnswer(sessionId, questionId, answer, userId) => ((ret: ActorRef) => {
+      val awu = answer.copy(userId = userId)
+      ret ! Success(awu)
+      eventRegion ! SessionEventPackage(awu.sessionId, ChoiceAnswerCreated(awu))
+      choiceAnswerList += awu.id.get -> awu
+      persist(ChoiceAnswerCreated(awu)) { e => e }
     }) (sender)
-    case DeleteChoiceAnswer(sessionId, questionId, id, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          choiceAnswerList.get(id) match {
-            case Some(a) => {
-              if (a.userId == user.id.get) {
+    case DeleteChoiceAnswer(sessionId, questionId, id, userId) => ((ret: ActorRef) => {
+      choiceAnswerList.get(id) match {
+        case Some(a) => {
+          if (a.userId == userId) {
+            choiceAnswerList -= id
+            eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerDeleted(a))
+            ret ! Success(a)
+            persist(ChoiceAnswerDeleted(a)) { e => e }
+          } else {
+            (userRegion ? GetRoleForSession(userId, sessionId)).mapTo[String] map { role =>
+              if (role == "owner") {
                 choiceAnswerList -= id
                 eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerDeleted(a))
                 ret ! Success(a)
                 persist(ChoiceAnswerDeleted(a)) { e => e }
               } else {
-                (userRegion ? GetRoleForSession(user.id.get, sessionId)).mapTo[String] map { role =>
-                  if (role == "owner") {
-                    choiceAnswerList -= id
-                    eventRegion ! SessionEventPackage(a.sessionId, ChoiceAnswerDeleted(a))
-                    ret ! Success(a)
-                    persist(ChoiceAnswerDeleted(a)) { e => e }
-                  } else {
-                    ret ! Failure(InsufficientRights(role, "DeleteChoiceAnswer"))
-                  }
-                }
+                ret ! Failure(InsufficientRights(role, "DeleteChoiceAnswer"))
               }
             }
           }
@@ -187,38 +179,30 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case GetFreetextAnswer(sessionId, questionId, id) => {
       sender() ! freetextAnswerList.get(id)
     }
-    case CreateFreetextAnswer(sessionId, questionId, answer, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          val awu = answer.copy(userId = user.id.get)
-          ret ! Success(awu)
-          eventRegion ! SessionEventPackage(awu.sessionId, FreetextAnswerCreated(awu))
-          freetextAnswerList += awu.id.get -> awu
-          persist(FreetextAnswerCreated(awu)) { e => e }
-        }
-      }
+    case CreateFreetextAnswer(sessionId, questionId, answer, userId) => ((ret: ActorRef) => {
+      val awu = answer.copy(userId = userId)
+      ret ! Success(awu)
+      eventRegion ! SessionEventPackage(awu.sessionId, FreetextAnswerCreated(awu))
+      freetextAnswerList += awu.id.get -> awu
+      persist(FreetextAnswerCreated(awu)) { e => e }
     }) (sender)
-    case DeleteFreetextAnswer(sessionId, questionId, id, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          freetextAnswerList.get(id) match {
-            case Some(a) => {
-              if (a.userId == user.id.get) {
+    case DeleteFreetextAnswer(sessionId, questionId, id, userId) => ((ret: ActorRef) => {
+      freetextAnswerList.get(id) match {
+        case Some(a) => {
+          if (a.userId == userId) {
+            freetextAnswerList -= id
+            eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerDeleted(a))
+            ret ! Success(a)
+            persist(FreetextAnswerDeleted(a)) { e => e }
+          } else {
+            (userRegion ? GetRoleForSession(userId, sessionId)).mapTo[String] map { role =>
+              if (role == "owner") {
                 freetextAnswerList -= id
                 eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerDeleted(a))
                 ret ! Success(a)
                 persist(FreetextAnswerDeleted(a)) { e => e }
               } else {
-                (userRegion ? GetRoleForSession(user.id.get, sessionId)).mapTo[String] map { role =>
-                  if (role == "owner") {
-                    freetextAnswerList -= id
-                    eventRegion ! SessionEventPackage(a.sessionId, FreetextAnswerDeleted(a))
-                    ret ! Success(a)
-                    persist(FreetextAnswerDeleted(a)) { e => e }
-                  } else {
-                    ret ! Failure(InsufficientRights(role, "DeleteFreetextAnswer"))
-                  }
-                }
+                ret ! Failure(InsufficientRights(role, "DeleteFreetextAnswer"))
               }
             }
           }
