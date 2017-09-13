@@ -7,6 +7,7 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
+import akka.actor.Props
 import akka.http.scaladsl.server.Directives._
 import spray.json._
 import de.thm.arsnova.gateway.api.BaseApi
@@ -14,6 +15,8 @@ import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.entities.Content
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
+import de.thm.arsnova.gateway.AuthServiceClientActor
+import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait ContentApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
@@ -34,8 +37,12 @@ trait ContentApi extends BaseApi {
           delete {
             headerValueByName("X-Session-Token") { tokenstring =>
               complete {
-                (contentRegion ? DeleteContent(sessionId, contentId, tokenstring))
-                  .mapTo[Try[Content]]
+                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                  case Success(uId) => {
+                    (contentRegion ? DeleteContent(sessionId, contentId, uId))
+                      .mapTo[Try[Content]]
+                  }
+                  case Failure(t) => Future.failed(t)
               }
             }
           }
@@ -58,9 +65,13 @@ trait ContentApi extends BaseApi {
           headerValueByName("X-Session-Token") { tokenstring =>
             entity(as[Content]) { content =>
               complete {
-                val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
-                (contentRegion ? CreateContent(sessionId, withIds, tokenstring))
-                  .mapTo[Try[Content]]
+                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                  case Success(uId) => {
+                    val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
+                    (contentRegion ? CreateContent(sessionId, withIds, uId))
+                      .mapTo[Try[Content]]
+                  }
+                  case Failure(t) => Future.failed(t)
               }
             }
           }
