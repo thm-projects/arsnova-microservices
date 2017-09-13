@@ -43,6 +43,7 @@ trait ContentApi extends BaseApi {
                       .mapTo[Try[Content]]
                   }
                   case Failure(t) => Future.failed(t)
+                }
               }
             }
           }
@@ -72,6 +73,7 @@ trait ContentApi extends BaseApi {
                       .mapTo[Try[Content]]
                   }
                   case Failure(t) => Future.failed(t)
+                }
               }
             }
           }

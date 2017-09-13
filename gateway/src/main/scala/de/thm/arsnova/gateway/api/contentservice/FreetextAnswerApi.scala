@@ -40,6 +40,7 @@ trait FreetextAnswerApi extends BaseApi {
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)
+                      }
                     }
                   }
                 }
@@ -60,6 +61,7 @@ trait FreetextAnswerApi extends BaseApi {
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)
+                      }
                     }
                   }
                 }

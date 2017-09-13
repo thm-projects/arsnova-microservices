@@ -55,6 +55,7 @@ trait CommentServiceApi extends BaseApi {
                       .mapTo[Try[Comment]]
                   }
                   case Failure(t) => Future.failed(t)
+                }
               }
             }
           }
