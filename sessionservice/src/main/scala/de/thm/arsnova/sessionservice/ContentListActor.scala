@@ -98,19 +98,15 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
         case None => ret ! None
       }
     }) (sender)
-    case DeleteContent(sessionId, id, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
-            if (role == "owner") {
-              val c = contentlist.remove(id)
-              ret ! Success(c.get)
-              eventRegion ! SessionEventPackage(sessionId, ContentDeleted(c.get))
-              persist(ContentDeleted(c.get))(e => e)
-            } else {
-              ret ! Failure(InsufficientRights(role, "Delete Content"))
-            }
-          }
+    case DeleteContent(sessionId, id, userId) => ((ret: ActorRef) => {
+      (userRegion ? GetRoleForSession(userId, id)).mapTo[String] map { role =>
+        if (role == "owner") {
+          val c = contentlist.remove(id)
+          ret ! Success(c.get)
+          eventRegion ! SessionEventPackage(sessionId, ContentDeleted(c.get))
+          persist(ContentDeleted(c.get))(e => e)
+        } else {
+          ret ! Failure(InsufficientRights(role, "Delete Content"))
         }
       }
     }) (sender)
@@ -122,21 +118,16 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
     case GetContentListBySessionIdAndVariant(sessionid, variant) => ((ret: ActorRef) => {
       ret ! contentlist.values.map(identity).toSeq.filter(_.variant == variant)
     }) (sender)
-    case CreateContent(sessionid, content, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          (userRegion ? GetRoleForSession(user.id.get, sessionid)).mapTo[String] map { role =>
-            if (role != "guest") {
-              contentlist += content.id.get -> content
-              ret ! Success(content)
-              eventRegion ! SessionEventPackage(content.sessionId, ContentCreated(content))
-              persist(ContentCreated(content)) { e => e }
-            } else {
-              ret ! Failure(InsufficientRights(role, "CreateContent"))
-            }
-          }
+    case CreateContent(sessionid, content, userID) => ((ret: ActorRef) => {
+      (userRegion ? GetRoleForSession(userID, sessionid)).mapTo[String] map { role =>
+        if (role != "guest") {
+          contentlist += content.id.get -> content
+          ret ! Success(content)
+          eventRegion ! SessionEventPackage(content.sessionId, ContentCreated(content))
+          persist(ContentCreated(content)) { e => e }
+        } else {
+          ret ! Failure(InsufficientRights(role, "CreateContent"))
         }
-        case Failure(t) => ret ! t
       }
     }) (sender)
 
