@@ -47,7 +47,7 @@ class AuthServiceClientActor extends Actor {
   }
 
   def start: Receive = {
-    case m @ LoginUser => ((ret: ActorRef) => {
+    case m @ LoginUser(username, password) => ((ret: ActorRef) => {
       (manager ? GetActorRefForService(serviceType)).mapTo[ActorRef].map { ref =>
         authRouter = Some(ref)
         loginUser(m, ret)
@@ -64,7 +64,7 @@ class AuthServiceClientActor extends Actor {
   }
 
   def gotRef: Receive = {
-    case m @ LoginUser => ((ret: ActorRef) => {
+    case m @ LoginUser(username, password) => ((ret: ActorRef) => {
       loginUser(m, ret)
     }) (sender)
     case m @ AuthenticateUser(token) => ((ret: ActorRef) => {
