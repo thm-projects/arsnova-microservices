@@ -99,37 +99,28 @@ class UserActor() extends PersistentActor {
         }
       }
     }) (sender)
-    case GetUserSessions(userId, tokenstring, withRole) => ((ret: ActorRef) => {
-      UserRepository.getUserByTokenString(tokenstring) map {
-        case Some(user) => {
-          if (user.id.get == userId) {
-            val futureRoles: Future[Seq[SessionRole]] = withRole match {
-              case Some(r) => {
-                SessionRoleRepository.getAllSessionsByRole(userId, r)
-              }
-              case None => {
-                SessionRoleRepository.getAllSessionRoles(userId)
-              }
+    case GetUserSessions(userId, withRole) => ((ret: ActorRef) => {
+      val futureRoles: Future[Seq[SessionRole]] = withRole match {
+        case Some(r) => {
+          SessionRoleRepository.getAllSessionsByRole(userId, r)
+        }
+        case None => {
+          SessionRoleRepository.getAllSessionRoles(userId)
+        }
+      }
+      futureRoles.map { roles =>
+        val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
+          (sessionRegion ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
+            case Success(session) => Some(session)
+            case Failure(t) => {
+              // TODO: handle dead entries in roles set / Exceptions?
+              None
             }
-            futureRoles.map { roles =>
-              val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
-                (sessionRegion ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
-                  case Success(session) => Some(session)
-                  case Failure(t) => {
-                    // TODO: handle dead entries in roles set / Exceptions?
-                    None
-                  }
-                }
-              }
-              Future.sequence(askFutures).map { list =>
-                ret ! Success(list.flatten)
-              }
-            }
-          } else {
-            ret ! Failure(InvalidToken(tokenstring))
           }
         }
-        case None => ret ! Failure(InvalidToken(tokenstring))
+        Future.sequence(askFutures).map { list =>
+          ret ! Success(list.flatten)
+        }
       }
     }) (sender)
     case sep: SessionEventPackage => handleSessionEvents(sep)

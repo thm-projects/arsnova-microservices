@@ -73,17 +73,12 @@ class SessionActor(authRouter: ActorRef) extends PersistentActor {
     case GetSession(id) => ((ret: ActorRef) => {
       ret ! Failure(NoSuchSession(Left(id)))
     }) (sender)
-    case CreateSession(id, session, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          state = Some(session)
-          context.become(sessionCreated)
-          ret ! Success(session)
-          eventRegion ! SessionEventPackage(id, SessionCreated(session))
-          persist(SessionCreated(session))(e => println(e))
-        }
-        case Failure(t) => ret ! t
-      }
+    case CreateSession(id, session, userId) => ((ret: ActorRef) => {
+      state = Some(session)
+      context.become(sessionCreated)
+      ret ! Success(session)
+      eventRegion ! SessionEventPackage(id, SessionCreated(session))
+      persist(SessionCreated(session))(e => println(e))
     }) (sender)
   }
 
@@ -94,37 +89,29 @@ class SessionActor(authRouter: ActorRef) extends PersistentActor {
         case None => ret ! Failure(NoSuchSession(Left(id)))
       }
     }) (sender)
-    case UpdateSession(id, session, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
-            if (role == "owner") {
-              state = Some(session)
-              ret ! Success(session)
-              eventRegion ! SessionEventPackage(id, SessionUpdated(session))
-              persist(SessionUpdated(session))(e => println(e))
-            } else {
-              ret ! Failure(InsufficientRights(role, "Update Session"))
-            }
-          }
+    case UpdateSession(id, session, userId) => ((ret: ActorRef) => {
+      (userRegion ? GetRoleForSession(userId, id)).mapTo[String] map { role =>
+        if (role == "owner") {
+          state = Some(session)
+          ret ! Success(session)
+          eventRegion ! SessionEventPackage(id, SessionUpdated(session))
+          persist(SessionUpdated(session))(e => println(e))
+        } else {
+          ret ! Failure(InsufficientRights(role, "Update Session"))
         }
       }
     }) (sender)
-    case DeleteSession(id, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          (userRegion ? GetRoleForSession(user.id.get, id)).mapTo[String] map { role =>
-            if (role == "owner") {
-              ret ! Success(state.get)
-              val e = SessionDeleted(state.get)
-              state = None
-              context.become(initial)
-              eventRegion ! SessionEventPackage(id, e)
-              persist(e)(e => e)
-            } else {
-              ret ! Failure(InsufficientRights(role, "Update Session"))
-            }
-          }
+    case DeleteSession(id, userId) => ((ret: ActorRef) => {
+      (userRegion ? GetRoleForSession(userId, id)).mapTo[String] map { role =>
+        if (role == "owner") {
+          ret ! Success(state.get)
+          val e = SessionDeleted(state.get)
+          state = None
+          context.become(initial)
+          eventRegion ! SessionEventPackage(id, e)
+          persist(e)(e => e)
+        } else {
+          ret ! Failure(InsufficientRights(role, "Update Session"))
         }
       }
     }) (sender)
