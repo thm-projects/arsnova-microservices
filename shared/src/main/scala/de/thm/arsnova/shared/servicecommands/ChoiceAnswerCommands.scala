@@ -15,7 +15,7 @@ object ChoiceAnswerCommands {
 
   case class GetChoiceAnswer(sessionId: UUID, questionId: UUID, id: UUID) extends ChoiceAnswerCommand
 
-  case class CreateChoiceAnswer(sessionId: UUID, questionId: UUID, answer: ChoiceAnswer, token: String) extends ChoiceAnswerCommand
+  case class CreateChoiceAnswer(sessionId: UUID, questionId: UUID, answer: ChoiceAnswer, userId: UUID) extends ChoiceAnswerCommand
 
-  case class DeleteChoiceAnswer(sessionId: UUID, questionId: UUID, id: UUID, token: String) extends ChoiceAnswerCommand
+  case class DeleteChoiceAnswer(sessionId: UUID, questionId: UUID, id: UUID, userId: UUID) extends ChoiceAnswerCommand
 }
