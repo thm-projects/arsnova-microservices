@@ -17,5 +17,5 @@ object UserCommands {
 
   case class GetRoleForSession(userId: UUID, sessionId: UUID) extends UserCommand
 
-  case class GetUserSessions(userId: UUID, token: String, withRole: Option[String] = None) extends UserCommand
+  case class GetUserSessions(userId: UUID, withRole: Option[String] = None) extends UserCommand
 }

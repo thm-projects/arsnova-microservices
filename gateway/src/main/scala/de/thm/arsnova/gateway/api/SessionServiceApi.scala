@@ -27,6 +27,7 @@ import de.thm.arsnova.shared.Exceptions._
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
+import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 import de.thm.arsnova.shared.shards.SessionShard
 
 /*
@@ -45,10 +46,15 @@ trait SessionServiceApi extends BaseApi {
         headerValueByName("X-Session-Token") { tokenstring =>
           entity(as[Session]) { session =>
             complete {
-              (sessionList ? GenerateEntry).mapTo[SessionListEntry].map { s =>
-                val completeSession = session.copy(id = Some(s.id), keyword = Some(s.keyword))
-                (sessionRegion ? CreateSession(completeSession.id.get, completeSession, tokenstring))
-                  .mapTo[Try[Session]]
+              (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                case Success(uId) => {
+                  (sessionList ? GenerateEntry).mapTo[SessionListEntry].map { s =>
+                    val completeSession = session.copy(id = Some(s.id), keyword = Some(s.keyword))
+                    (sessionRegion ? CreateSession(completeSession.id.get, completeSession, uId))
+                      .mapTo[Try[Session]]
+                  }
+                }
+                case Failure(t) => Future.failed(t)
               }
             }
           }
@@ -68,8 +74,17 @@ trait SessionServiceApi extends BaseApi {
         headerValueByName("X-Session-Token") { tokenstring =>
           parameter("userid") { userId =>
             complete {
-              (userRegion ? GetUserSessions(UUID.fromString(userId), tokenstring))
-                .mapTo[Try[Seq[Session]]]
+              (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                case Success(uId) => {
+                  if (userId == uId) {
+                    (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId)))
+                      .mapTo[Try[Seq[Session]]]
+                  } else {
+                    Future.failed(InvalidToken(tokenstring))
+                  }
+                }
+                case Failure(t) => Future.failed(t)
+              }
             }
           }
         }
@@ -87,8 +102,13 @@ trait SessionServiceApi extends BaseApi {
           headerValueByName("X-Session-Token") { tokenstring =>
             entity(as[Session]) { session =>
               complete {
-                (sessionRegion ? UpdateSession(sessionId, session, tokenstring))
-                  .mapTo[Try[Session]]
+                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                  case Success(uId) => {
+                    (sessionRegion ? UpdateSession(sessionId, session, uId))
+                      .mapTo[Try[Session]]
+                  }
+                  case Failure(t) => Future.failed(t)
+                }
               }
             }
           }
@@ -96,8 +116,13 @@ trait SessionServiceApi extends BaseApi {
         delete {
           headerValueByName("X-Session-Token") { tokenstring =>
             complete {
-              (sessionRegion ? DeleteSession(sessionId, tokenstring))
-                .mapTo[Try[Session]]
+              (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                case Success(uId) => {
+                  (sessionRegion ? DeleteSession(sessionId, uId))
+                    .mapTo[Try[Session]]
+                }
+                case Failure(t) => Future.failed(t)
+              }
             }
           }
         }

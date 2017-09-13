@@ -20,13 +20,13 @@ object SessionCommands {
     implicit val format: RootJsonFormat[GetSession] = jsonFormat1(GetSession)
   }
 
-  case class CreateSession(id: UUID, session: Session, token: String) extends SessionCommand
+  case class CreateSession(id: UUID, session: Session, userId: UUID) extends SessionCommand
 
   object CreateSessionFormat extends DefaultJsonProtocol {
     implicit val format: RootJsonFormat[CreateSession] = jsonFormat3(CreateSession)
   }
 
-  case class UpdateSession(id: UUID, session: Session, token: String) extends SessionCommand
+  case class UpdateSession(id: UUID, session: Session, userId: UUID) extends SessionCommand
 
-  case class DeleteSession(id: UUID, token: String) extends SessionCommand
+  case class DeleteSession(id: UUID, userId: UUID) extends SessionCommand
 }
