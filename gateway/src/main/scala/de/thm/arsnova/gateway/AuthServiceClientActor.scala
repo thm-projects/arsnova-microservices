@@ -2,10 +2,11 @@ package de.thm.arsnova.gateway
 
 import java.util.UUID
 
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 import akka.util.Timeout
 import akka.pattern.{ask, pipe}
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import de.thm.arsnova.shared.Exceptions.InvalidToken
 import de.thm.arsnova.shared.management.RegistryCommands._
 import de.thm.arsnova.shared.servicecommands.AuthCommands._
 import de.thm.arsnova.shared.entities.Token
@@ -37,7 +38,10 @@ class AuthServiceClientActor extends Actor {
     (authRouter.get ? m).mapTo[Option[Token]] map {
       case Some(token) => {
         tokenList += token.token -> token.userId
-        ret ! token.userId
+        ret ! Success(token.userId)
+      }
+      case None => {
+        ret ! Failure(InvalidToken(m.token))
       }
     }
   }
@@ -65,7 +69,7 @@ class AuthServiceClientActor extends Actor {
     }) (sender)
     case m @ AuthenticateUser(token) => ((ret: ActorRef) => {
       tokenList.get(token) match {
-        case Some(id) => ret ! Some(id)
+        case Some(id) => ret ! Success(id)
         case None => authenticateUser(m, ret)
       }
     }) (sender)
