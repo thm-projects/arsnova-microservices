@@ -23,8 +23,6 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 trait ChoiceAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
 
-  val authClient = system.actorOf(Props[AuthServiceClientActor], name = "authClient")
-
   val choiceAnswerApi = pathPrefix("session") {
     pathPrefix(JavaUUID) { sessionId =>
       pathPrefix("question") {
