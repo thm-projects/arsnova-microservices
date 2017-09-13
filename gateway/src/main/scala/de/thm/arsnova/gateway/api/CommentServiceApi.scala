@@ -12,6 +12,7 @@ import spray.json._
 import de.thm.arsnova.shared.entities.Comment
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.CommentCommands._
+import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait CommentServiceApi extends BaseApi {
   // protocol for serializing data
@@ -48,8 +49,12 @@ trait CommentServiceApi extends BaseApi {
           headerValueByName("X-Session-Token") { token =>
             entity(as[Comment]) { comment =>
               complete {
-                (commentRegion ? CreateComment(sessionId, comment, token))
-                  .mapTo[Try[Comment]]
+                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                  case Success(uId) => {
+                    (commentRegion ? CreateComment(sessionId, comment, uId))
+                      .mapTo[Try[Comment]]
+                  }
+                  case Failure(t) => Future.failed(t)
               }
             }
           }
