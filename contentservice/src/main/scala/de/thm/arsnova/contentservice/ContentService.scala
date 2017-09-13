@@ -6,7 +6,6 @@ import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStore}
 import akka.routing.RandomPool
 import de.thm.arsnova.authservice.AuthServiceActor
-import de.thm.arsnova.sessionservice.ContentListActor
 import de.thm.arsnova.shared.actors.ServiceManagementActor
 import de.thm.arsnova.shared.shards.{ContentListShard, EventShard, SessionShard, UserShard}
 
