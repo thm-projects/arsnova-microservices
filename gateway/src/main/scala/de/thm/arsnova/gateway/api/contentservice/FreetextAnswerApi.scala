@@ -13,6 +13,7 @@ import spray.json._
 import de.thm.arsnova.gateway.api.BaseApi
 import de.thm.arsnova.shared.entities.FreetextAnswer
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
+import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait FreetextAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.FreetextAnswerJsonProtocol._
@@ -33,8 +34,12 @@ trait FreetextAnswerApi extends BaseApi {
                 delete {
                   headerValueByName("X-Session-Token") { token =>
                     complete {
-                      (answerListRegion ? DeleteFreetextAnswer(sessionId, questionId, answerId, token))
-                        .mapTo[Try[FreetextAnswer]]
+                      (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                        case Success(uId) => {
+                          (freetextAnswerListRegion ? DeleteFreetextAnswer(sessionId, questionId, answerId, uId))
+                            .mapTo[Try[FreetextAnswer]]
+                        }
+                        case Failure(t) => Future.failed(t)
                     }
                   }
                 }
@@ -49,8 +54,12 @@ trait FreetextAnswerApi extends BaseApi {
                 headerValueByName("X-Session-Token") { token =>
                   entity(as[FreetextAnswer]) { answer =>
                     complete {
-                      (answerListRegion ? CreateFreetextAnswer(sessionId, questionId, answer, token))
-                        .mapTo[Try[FreetextAnswer]]
+                      (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                        case Success(uId) => {
+                          (freetextAnswerListRegion ? CreateFreetextAnswer(sessionId, questionId, answer, uId))
+                            .mapTo[Try[FreetextAnswer]]
+                        }
+                        case Failure(t) => Future.failed(t)
                     }
                   }
                 }
