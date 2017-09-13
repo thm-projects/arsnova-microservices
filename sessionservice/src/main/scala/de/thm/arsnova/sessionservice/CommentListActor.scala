@@ -99,17 +99,12 @@ class CommentListActor(authRouter: ActorRef) extends PersistentActor {
   }
 
   def sessionCreated: Receive = {
-    case CreateComment(sessionId, comment, token) => ((ret: ActorRef) => {
-      tokenToUser(token) map {
-        case Success(user) => {
-          commentlist += comment.id.get -> comment
-          ret ! Success(comment)
-          val e = CommentCreated(comment)
-          eventRegion ! SessionEventPackage(comment.sessionId, e)
-          persist(e) { e => e }
-        }
-        case Failure(t) => ret ! t
-      }
+    case CreateComment(sessionId, comment, userId) => ((ret: ActorRef) => {
+      commentlist += comment.id.get -> comment
+      ret ! Success(comment)
+      val e = CommentCreated(comment)
+      eventRegion ! SessionEventPackage(comment.sessionId, e)
+      persist(e) { e => e }
     }) (sender)
     case GetComment(sessionId, id) => ((ret: ActorRef) => {
       commentlist.get(id) match {
