@@ -27,34 +27,6 @@ object SessionService extends App {
     )).props(Props[AuthServiceActor]), "AuthRouter"
   )
 
-  ClusterSharding(system).startProxy(
-    typeName = UserShard.shardName,
-    role = UserShard.serviceRole,
-    extractEntityId = UserShard.idExtractor,
-    extractShardId = UserShard.shardResolver
-  )
-
-  ClusterSharding(system).startProxy(
-    typeName = EventShard.shardName,
-    role = EventShard.serviceRole,
-    extractEntityId = EventShard.idExtractor,
-    extractShardId = EventShard.shardResolver
-  )
-
-  ClusterSharding(system).startProxy(
-    typeName = SessionShard.shardName,
-    role = SessionShard.serviceRole,
-    extractEntityId = SessionShard.idExtractor,
-    extractShardId = SessionShard.shardResolver
-  )
-
-  ClusterSharding(system).startProxy(
-    typeName = ContentListShard.shardName,
-    role = ContentListShard.serviceRole,
-    extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver
-  )
-
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
 
@@ -96,5 +68,34 @@ object SessionService extends App {
     settings = ClusterShardingSettings(system),
     extractEntityId = AnswerListShard.idExtractor,
     extractShardId = AnswerListShard.shardResolver
+  )
+
+  //start proxies
+  ClusterSharding(system).startProxy(
+    typeName = UserShard.shardName,
+    role = UserShard.serviceRole,
+    extractEntityId = UserShard.idExtractor,
+    extractShardId = UserShard.shardResolver
+  )
+
+  ClusterSharding(system).startProxy(
+    typeName = EventShard.shardName,
+    role = EventShard.serviceRole,
+    extractEntityId = EventShard.idExtractor,
+    extractShardId = EventShard.shardResolver
+  )
+
+  ClusterSharding(system).startProxy(
+    typeName = SessionShard.shardName,
+    role = SessionShard.serviceRole,
+    extractEntityId = SessionShard.idExtractor,
+    extractShardId = SessionShard.shardResolver
+  )
+
+  ClusterSharding(system).startProxy(
+    typeName = ContentListShard.shardName,
+    role = ContentListShard.serviceRole,
+    extractEntityId = ContentListShard.idExtractor,
+    extractShardId = ContentListShard.shardResolver
   )
 }
