@@ -45,13 +45,15 @@ object SessionService extends App {
     typeName = SessionShard.shardName,
     role = SessionShard.serviceRole,
     extractEntityId = SessionShard.idExtractor,
-    extractShardId = SessionShard.shardResolver)
+    extractShardId = SessionShard.shardResolver
+  )
 
   ClusterSharding(system).startProxy(
     typeName = ContentListShard.shardName,
     role = ContentListShard.serviceRole,
     extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver)
+    extractShardId = ContentListShard.shardResolver
+  )
 
   val eventRegion = ClusterSharding(system).shardRegion(EventShard.shardName)
 
@@ -69,7 +71,8 @@ object SessionService extends App {
     entityProps = UserActor.props(sessionRegion),
     settings = ClusterShardingSettings(system),
     extractEntityId = UserShard.idExtractor,
-    extractShardId = UserShard.shardResolver)
+    extractShardId = UserShard.shardResolver
+  )
 
   ClusterSharding(system).start(
     typeName = SessionShard.shardName,
@@ -84,19 +87,22 @@ object SessionService extends App {
     entityProps = ContentListActor.props(eventRegion, authRouter, userRegion, sessionRegion),
     settings = ClusterShardingSettings(system),
     extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver)
+    extractShardId = ContentListShard.shardResolver
+  )
 
   ClusterSharding(system).start(
     typeName = CommentShard.shardName,
     entityProps = CommentListActor.props(eventRegion, authRouter, sessionRegion),
     settings = ClusterShardingSettings(system),
     extractEntityId = CommentShard.idExtractor,
-    extractShardId = CommentShard.shardResolver)
+    extractShardId = CommentShard.shardResolver
+  )
 
   ClusterSharding(system).start(
     typeName = CommentShard.shardName,
     entityProps = AnswerListActor.props(eventRegion, authRouter, contentRegion, userRegion),
     settings = ClusterShardingSettings(system),
     extractEntityId = CommentShard.idExtractor,
-    extractShardId = CommentShard.shardResolver)
+    extractShardId = CommentShard.shardResolver
+  )
 }

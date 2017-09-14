@@ -20,29 +20,34 @@ trait BaseApi {
     typeName = UserShard.shardName,
     role = UserShard.serviceRole,
     extractEntityId = UserShard.idExtractor,
-    extractShardId = UserShard.shardResolver)
+    extractShardId = UserShard.shardResolver
+  )
 
   val sessionRegion = ClusterSharding(system).startProxy(
     typeName = SessionShard.shardName,
     role = SessionShard.serviceRole,
     extractEntityId = SessionShard.idExtractor,
-    extractShardId = SessionShard.shardResolver)
+    extractShardId = SessionShard.shardResolver
+  )
 
   val contentRegion = ClusterSharding(system).startProxy(
     typeName = ContentListShard.shardName,
     role = ContentListShard.serviceRole,
     extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver)
+    extractShardId = ContentListShard.shardResolver
+  )
 
   val answerListRegion = ClusterSharding(system).startProxy(
     typeName = AnswerListShard.shardName,
     role = AnswerListShard.serviceRole,
     extractEntityId = AnswerListShard.idExtractor,
-    extractShardId = AnswerListShard.shardResolver)
+    extractShardId = AnswerListShard.shardResolver
+  )
 
   val commentRegion = ClusterSharding(system).startProxy(
     typeName = CommentShard.shardName,
     role = CommentShard.serviceRole,
     extractEntityId = CommentShard.idExtractor,
-    extractShardId = CommentShard.shardResolver)
+    extractShardId = CommentShard.shardResolver
+  )
 }
