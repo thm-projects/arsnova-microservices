@@ -15,20 +15,31 @@ import akka.http.scaladsl.server.Directives._
 import akka.routing.RandomPool
 import de.thm.arsnova.gateway.Context._
 import de.thm.arsnova.gateway.AuthServiceClientActor
+import de.thm.arsnova.gateway.sharding.UserShard
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.AuthCommands._
+import de.thm.arsnova.shared.servicecommands.UserCommands.GetUser
 import de.thm.arsnova.shared.entities.{Token, User}
 
 trait AuthApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.UserJsonProtocol._
+
+  val userRegion = UserShard.getProxy
 
   val authApi = pathPrefix("auth") {
     pathPrefix("whoami") {
       get {
         headerValueByName("X-Session-Token") { tokenstring =>
           complete {
-            (authClient ? GetUserFromTokenString(tokenstring))
-              .mapTo[Try[User]]
+            (authClient ? AuthenticateUser(tokenstring))
+              .mapTo[Try[UUID]] map {
+              case Success(uid) => {
+                (userRegion ? GetUser(uid)).mapTo[Try[User]]
+              }
+              case Failure(t) => {
+                Future.failed(t)
+              }
+            }
           }
         }
       }

@@ -34,14 +34,6 @@ class AuthServiceActor extends Actor {
     case AuthenticateUser(token) => {
       TokenRepository.getByToken(token) pipeTo sender()
     }
-    case GetUserFromTokenString(tokenstring) => ((ret: ActorRef) => {
-      TokenRepository.getByToken(tokenstring) map {
-        case Some(token) => {
-          (userRegion ? GetUser(token.userId)) pipeTo ret
-        }
-        case None => ret ! Failure(InvalidToken(tokenstring))
-      }
-    }) (sender)
 
     case CheckTokenString(tokenstring) => ((ret: ActorRef) => {
       UserRepository.checkTokenString(tokenstring) pipeTo ret

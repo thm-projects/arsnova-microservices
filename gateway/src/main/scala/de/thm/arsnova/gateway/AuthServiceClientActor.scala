@@ -9,7 +9,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import de.thm.arsnova.shared.Exceptions.InvalidToken
 import de.thm.arsnova.shared.management.RegistryCommands._
 import de.thm.arsnova.shared.servicecommands.AuthCommands._
-import de.thm.arsnova.shared.entities.Token
+import de.thm.arsnova.shared.entities.{Token, User}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
