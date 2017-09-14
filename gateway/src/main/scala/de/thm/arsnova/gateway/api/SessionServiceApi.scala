@@ -77,7 +77,7 @@ trait SessionServiceApi extends BaseApi {
               (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
                 case Success(uId) => {
                   if (userId == uId) {
-                    (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId)))
+                    (userRegion ? GetUserSessions(UUID.fromString(userId)))
                       .mapTo[Try[Seq[Session]]]
                   } else {
                     Future.failed(InvalidToken(tokenstring))

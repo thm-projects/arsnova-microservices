@@ -36,7 +36,7 @@ trait FreetextAnswerApi extends BaseApi {
                     complete {
                       (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
                         case Success(uId) => {
-                          (freetextAnswerListRegion ? DeleteFreetextAnswer(sessionId, questionId, answerId, uId))
+                          (answerListRegion ? DeleteFreetextAnswer(sessionId, questionId, answerId, uId))
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)
@@ -57,7 +57,7 @@ trait FreetextAnswerApi extends BaseApi {
                     complete {
                       (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
                         case Success(uId) => {
-                          (freetextAnswerListRegion ? CreateFreetextAnswer(sessionId, questionId, answer, uId))
+                          (answerListRegion ? CreateFreetextAnswer(sessionId, questionId, answer, uId))
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)
