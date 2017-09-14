@@ -17,7 +17,6 @@ import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import de.thm.arsnova.shared.entities.{Session, User}
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted, SessionEvent, SessionUpdated}
-import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
@@ -40,10 +39,6 @@ class SessionActor(authRouter: ActorRef) extends PersistentActor {
   val eventRegion = ClusterSharding(context.system).shardRegion(EventShard.shardName)
 
   val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
-
-  def tokenToUser(tokenstring: String): Future[Try[User]] = {
-    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]
-  }
 
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
 

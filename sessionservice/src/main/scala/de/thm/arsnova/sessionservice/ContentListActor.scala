@@ -12,7 +12,6 @@ import de.thm.arsnova.shared.entities.{Content, Session, User}
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
-import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands.GetSession
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -42,10 +41,6 @@ class ContentListActor(authRouter: ActorRef) extends PersistentActor {
 
   private val contentlist: collection.mutable.HashMap[UUID, Content] =
     collection.mutable.HashMap.empty[UUID, Content]
-
-  def tokenToUser(tokenstring: String): Future[Try[User]] = {
-    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]
-  }
 
   override def persistenceId: String = self.path.parent.name + "-"  + self.path.name
 

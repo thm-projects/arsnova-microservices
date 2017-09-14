@@ -12,7 +12,6 @@ import de.thm.arsnova.shared.entities.{Comment, Session, User}
 import de.thm.arsnova.shared.events.CommentEvents._
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
-import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.CommentCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands.GetSession
 import de.thm.arsnova.shared.shards.{EventShard, SessionShard, UserShard}
@@ -41,10 +40,6 @@ class CommentListActor(authRouter: ActorRef) extends PersistentActor {
 
   private val commentlist: collection.mutable.HashMap[UUID, Comment] =
     collection.mutable.HashMap.empty[UUID, Comment]
-
-  def tokenToUser(tokenstring: String): Future[Try[User]] = {
-    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]
-  }
 
   override def persistenceId: String = self.path.parent.name + "-"  + self.path.name
 

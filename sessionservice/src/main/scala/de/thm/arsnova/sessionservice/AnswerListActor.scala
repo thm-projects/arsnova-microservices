@@ -13,7 +13,6 @@ import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.FreetextAnswerEvents._
 import de.thm.arsnova.shared.events.SessionEventPackage
-import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
@@ -39,10 +38,6 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
 
   val contentRegion = ClusterSharding(context.system).shardRegion(ContentListShard.shardName)
-
-  def tokenToUser(tokenstring: String): Future[Try[User]] = {
-    (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]
-  }
 
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
 
