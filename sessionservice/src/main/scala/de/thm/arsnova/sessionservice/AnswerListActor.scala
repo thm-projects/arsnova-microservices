@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.util.Timeout
+import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{ChoiceAnswer, Content, FreetextAnswer, User}
 import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
@@ -17,20 +18,27 @@ import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands.GetRoleForSession
+import de.thm.arsnova.shared.shards.{EventShard, ContentListShard, UserShard}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 object AnswerListActor {
-  def props(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef, userRegion: ActorRef): Props =
-    Props(new AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef, userRegion: ActorRef))
+  def props(authRouter: ActorRef): Props =
+    Props(new AnswerListActor(authRouter: ActorRef))
 }
 
-class AnswerListActor(eventRegion: ActorRef, authRouter: ActorRef, contentRegion: ActorRef, userRegion: ActorRef) extends PersistentActor {
+class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
+
+  val eventRegion = ClusterSharding(context.system).shardRegion(EventShard.shardName)
+
+  val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
+
+  val contentRegion = ClusterSharding(context.system).shardRegion(ContentListShard.shardName)
 
   def tokenToUser(tokenstring: String): Future[Try[User]] = {
     (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]

@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.util.Timeout
+import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions.{NoSuchSession, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Comment, Session, User}
 import de.thm.arsnova.shared.events.CommentEvents._
@@ -14,19 +15,26 @@ import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDelete
 import de.thm.arsnova.shared.servicecommands.AuthCommands.GetUserFromTokenString
 import de.thm.arsnova.shared.servicecommands.CommentCommands._
 import de.thm.arsnova.shared.servicecommands.SessionCommands.GetSession
+import de.thm.arsnova.shared.shards.{EventShard, SessionShard, UserShard}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 object CommentListActor {
-  def props(eventRegion: ActorRef, authRouter: ActorRef, sessionRegion: ActorRef): Props =
-    Props(new CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegion: ActorRef))
+  def props(authRouter: ActorRef): Props =
+    Props(new CommentListActor(authRouter: ActorRef))
 }
 
-class CommentListActor(eventRegion: ActorRef, authRouter: ActorRef, sessionRegion: ActorRef) extends PersistentActor {
+class CommentListActor(authRouter: ActorRef) extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
+
+  val eventRegion = ClusterSharding(context.system).shardRegion(EventShard.shardName)
+
+  val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
+
+  val sessionRegion = ClusterSharding(context.system).shardRegion(SessionShard.shardName)
 
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)

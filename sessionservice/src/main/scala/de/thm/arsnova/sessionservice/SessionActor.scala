@@ -12,6 +12,7 @@ import akka.actor.ReceiveTimeout
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import akka.cluster.sharding.ShardRegion
+import akka.cluster.sharding.ClusterSharding
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
 import de.thm.arsnova.shared.entities.{Session, User}
@@ -22,18 +23,23 @@ import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchSession, NoUserException}
 import de.thm.arsnova.shared.events.SessionEventPackage
+import de.thm.arsnova.shared.shards.{EventShard, UserShard}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object SessionActor {
-  def props(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef): Props =
-    Props(new SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef))
+  def props(authRouter: ActorRef): Props =
+    Props(new SessionActor(authRouter: ActorRef))
 }
 
-class SessionActor(eventRegion: ActorRef, authRouter: ActorRef, userRegion: ActorRef) extends PersistentActor {
+class SessionActor(authRouter: ActorRef) extends PersistentActor {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
+
+  val eventRegion = ClusterSharding(context.system).shardRegion(EventShard.shardName)
+
+  val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
 
   def tokenToUser(tokenstring: String): Future[Try[User]] = {
     (authRouter ? GetUserFromTokenString(tokenstring)).mapTo[Try[User]]

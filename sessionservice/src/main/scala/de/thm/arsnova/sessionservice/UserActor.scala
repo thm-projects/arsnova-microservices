@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.util.Timeout
+import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
@@ -12,19 +13,22 @@ import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDelete
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole, UserLosesSessionRole}
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
+import de.thm.arsnova.shared.shards.SessionShard
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 object UserActor {
-  def props(sessionShards: ActorRef): Props =
-    Props(new UserActor(sessionShards: ActorRef))
+  def props(): Props =
+    Props(new UserActor())
 }
 
-class UserActor(sessionRegion: ActorRef) extends PersistentActor {
+class UserActor() extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
+
+  val sessionRegion = ClusterSharding(context.system).shardRegion(SessionShard.shardName)
 
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
 

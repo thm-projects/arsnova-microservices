@@ -55,20 +55,12 @@ object SessionService extends App {
     extractShardId = ContentListShard.shardResolver
   )
 
-  val eventRegion = ClusterSharding(system).shardRegion(EventShard.shardName)
-
-  val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
-
-  val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
-
-  val contentRegion = ClusterSharding(system).shardRegion(ContentListShard.shardName)
-
   val storeRef = Await.result(system.actorSelection(ActorPath.fromString("akka://ARSnovaService@127.0.0.1:8870/user/store")).resolveOne, 5.seconds)
   SharedLeveldbJournal.setStore(storeRef, system)
 
   ClusterSharding(system).start(
     typeName = UserShard.shardName,
-    entityProps = UserActor.props(sessionRegion),
+    entityProps = UserActor.props(),
     settings = ClusterShardingSettings(system),
     extractEntityId = UserShard.idExtractor,
     extractShardId = UserShard.shardResolver
@@ -76,7 +68,7 @@ object SessionService extends App {
 
   ClusterSharding(system).start(
     typeName = SessionShard.shardName,
-    entityProps = SessionActor.props(eventRegion,authRouter, userRegion),
+    entityProps = SessionActor.props(authRouter),
     settings = ClusterShardingSettings(system),
     extractEntityId = SessionShard.idExtractor,
     extractShardId = SessionShard.shardResolver
@@ -84,7 +76,7 @@ object SessionService extends App {
 
   ClusterSharding(system).start(
     typeName = ContentListShard.shardName,
-    entityProps = ContentListActor.props(eventRegion, authRouter, userRegion, sessionRegion),
+    entityProps = ContentListActor.props(authRouter),
     settings = ClusterShardingSettings(system),
     extractEntityId = ContentListShard.idExtractor,
     extractShardId = ContentListShard.shardResolver
@@ -92,17 +84,17 @@ object SessionService extends App {
 
   ClusterSharding(system).start(
     typeName = CommentShard.shardName,
-    entityProps = CommentListActor.props(eventRegion, authRouter, sessionRegion),
+    entityProps = CommentListActor.props(authRouter),
     settings = ClusterShardingSettings(system),
     extractEntityId = CommentShard.idExtractor,
     extractShardId = CommentShard.shardResolver
   )
 
   ClusterSharding(system).start(
-    typeName = CommentShard.shardName,
-    entityProps = AnswerListActor.props(eventRegion, authRouter, contentRegion, userRegion),
+    typeName = AnswerListShard.shardName,
+    entityProps = AnswerListActor.props(authRouter),
     settings = ClusterShardingSettings(system),
-    extractEntityId = CommentShard.idExtractor,
-    extractShardId = CommentShard.shardResolver
+    extractEntityId = AnswerListShard.idExtractor,
+    extractShardId = AnswerListShard.shardResolver
   )
 }
