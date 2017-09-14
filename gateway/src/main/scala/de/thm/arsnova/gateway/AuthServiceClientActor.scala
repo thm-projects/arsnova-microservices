@@ -31,7 +31,7 @@ class AuthServiceClientActor extends Actor {
   val receive: Receive = start
 
   def loginUser(m: LoginUser, ret: ActorRef): Unit = {
-    (authRouter.get ? m).mapTo[Try[UUID]] pipeTo ret
+    (authRouter.get ? m).mapTo[String] pipeTo ret
   }
 
   def authenticateUser(m: AuthenticateUser, ret: ActorRef): Unit = {
