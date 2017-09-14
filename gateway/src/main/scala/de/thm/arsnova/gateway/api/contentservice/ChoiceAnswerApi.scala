@@ -14,12 +14,9 @@ import de.thm.arsnova.gateway.api.BaseApi
 import de.thm.arsnova.shared.entities.ChoiceAnswer
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
-import de.thm.arsnova.gateway.sharding.AnswerListShard
 
 trait ChoiceAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
-
-  val choiceAnswerListRegion = AnswerListShard.getProxy
 
   val choiceAnswerApi = pathPrefix("session") {
     pathPrefix(JavaUUID) { sessionId =>
@@ -29,14 +26,14 @@ trait ChoiceAnswerApi extends BaseApi {
             pathPrefix(JavaUUID) { answerId =>
               get {
                 complete {
-                  (choiceAnswerListRegion ? GetChoiceAnswer(sessionId, questionId, answerId))
+                  (answerListRegion ? GetChoiceAnswer(sessionId, questionId, answerId))
                     .mapTo[Option[ChoiceAnswer]]
                 }
               } ~
               delete {
                 headerValueByName("X-Session-Token") { token =>
                   complete {
-                    (choiceAnswerListRegion ? DeleteChoiceAnswer(sessionId, questionId, answerId, token))
+                    (answerListRegion ? DeleteChoiceAnswer(sessionId, questionId, answerId, token))
                       .mapTo[Try[ChoiceAnswer]]
                   }
                 }
@@ -44,7 +41,7 @@ trait ChoiceAnswerApi extends BaseApi {
             } ~
             get {
               complete {
-                (choiceAnswerListRegion ? GetChoiceAnswers(sessionId, questionId))
+                (answerListRegion ? GetChoiceAnswers(sessionId, questionId))
                   .mapTo[Seq[ChoiceAnswer]]
               }
             } ~
@@ -52,7 +49,7 @@ trait ChoiceAnswerApi extends BaseApi {
               headerValueByName("X-Session-Token") { tokenstring =>
                 entity(as[ChoiceAnswer]) { answer =>
                   complete {
-                    (choiceAnswerListRegion ? CreateChoiceAnswer(sessionId, questionId, answer, tokenstring))
+                    (answerListRegion ? CreateChoiceAnswer(sessionId, questionId, answer, tokenstring))
                       .mapTo[Try[ChoiceAnswer]]
                   }
                 }

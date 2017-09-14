@@ -8,7 +8,6 @@ import scala.util.{Failure, Success, Try}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
-import de.thm.arsnova.gateway.sharding.CommentListShard
 import spray.json._
 import de.thm.arsnova.shared.entities.Comment
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
@@ -17,8 +16,6 @@ import de.thm.arsnova.shared.servicecommands.CommentCommands._
 trait CommentServiceApi extends BaseApi {
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.CommentJsonProtocol._
-
-  val commentRegion = CommentListShard.getProxy
 
   val commentServiceApi = pathPrefix("session") {
     pathPrefix(JavaUUID) { sessionId =>

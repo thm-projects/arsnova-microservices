@@ -10,7 +10,6 @@ import akka.pattern.ask
 import akka.http.scaladsl.server.Directives._
 import spray.json._
 import de.thm.arsnova.gateway.api.BaseApi
-import de.thm.arsnova.gateway.sharding.ContentShard
 import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.entities.Content
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
@@ -18,8 +17,6 @@ import de.thm.arsnova.shared.servicecommands.ContentCommands._
 
 trait ContentApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
-
-  val contentRegion = ContentShard.getProxy
 
   val contentApi = pathPrefix("session") {
     pathPrefix(JavaUUID) { sessionId =>

@@ -23,7 +23,6 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes._
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
-import de.thm.arsnova.gateway.sharding.UserShard
 import de.thm.arsnova.shared.Exceptions._
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
@@ -37,15 +36,6 @@ trait SessionServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
-
-  ClusterSharding(system).startProxy(
-    typeName = SessionShard.shardName,
-    role = SessionShard.serviceRole,
-    extractEntityId = SessionShard.idExtractor,
-    extractShardId = SessionShard.shardResolver)
-
-  val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
-  val sessionsUserRegion = UserShard.getProxy
 
   val sessionList = system.actorOf(Props[SessionListClientActor], name = "sessionlist")
 
@@ -78,7 +68,7 @@ trait SessionServiceApi extends BaseApi {
         headerValueByName("X-Session-Token") { tokenstring =>
           parameter("userid") { userId =>
             complete {
-              (sessionsUserRegion ? GetUserSessions(UUID.fromString(userId), tokenstring))
+              (userRegion ? GetUserSessions(UUID.fromString(userId), tokenstring))
                 .mapTo[Try[Seq[Session]]]
             }
           }
