@@ -76,7 +76,7 @@ trait SessionServiceApi extends BaseApi {
             complete {
               (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                 case Success(uId) => {
-                  if (userId == uId) {
+                  if (UUID.fromString(userId) == uId) {
                     (userRegion ? GetUserSessions(UUID.fromString(userId)))
                       .mapTo[Try[Seq[Session]]]
                   } else {
