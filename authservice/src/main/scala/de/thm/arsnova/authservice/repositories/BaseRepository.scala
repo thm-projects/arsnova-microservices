@@ -11,5 +11,4 @@ trait BaseRepository {
   val db: Database = Database.forConfig("database")
   val usersTable = TableQuery[UsersTable]
   val tokensTable = TableQuery[TokensTable]
-  val sessionRolesTables = TableQuery[SessionRolesTables]
 }
