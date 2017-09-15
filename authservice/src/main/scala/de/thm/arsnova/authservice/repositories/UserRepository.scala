@@ -14,8 +14,8 @@ object UserRepository extends BaseRepository {
     db.run(usersTable.filter(_.id === userId).result.headOption)
   }
 
-  def create(user: User): Future[User] = {
-    db.run(usersTable += user).map(_ => user)
+  def create(user: User): Future[Int] = {
+    db.run(usersTable += user)
   }
 
   def update(newUser: User, userId: UUID): Future[Int] = {

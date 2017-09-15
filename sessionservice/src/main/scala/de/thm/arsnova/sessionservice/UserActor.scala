@@ -5,11 +5,12 @@ import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
-import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
+import de.thm.arsnova.shared.Exceptions.{AddUserWentWrong, InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole, UserLosesSessionRole}
+import de.thm.arsnova.shared.servicecommands.AuthCommands.AddUser
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.shards.SessionShard
@@ -19,11 +20,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 object UserActor {
-  def props(): Props =
-    Props(new UserActor())
+  def props(authRouter: ActorRef): Props =
+    Props(new UserActor(authRouter: ActorRef))
 }
 
-class UserActor() extends PersistentActor {
+class UserActor(authRouter: ActorRef) extends PersistentActor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
@@ -66,10 +67,20 @@ class UserActor() extends PersistentActor {
 
   def initial: Receive = {
     case CreateUser(userId, user) => ((ret: ActorRef) => {
-      ret ! user
-      userState = Some(user)
-      context.become(userCreated)
-      persist(UserCreated(user))(e => e)
+      (authRouter ? AddUser(userId, user.username, user.password)).mapTo[Int] map {
+        // User must be added to auth db for login
+        // authRouter answers with tables touched
+        // TODO: maybe return bool - but it would add delay since authRouter can't pipe
+        case 1 => {
+          ret ! Success(user)
+          userState = Some(user)
+          context.become(userCreated)
+          persist(UserCreated(user))(e => e)
+        }
+        case _ => {
+          ret ! Failure(AddUserWentWrong(user.username))
+        }
+      }
     }) (sender)
     case GetUser(userId) => {
       sender() ! Failure(ResourceNotFound("user"))

@@ -13,6 +13,7 @@ import akka.cluster.Cluster
 import akka.pattern.{ask, pipe}
 import akka.cluster.sharding.ClusterSharding
 import akka.util.Timeout
+import de.thm.arsnova.shared.entities.User
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, NoUserException}
 import de.thm.arsnova.shared.shards.UserShard
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -33,6 +34,9 @@ class AuthServiceActor extends Actor {
     }) (sender)
     case AuthenticateUser(token) => {
       TokenRepository.getByToken(token) pipeTo sender()
+    }
+    case AddUser(userId, username, password) => {
+      UserRepository.create(User(Some(userId), username, password)) pipeTo sender()
     }
 
     case CheckTokenString(tokenstring) => ((ret: ActorRef) => {

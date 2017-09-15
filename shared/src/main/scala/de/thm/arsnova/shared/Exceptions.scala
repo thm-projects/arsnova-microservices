@@ -33,4 +33,7 @@ object Exceptions {
   case class InvalidToken(token: String) extends ARSException {
     def getMsg: String = s"Invalid token: $token"
   }
+  case class AddUserWentWrong(username: String) extends ARSException {
+    def getMsg: String = s"User with username $username couldn't be added to database"
+  }
 }

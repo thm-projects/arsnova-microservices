@@ -42,7 +42,7 @@ trait UserApi extends BaseApi {
           val newId = UUID.randomUUID()
           val userWithId = user.copy(id = Some(newId))
           (userRegion ? CreateUser(newId, userWithId))
-            .mapTo[User]
+            .mapTo[Try[User]]
         }
       }
     }
