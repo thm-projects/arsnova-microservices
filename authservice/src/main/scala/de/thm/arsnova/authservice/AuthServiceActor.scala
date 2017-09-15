@@ -36,7 +36,7 @@ class AuthServiceActor extends Actor {
     }
 
     case CheckTokenString(tokenstring) => ((ret: ActorRef) => {
-      UserRepository.checkTokenString(tokenstring) pipeTo ret
+      TokenRepository.checkTokenString(tokenstring) pipeTo ret
     }) (sender)
   }
 }

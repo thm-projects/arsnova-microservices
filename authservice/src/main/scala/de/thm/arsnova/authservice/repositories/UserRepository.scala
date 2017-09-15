@@ -37,10 +37,6 @@ object UserRepository extends BaseRepository {
     db.run(qry.result.headOption)
   }
 
-  def checkTokenString(tokenString: String): Future[Boolean] = {
-    db.run(tokensTable.filter(_.token === tokenString).exists.result)
-  }
-
   def verifyLogin(username: String, password: String): Future[Option[UUID]] = {
     db.run(usersTable.filter(u => (u.username === username && u.password === password)).map(_.id).result.headOption)
   }

@@ -20,4 +20,8 @@ object TokenRepository extends BaseRepository {
     val qry = tokensTable.filter(_.token === token)
     db.run(qry.result.headOption)
   }
+
+  def checkTokenString(tokenString: String): Future[Boolean] = {
+    db.run(tokensTable.filter(_.token === tokenString).exists.result)
+  }
 }
