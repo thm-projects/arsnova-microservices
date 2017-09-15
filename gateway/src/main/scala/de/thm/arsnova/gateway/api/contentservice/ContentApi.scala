@@ -35,9 +35,9 @@ trait ContentApi extends BaseApi {
             }
           } ~
           delete {
-            headerValueByName("X-Session-Token") { tokenstring =>
+            headerValueByName("X-Session-Token") { token =>
               complete {
-                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
                     (contentRegion ? DeleteContent(sessionId, contentId, uId))
                       .mapTo[Try[Content]]
@@ -63,10 +63,10 @@ trait ContentApi extends BaseApi {
           }
         } ~
         post {
-          headerValueByName("X-Session-Token") { tokenstring =>
+          headerValueByName("X-Session-Token") { token =>
             entity(as[Content]) { content =>
               complete {
-                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
                     val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
                     (contentRegion ? CreateContent(sessionId, withIds, uId))

@@ -34,7 +34,7 @@ trait FreetextAnswerApi extends BaseApi {
                 delete {
                   headerValueByName("X-Session-Token") { token =>
                     complete {
-                      (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                      (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                         case Success(uId) => {
                           (answerListRegion ? DeleteFreetextAnswer(sessionId, questionId, answerId, uId))
                             .mapTo[Try[FreetextAnswer]]
@@ -55,7 +55,7 @@ trait FreetextAnswerApi extends BaseApi {
                 headerValueByName("X-Session-Token") { token =>
                   entity(as[FreetextAnswer]) { answer =>
                     complete {
-                      (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                      (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                         case Success(uId) => {
                           (answerListRegion ? CreateFreetextAnswer(sessionId, questionId, answer, uId))
                             .mapTo[Try[FreetextAnswer]]

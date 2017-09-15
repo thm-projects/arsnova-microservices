@@ -43,10 +43,10 @@ trait SessionServiceApi extends BaseApi {
   val sessionApi = pathPrefix("session") {
     pathEndOrSingleSlash {
       post {
-        headerValueByName("X-Session-Token") { tokenstring =>
+        headerValueByName("X-Session-Token") { token =>
           entity(as[Session]) { session =>
             complete {
-              (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+              (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                 case Success(uId) => {
                   (sessionList ? GenerateEntry).mapTo[SessionListEntry].map { s =>
                     val completeSession = session.copy(id = Some(s.id), keyword = Some(s.keyword))
@@ -71,16 +71,16 @@ trait SessionServiceApi extends BaseApi {
             }
           }
         } ~
-        headerValueByName("X-Session-Token") { tokenstring =>
+        headerValueByName("X-Session-Token") { token =>
           parameter("userid") { userId =>
             complete {
-              (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+              (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                 case Success(uId) => {
                   if (userId == uId) {
                     (userRegion ? GetUserSessions(UUID.fromString(userId)))
                       .mapTo[Try[Seq[Session]]]
                   } else {
-                    Future.failed(InvalidToken(tokenstring))
+                    Future.failed(InvalidToken(token))
                   }
                 }
                 case Failure(t) => Future.failed(t)
@@ -99,10 +99,10 @@ trait SessionServiceApi extends BaseApi {
           }
         } ~
         put {
-          headerValueByName("X-Session-Token") { tokenstring =>
+          headerValueByName("X-Session-Token") { token =>
             entity(as[Session]) { session =>
               complete {
-                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
                     (sessionRegion ? UpdateSession(sessionId, session, uId))
                       .mapTo[Try[Session]]
@@ -114,9 +114,9 @@ trait SessionServiceApi extends BaseApi {
           }
         } ~
         delete {
-          headerValueByName("X-Session-Token") { tokenstring =>
+          headerValueByName("X-Session-Token") { token =>
             complete {
-              (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+              (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                 case Success(uId) => {
                   (sessionRegion ? DeleteSession(sessionId, uId))
                     .mapTo[Try[Session]]

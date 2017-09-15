@@ -49,7 +49,7 @@ trait CommentServiceApi extends BaseApi {
           headerValueByName("X-Session-Token") { token =>
             entity(as[Comment]) { comment =>
               complete {
-                (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
                     (commentRegion ? CreateComment(sessionId, comment, uId))
                       .mapTo[Try[Comment]]

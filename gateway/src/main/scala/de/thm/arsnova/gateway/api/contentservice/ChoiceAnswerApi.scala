@@ -38,7 +38,7 @@ trait ChoiceAnswerApi extends BaseApi {
               delete {
                 headerValueByName("X-Session-Token") { token =>
                   complete {
-                    (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                    (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                       case Success(uId) => {
                         (answerListRegion ? DeleteChoiceAnswer(sessionId, questionId, answerId, uId))
                           .mapTo[Try[ChoiceAnswer]]
@@ -56,10 +56,10 @@ trait ChoiceAnswerApi extends BaseApi {
               }
             } ~
             post {
-              headerValueByName("X-Session-Token") { tokenstring =>
+              headerValueByName("X-Session-Token") { token =>
                 entity(as[ChoiceAnswer]) { answer =>
                   complete {
-                    (authClient ? AuthenticateUser).mapTo[Try[UUID]] map {
+                    (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                       case Success(uId) => {
                         (answerListRegion ? CreateChoiceAnswer(sessionId, questionId, answer, uId))
                           .mapTo[Try[ChoiceAnswer]]
