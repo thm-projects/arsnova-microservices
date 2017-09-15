@@ -54,11 +54,13 @@ class UserActor() extends PersistentActor {
     sep.event match {
       case SessionCreated(session) => {
         val newRole = SessionRole(session.userId, session.id.get, "owner")
+        rolesState += newRole
         SessionRoleRepository.addSessionRole(newRole)
         persist(UserGetsSessionRole(newRole)) { e => e}
       }
       case SessionDeleted(session) => {
         val oldRole = SessionRole(session.userId, session.id.get, "owner")
+        rolesState -= oldRole
         SessionRoleRepository.deleteSessionRole(oldRole)
         persist(UserLosesSessionRole(oldRole))(e => e)
       }
