@@ -5,7 +5,6 @@ import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
-import de.thm.arsnova.authservice.repositories.{SessionRoleRepository, UserRepository}
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, ResourceNotFound}
 import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
 import de.thm.arsnova.shared.events.SessionEventPackage
@@ -55,13 +54,11 @@ class UserActor() extends PersistentActor {
       case SessionCreated(session) => {
         val newRole = SessionRole(session.userId, session.id.get, "owner")
         rolesState += newRole
-        SessionRoleRepository.addSessionRole(newRole)
         persist(UserGetsSessionRole(newRole)) { e => e}
       }
       case SessionDeleted(session) => {
         val oldRole = SessionRole(session.userId, session.id.get, "owner")
         rolesState -= oldRole
-        SessionRoleRepository.deleteSessionRole(oldRole)
         persist(UserLosesSessionRole(oldRole))(e => e)
       }
     }
@@ -69,12 +66,10 @@ class UserActor() extends PersistentActor {
 
   def initial: Receive = {
     case CreateUser(userId, user) => ((ret: ActorRef) => {
-      UserRepository.create(user) map { u =>
-        ret ! u
-        userState = Some(u)
-        context.become(userCreated)
-        persist(UserCreated(u))(e => e)
-      }
+      ret ! user
+      userState = Some(user)
+      context.become(userCreated)
+      persist(UserCreated(user))(e => e)
     }) (sender)
     case GetUser(userId) => {
       sender() ! Failure(ResourceNotFound("user"))
@@ -92,37 +87,29 @@ class UserActor() extends PersistentActor {
       // need to ensure that there is only one role set per user to use find and not filter
       rolesState.find(r => r.userId == userId && r.sessionId == sessionId) match {
         case Some(r) => ret ! r.role
-        case None => SessionRoleRepository.getSessionRole(userId, sessionId) map {
-          case Some(r) => {
-            rolesState += r
-            ret ! r.role
-          }
-          case None => ret ! "guest"
-        }
+        case None => ret ! "guest"
       }
     }) (sender)
     case GetUserSessions(userId, withRole) => ((ret: ActorRef) => {
-      val futureRoles: Future[Seq[SessionRole]] = withRole match {
+      val roles: Seq[SessionRole] = withRole match {
         case Some(r) => {
-          SessionRoleRepository.getAllSessionsByRole(userId, r)
+          rolesState.filter(_.role == r).toSeq
         }
         case None => {
-          SessionRoleRepository.getAllSessionRoles(userId)
+          rolesState.toSeq
         }
       }
-      futureRoles.map { roles =>
-        val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
-          (sessionRegion ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
-            case Success(session) => Some(session)
-            case Failure(t) => {
-              // TODO: handle dead entries in roles set / Exceptions?
-              None
-            }
+      val askFutures: Seq[Future[Option[Session]]] = roles map { sr =>
+        (sessionRegion ? GetSession(sr.sessionId)).mapTo[Try[Session]].map {
+          case Success(session) => Some(session)
+          case Failure(t) => {
+            // TODO: handle dead entries in roles set / Exceptions?
+            None
           }
         }
-        Future.sequence(askFutures).map { list =>
-          ret ! Success(list.flatten)
-        }
+      }
+      Future.sequence(askFutures).map { list =>
+        ret ! Success(list.flatten)
       }
     }) (sender)
     case sep: SessionEventPackage => handleSessionEvents(sep)
