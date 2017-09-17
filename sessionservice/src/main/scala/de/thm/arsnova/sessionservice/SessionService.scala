@@ -32,7 +32,7 @@ object SessionService extends App {
 
   ClusterSharding(system).start(
     typeName = UserShard.shardName,
-    entityProps = UserActor.props(),
+    entityProps = UserActor.props(authRouter),
     settings = ClusterShardingSettings(system),
     extractEntityId = UserShard.idExtractor,
     extractShardId = UserShard.shardResolver
