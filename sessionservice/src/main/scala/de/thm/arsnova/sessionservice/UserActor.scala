@@ -6,11 +6,11 @@ import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions.{AddUserWentWrong, InvalidToken, ResourceNotFound}
-import de.thm.arsnova.shared.entities.{Session, SessionRole, User}
+import de.thm.arsnova.shared.entities.{Session, SessionRole, User, DbUser}
 import de.thm.arsnova.shared.events.SessionEventPackage
 import de.thm.arsnova.shared.events.SessionEvents.{SessionCreated, SessionDeleted}
 import de.thm.arsnova.shared.events.UserEvents.{UserCreated, UserGetsSessionRole, UserLosesSessionRole}
-import de.thm.arsnova.shared.servicecommands.AuthCommands.AddUser
+import de.thm.arsnova.shared.servicecommands.AuthCommands.AddDbUser
 import de.thm.arsnova.shared.servicecommands.SessionCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.shards.SessionShard
@@ -67,7 +67,7 @@ class UserActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case CreateUser(userId, user) => ((ret: ActorRef) => {
-      (authRouter ? AddUser(userId, user.username, user.password)).mapTo[Int] map {
+      (authRouter ? AddDbUser(DbUser(Some(userId), user.username, user.password))).mapTo[Int] map {
         // User must be added to auth db for login
         // authRouter answers with tables touched
         // TODO: maybe return bool - but it would add delay since authRouter can't pipe

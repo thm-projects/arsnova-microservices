@@ -2,7 +2,7 @@ package de.thm.arsnova.shared.servicecommands
 
 import java.util.UUID
 
-import de.thm.arsnova.shared.entities.{Token, User}
+import de.thm.arsnova.shared.entities.{Token, DbUser}
 
 object AuthCommands {
   sealed trait AuthCommand extends ServiceCommand
@@ -13,5 +13,5 @@ object AuthCommands {
 
   case class CheckTokenString(tokenstring: String) extends AuthCommand
 
-  case class AddUser(userId: UUID, username: String, password: String) extends AuthCommand
+  case class AddDbUser(user: DbUser) extends AuthCommand
 }

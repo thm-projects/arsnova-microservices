@@ -13,7 +13,7 @@ import akka.cluster.Cluster
 import akka.pattern.{ask, pipe}
 import akka.cluster.sharding.ClusterSharding
 import akka.util.Timeout
-import de.thm.arsnova.shared.entities.User
+import de.thm.arsnova.shared.entities.DbUser
 import de.thm.arsnova.shared.Exceptions.{InvalidToken, NoUserException}
 import de.thm.arsnova.shared.shards.UserShard
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -27,7 +27,7 @@ class AuthServiceActor extends Actor {
 
   def receive = {
     case LoginUser(username, password) => ((ret: ActorRef) => {
-      UserRepository.verifyLogin(username, password).map {
+      DbUserRepository.verifyLogin(username, password).map {
         case Some(uuid) => TokenRepository.create(uuid) pipeTo ret
         case None => Future { "not found" } pipeTo ret
       }
@@ -35,8 +35,8 @@ class AuthServiceActor extends Actor {
     case AuthenticateUser(token) => {
       TokenRepository.getByToken(token) pipeTo sender()
     }
-    case AddUser(userId, username, password) => {
-      UserRepository.create(User(Some(userId), username, password)) pipeTo sender()
+    case AddDbUser(user) => {
+      DbUserRepository.create(user) pipeTo sender()
     }
 
     case CheckTokenString(tokenstring) => ((ret: ActorRef) => {

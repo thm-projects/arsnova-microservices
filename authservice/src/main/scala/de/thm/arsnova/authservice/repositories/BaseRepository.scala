@@ -9,6 +9,6 @@ import de.thm.arsnova.authservice.repositories.definitions._
 
 trait BaseRepository {
   val db: Database = Database.forConfig("database")
-  val usersTable = TableQuery[UsersTable]
+  val dbUsersTable = TableQuery[DbUsersTable]
   val tokensTable = TableQuery[TokensTable]
 }
