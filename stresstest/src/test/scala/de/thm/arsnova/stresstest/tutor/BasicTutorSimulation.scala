@@ -24,7 +24,7 @@ object BasicTutorSimulation extends TutorScenario {
     "preparation", "mc", Some("This is the hint!"), Some("The answer is 13"), true, false, true, true, false, None, Some(mcAnswerOptions))
 
   val scn = scenario("Basic Tutor").exec(
-    createSession(basicNewSession),
+    createRoom(basicNewRoom),
     createQuestion(newMCQuestion, "mc")
   )
 }

@@ -15,19 +15,19 @@ trait TutorScenario {
   import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
 
   val now = Calendar.getInstance.getTime.toString
-  val basicNewSession = Room(None, None, UUID.randomUUID, "A new Session", "ans", now, now, true, false, false)
+  val basicNewRoom = Room(None, None, UUID.randomUUID, "A new room", "ans", now, now, true, false, false)
 
-  def createSession(session: de.thm.arsnova.shared.entities.Room) = exec(
-    http("Tutor creates session")
-      .post("/session/")
+  def createRoom(room: de.thm.arsnova.shared.entities.Room) = exec(
+    http("Tutor creates room")
+      .post("/room/")
       .header("Content-Type", "application/json")
-      .body(StringBody(session.toJson.toString)).asJSON
-      .check(jsonPath("$").saveAs("sessionId"))
+      .body(StringBody(room.toJson.toString)).asJSON
+      .check(jsonPath("$").saveAs("roomId"))
   ).pause(4)
 
   def createQuestion(question: Content, name: String) = exec(
     http(s"Tutor creates ${name} question")
-      .post("/session/${sessionId}/question")
+      .post("/room/${roomId}/question")
       .header("Content-Type", "application/json")
       .body(StringBody(question.toJson.toString)).asJSON
   ).pause(4)
