@@ -118,11 +118,5 @@ lazy val commentservice = (project in file("commentservice"))
   )
   .dependsOn(shared, authservice)
 
-lazy val stresstest = (project in file("stresstest"))
-  .settings(
-    libraryDependencies ++= gatlingDeps
-  )
-  .dependsOn(shared)
-
 // skip Tests in assembly job
 test in assembly := {}
