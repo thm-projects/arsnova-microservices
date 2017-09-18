@@ -15,14 +15,14 @@ import akka.routing.RandomPool
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.gateway.Context._
 import spray.json._
-import de.thm.arsnova.sessionservice.UserActor
+import de.thm.arsnova.roomservice.UserActor
 import de.thm.arsnova.shared.servicecommands.UserCommands._
-import de.thm.arsnova.shared.entities.{Session, User}
+import de.thm.arsnova.shared.entities.{Room, User}
 import de.thm.arsnova.shared.Exceptions._
 
 trait UserApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
-  import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
   import de.thm.arsnova.shared.mappings.UserJsonProtocol._
 
   val userApi = pathPrefix("user") {

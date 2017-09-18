@@ -18,13 +18,13 @@ trait CommentServiceApi extends BaseApi {
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.CommentJsonProtocol._
 
-  val commentServiceApi = pathPrefix("session") {
-    pathPrefix(JavaUUID) { sessionId =>
+  val commentServiceApi = pathPrefix("room") {
+    pathPrefix(JavaUUID) { roomId =>
       pathPrefix("comment") {
         pathPrefix(JavaUUID) { commentId =>
           get {
             complete {
-              (commentRegion ? GetComment(sessionId, commentId))
+              (commentRegion ? GetComment(roomId, commentId))
                 .mapTo[Try[Comment]]
             }
           }
@@ -34,11 +34,11 @@ trait CommentServiceApi extends BaseApi {
             complete {
               read match {
                 case true => {
-                  (commentRegion ? GetUnreadComments(sessionId))
+                  (commentRegion ? GetUnreadComments(roomId))
                     .mapTo[Try[Seq[Comment]]]
                 }
                 case false => {
-                  (commentRegion ? GetCommentsBySessionId(sessionId))
+                  (commentRegion ? GetCommentsByRoomId(roomId))
                     .mapTo[Seq[Comment]]
                 }
               }
@@ -51,7 +51,7 @@ trait CommentServiceApi extends BaseApi {
               complete {
                 (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
-                    (commentRegion ? CreateComment(sessionId, comment, uId))
+                    (commentRegion ? CreateComment(roomId, comment, uId))
                       .mapTo[Try[Comment]]
                   }
                   case Failure(t) => Future.failed(t)

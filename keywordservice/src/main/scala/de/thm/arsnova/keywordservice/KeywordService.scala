@@ -19,6 +19,6 @@ object KeywordService extends App with MigrationConfig {
     reloadSchema()
   }
 
-  val router = system.actorOf(RoundRobinPool(10).props(Props[SessionListActor]), "router")
-  val manager = system.actorOf(ServiceManagementActor.props(Seq(("sessionlist", router))), "manager")
+  val router = system.actorOf(RoundRobinPool(10).props(Props[RoomListActor]), "router")
+  val manager = system.actorOf(ServiceManagementActor.props(Seq(("roomlist", router))), "manager")
 }

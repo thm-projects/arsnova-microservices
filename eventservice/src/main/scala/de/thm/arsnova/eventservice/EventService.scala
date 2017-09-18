@@ -16,7 +16,7 @@ object EventService extends App {
 
   ClusterSharding(system).start(
     typeName = EventShard.shardName,
-    entityProps = SessionEventActor.props(),
+    entityProps = RoomEventActor.props(),
     settings = ClusterShardingSettings(system),
     extractEntityId = EventShard.idExtractor,
     extractShardId = EventShard.shardResolver

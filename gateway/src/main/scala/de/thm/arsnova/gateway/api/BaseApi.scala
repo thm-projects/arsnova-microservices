@@ -27,11 +27,11 @@ trait BaseApi {
     extractShardId = UserShard.shardResolver
   )
 
-  val sessionRegion = ClusterSharding(system).startProxy(
-    typeName = SessionShard.shardName,
-    role = SessionShard.serviceRole,
-    extractEntityId = SessionShard.idExtractor,
-    extractShardId = SessionShard.shardResolver
+  val roomRegion = ClusterSharding(system).startProxy(
+    typeName = RoomShard.shardName,
+    role = RoomShard.serviceRole,
+    extractEntityId = RoomShard.idExtractor,
+    extractShardId = RoomShard.shardResolver
   )
 
   val contentRegion = ClusterSharding(system).startProxy(

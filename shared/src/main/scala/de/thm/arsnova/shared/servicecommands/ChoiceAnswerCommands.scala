@@ -7,15 +7,15 @@ import de.thm.arsnova.shared.entities.ChoiceAnswer
 
 object ChoiceAnswerCommands {
   sealed trait ChoiceAnswerCommand extends ServiceCommand {
-    def sessionId: UUID
+    def roomId: UUID
     def questionId: UUID
   }
 
-  case class GetChoiceAnswers(sessionId: UUID, questionId: UUID) extends ChoiceAnswerCommand
+  case class GetChoiceAnswers(roomId: UUID, questionId: UUID) extends ChoiceAnswerCommand
 
-  case class GetChoiceAnswer(sessionId: UUID, questionId: UUID, id: UUID) extends ChoiceAnswerCommand
+  case class GetChoiceAnswer(roomId: UUID, questionId: UUID, id: UUID) extends ChoiceAnswerCommand
 
-  case class CreateChoiceAnswer(sessionId: UUID, questionId: UUID, answer: ChoiceAnswer, userId: UUID) extends ChoiceAnswerCommand
+  case class CreateChoiceAnswer(roomId: UUID, questionId: UUID, answer: ChoiceAnswer, userId: UUID) extends ChoiceAnswerCommand
 
-  case class DeleteChoiceAnswer(sessionId: UUID, questionId: UUID, id: UUID, userId: UUID) extends ChoiceAnswerCommand
+  case class DeleteChoiceAnswer(roomId: UUID, questionId: UUID, id: UUID, userId: UUID) extends ChoiceAnswerCommand
 }

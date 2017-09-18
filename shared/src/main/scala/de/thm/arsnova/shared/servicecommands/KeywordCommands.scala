@@ -8,13 +8,13 @@ object KeywordCommands {
 
   sealed trait KeywordCommand extends ServiceCommand
 
-  case class GetSessionEntry(keyword: String, ref: ActorRef) extends KeywordCommand
+  case class GetRoomEntry(keyword: String, ref: ActorRef) extends KeywordCommand
 
-  case class GetSessionList(ref: ActorRef) extends KeywordCommand
+  case class GetRoomList(ref: ActorRef) extends KeywordCommand
 
-  case class LookupSession(keyword: String) extends KeywordCommand
+  case class LookupRoom(keyword: String) extends KeywordCommand
 
-  case class SessionIdFromKeyword(id: Option[UUID]) extends KeywordCommand
+  case class RoomIdFromKeyword(id: Option[UUID]) extends KeywordCommand
 
   case object GenerateEntry extends KeywordCommand
 

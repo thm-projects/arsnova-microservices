@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 import de.thm.arsnova.shared.entities._
 
 object BasicTutorSimulation extends TutorScenario {
-  import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
 
   val mcAnswerOptions = Seq(

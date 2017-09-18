@@ -8,8 +8,8 @@ import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import akka.persistence.journal.leveldb.SharedLeveldbJournal
 import akka.routing.RandomPool
 import de.thm.arsnova.authservice.AuthServiceActor
-import de.thm.arsnova.sessionservice.CommentListActor
-import de.thm.arsnova.shared.shards.{CommentShard, EventShard, SessionShard, UserShard}
+import de.thm.arsnova.roomservice.CommentListActor
+import de.thm.arsnova.shared.shards.{CommentShard, EventShard, RoomShard, UserShard}
 
 import scala.concurrent.Await
 
@@ -40,12 +40,12 @@ object CommentService extends App {
   )
 
   ClusterSharding(system).startProxy(
-    typeName = SessionShard.shardName,
-    role = SessionShard.serviceRole,
-    extractEntityId = SessionShard.idExtractor,
-    extractShardId = SessionShard.shardResolver)
+    typeName = RoomShard.shardName,
+    role = RoomShard.serviceRole,
+    extractEntityId = RoomShard.idExtractor,
+    extractShardId = RoomShard.shardResolver)
 
-  val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
+  val roomRegion = ClusterSharding(system).shardRegion(RoomShard.shardName)
 
   val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
 

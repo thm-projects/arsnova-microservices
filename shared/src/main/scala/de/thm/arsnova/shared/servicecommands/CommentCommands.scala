@@ -7,16 +7,16 @@ import de.thm.arsnova.shared.entities.Comment
 
 object CommentCommands {
   sealed trait CommentCommand extends ServiceCommand {
-    def sessionId: UUID
+    def roomId: UUID
   }
 
-  case class GetComment(sessionId: UUID, id: UUID) extends CommentCommand
+  case class GetComment(roomId: UUID, id: UUID) extends CommentCommand
 
-  case class GetCommentsBySessionId(sessionId: UUID) extends CommentCommand
+  case class GetCommentsByRoomId(roomId: UUID) extends CommentCommand
 
-  case class GetUnreadComments(sessionId: UUID) extends CommentCommand
+  case class GetUnreadComments(roomId: UUID) extends CommentCommand
 
-  case class CreateComment(sessionId: UUID, comment: Comment, userId: UUID) extends CommentCommand
+  case class CreateComment(roomId: UUID, comment: Comment, userId: UUID) extends CommentCommand
 
-  case class DeleteComment(sessionId: UUID, commentId: UUID) extends CommentCommand
+  case class DeleteComment(roomId: UUID, commentId: UUID) extends CommentCommand
 }

@@ -18,16 +18,16 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 trait FreetextAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.FreetextAnswerJsonProtocol._
 
-  val freetextAnswerApi = pathPrefix("session") {
+  val freetextAnswerApi = pathPrefix("room") {
     optionalHeaderValueByName("X-Session-Token") { tokenstring =>
-      pathPrefix(JavaUUID) { sessionId =>
+      pathPrefix(JavaUUID) { roomId =>
         pathPrefix("question") {
           pathPrefix(JavaUUID) { questionId =>
             pathPrefix("freetextanswer") {
               pathPrefix(JavaUUID) { answerId =>
                 get {
                   complete {
-                    (answerListRegion ? GetFreetextAnswer(sessionId, questionId, answerId))
+                    (answerListRegion ? GetFreetextAnswer(roomId, questionId, answerId))
                       .mapTo[Option[FreetextAnswer]]
                   }
                 } ~
@@ -36,7 +36,7 @@ trait FreetextAnswerApi extends BaseApi {
                     complete {
                       (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                         case Success(uId) => {
-                          (answerListRegion ? DeleteFreetextAnswer(sessionId, questionId, answerId, uId))
+                          (answerListRegion ? DeleteFreetextAnswer(roomId, questionId, answerId, uId))
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)
@@ -47,7 +47,7 @@ trait FreetextAnswerApi extends BaseApi {
               } ~
               get {
                 complete {
-                  (answerListRegion ? GetFreetextAnswers(sessionId, questionId))
+                  (answerListRegion ? GetFreetextAnswers(roomId, questionId))
                     .mapTo[Seq[FreetextAnswer]]
                 }
               } ~
@@ -57,7 +57,7 @@ trait FreetextAnswerApi extends BaseApi {
                     complete {
                       (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                         case Success(uId) => {
-                          (answerListRegion ? CreateFreetextAnswer(sessionId, questionId, answer, uId))
+                          (answerListRegion ? CreateFreetextAnswer(roomId, questionId, answer, uId))
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)

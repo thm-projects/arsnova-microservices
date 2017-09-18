@@ -16,11 +16,11 @@ object Exceptions {
   case class NoUserException(methodName: String) extends ARSException {
     def getMsg: String = "No user given"
   }
-  case class NoSuchSession(reason: Either[UUID, String]) extends ARSException {
+  case class NoSuchRoom(reason: Either[UUID, String]) extends ARSException {
     def getMsg: String = {
       reason match {
-        case Left(id) => s"Could not get session. So such id: $id"
-        case Right(keyword) => s"Could not get session. So such keyword: $keyword"
+        case Left(id) => s"Could not get room. So such id: $id"
+        case Right(keyword) => s"Could not get room. So such keyword: $keyword"
       }
     }
   }

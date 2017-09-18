@@ -21,13 +21,13 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 trait ContentApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
 
-  val contentApi = pathPrefix("session") {
-    pathPrefix(JavaUUID) { sessionId =>
+  val contentApi = pathPrefix("room") {
+    pathPrefix(JavaUUID) { roomId =>
       pathPrefix("content") {
         pathPrefix(JavaUUID) { contentId =>
           get {
             complete {
-              (contentRegion ? GetContent(sessionId, contentId))
+              (contentRegion ? GetContent(roomId, contentId))
                 .mapTo[Option[Content]].map {
                 case Some(c) => Success(c)
                 case None => Failure(NoSuchContent)
@@ -39,7 +39,7 @@ trait ContentApi extends BaseApi {
               complete {
                 (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
-                    (contentRegion ? DeleteContent(sessionId, contentId, uId))
+                    (contentRegion ? DeleteContent(roomId, contentId, uId))
                       .mapTo[Try[Content]]
                   }
                   case Failure(t) => Future.failed(t)
@@ -51,14 +51,14 @@ trait ContentApi extends BaseApi {
         get {
           parameters("variant") { variant =>
             complete {
-              (contentRegion ? GetContentListBySessionIdAndVariant(sessionId, variant))
+              (contentRegion ? GetContentListByRoomIdAndVariant(roomId, variant))
                 .mapTo[Seq[Content]].map(_.toJson)
             }
           }
         } ~
         get {
           complete {
-            (contentRegion ? GetContentListBySessionId(sessionId))
+            (contentRegion ? GetContentListByRoomId(roomId))
               .mapTo[Seq[Content]].map(_.toJson)
           }
         } ~
@@ -68,8 +68,8 @@ trait ContentApi extends BaseApi {
               complete {
                 (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
-                    val withIds = content.copy(sessionId = sessionId, id = Some(UUID.randomUUID()))
-                    (contentRegion ? CreateContent(sessionId, withIds, uId))
+                    val withIds = content.copy(roomId = roomId, id = Some(UUID.randomUUID()))
+                    (contentRegion ? CreateContent(roomId, withIds, uId))
                       .mapTo[Try[Content]]
                   }
                   case Failure(t) => Future.failed(t)

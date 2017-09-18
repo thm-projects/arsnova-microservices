@@ -5,7 +5,7 @@ import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import akka.routing.RandomPool
 import akka.persistence.journal.leveldb.SharedLeveldbJournal
 import de.thm.arsnova.shared.actors.ServiceManagementActor
-import de.thm.arsnova.shared.shards.{SessionShard, UserShard}
+import de.thm.arsnova.shared.shards.{RoomShard, UserShard}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -17,12 +17,12 @@ object AuthService extends App with MigrationConfig {
   SharedLeveldbJournal.setStore(storeRef, system)
 
   ClusterSharding(system).startProxy(
-    typeName = SessionShard.shardName,
-    role = SessionShard.serviceRole,
-    extractEntityId = SessionShard.idExtractor,
-    extractShardId = SessionShard.shardResolver)
+    typeName = RoomShard.shardName,
+    role = RoomShard.serviceRole,
+    extractEntityId = RoomShard.idExtractor,
+    extractShardId = RoomShard.shardResolver)
 
-  val sessionRegion = ClusterSharding(system).shardRegion(SessionShard.shardName)
+  val roomRegion = ClusterSharding(system).shardRegion(RoomShard.shardName)
 
   val authRouter: ActorRef = system.actorOf(RandomPool(100).props(Props[AuthServiceActor]), "authRouter")
 

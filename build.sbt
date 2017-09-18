@@ -60,7 +60,7 @@ lazy val root = (project in file("."))
     managementservice,
     eventservice,
     keywordservice,
-    sessionservice,
+    roomservice,
     contentservice,
     commentservice
   )
@@ -74,7 +74,7 @@ lazy val gateway = (project in file("gateway"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ kamonDeps
   )
-  .dependsOn(shared, authservice, sessionservice, contentservice)
+  .dependsOn(shared, authservice, roomservice, contentservice)
 
 lazy val managementservice = (project in file("managementservice"))
   .settings(
@@ -100,7 +100,7 @@ lazy val keywordservice = (project in file("keywordservice"))
   )
   .dependsOn(shared)
 
-lazy val sessionservice = (project in file("sessionservice"))
+lazy val roomservice = (project in file("roomservice"))
   .settings(
     libraryDependencies ++= akkaDependencies ++ kamonDeps
   )

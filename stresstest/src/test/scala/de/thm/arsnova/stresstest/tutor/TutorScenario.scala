@@ -12,12 +12,12 @@ import de.thm.arsnova.shared.entities._
 
 trait TutorScenario {
   import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
-  import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
 
   val now = Calendar.getInstance.getTime.toString
-  val basicNewSession = Session(None, None, UUID.randomUUID, "A new Session", "ans", now, now, true, false, false)
+  val basicNewSession = Room(None, None, UUID.randomUUID, "A new Session", "ans", now, now, true, false, false)
 
-  def createSession(session: de.thm.arsnova.shared.entities.Session) = exec(
+  def createSession(session: de.thm.arsnova.shared.entities.Room) = exec(
     http("Tutor creates session")
       .post("/session/")
       .header("Content-Type", "application/json")

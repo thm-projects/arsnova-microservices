@@ -4,7 +4,7 @@ import akka.actor.Props
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
-import de.thm.arsnova.sessionservice.SessionActor
+import de.thm.arsnova.roomservice.RoomActor
 import de.thm.arsnova.shared.actors.ServiceManagementActor
 import kamon.Kamon
 

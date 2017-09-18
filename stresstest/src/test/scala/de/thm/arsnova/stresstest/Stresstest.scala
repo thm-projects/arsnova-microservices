@@ -13,7 +13,7 @@ import de.thm.arsnova.stresstest.auditor._
 import de.thm.arsnova.shared.entities._
 
 class Stresstest extends Simulation {
-  import de.thm.arsnova.shared.mappings.SessionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
 
   val httpProtocol = http
     .baseURL("http://localhost:9000")

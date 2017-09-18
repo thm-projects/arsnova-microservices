@@ -23,15 +23,15 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 trait ChoiceAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
 
-  val choiceAnswerApi = pathPrefix("session") {
-    pathPrefix(JavaUUID) { sessionId =>
+  val choiceAnswerApi = pathPrefix("room") {
+    pathPrefix(JavaUUID) { roomId =>
       pathPrefix("question") {
         pathPrefix(JavaUUID) { questionId =>
           pathPrefix("choiceanswer") {
             pathPrefix(JavaUUID) { answerId =>
               get {
                 complete {
-                  (answerListRegion ? GetChoiceAnswer(sessionId, questionId, answerId))
+                  (answerListRegion ? GetChoiceAnswer(roomId, questionId, answerId))
                     .mapTo[Option[ChoiceAnswer]]
                 }
               } ~
@@ -40,7 +40,7 @@ trait ChoiceAnswerApi extends BaseApi {
                   complete {
                     (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                       case Success(uId) => {
-                        (answerListRegion ? DeleteChoiceAnswer(sessionId, questionId, answerId, uId))
+                        (answerListRegion ? DeleteChoiceAnswer(roomId, questionId, answerId, uId))
                           .mapTo[Try[ChoiceAnswer]]
                       }
                       case Failure(t) => Future.failed(t)
@@ -51,7 +51,7 @@ trait ChoiceAnswerApi extends BaseApi {
             } ~
             get {
               complete {
-                (answerListRegion ? GetChoiceAnswers(sessionId, questionId))
+                (answerListRegion ? GetChoiceAnswers(roomId, questionId))
                   .mapTo[Seq[ChoiceAnswer]]
               }
             } ~
@@ -61,7 +61,7 @@ trait ChoiceAnswerApi extends BaseApi {
                   complete {
                     (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                       case Success(uId) => {
-                        (answerListRegion ? CreateChoiceAnswer(sessionId, questionId, answer, uId))
+                        (answerListRegion ? CreateChoiceAnswer(roomId, questionId, answer, uId))
                           .mapTo[Try[ChoiceAnswer]]
                       }
                       case Failure(t) => Future.failed(t)
