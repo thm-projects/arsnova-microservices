@@ -6,5 +6,4 @@ Head over to [arsnova.eu](http://arsnova.eu/mobile) to see it in action.
 # arsnova-microservices
 arsnova-microservice is the approach to handle very large and dynamic user load on the backend side for arsnova.voting.
 
-# tech
-This project makes heavy use of [akka](http://akka.io/), especially akka cluster.
+[Whitepaper](http://arsnova-uploads.mni.thm.de/arsnova-microservices-whitepaper.pdf)
