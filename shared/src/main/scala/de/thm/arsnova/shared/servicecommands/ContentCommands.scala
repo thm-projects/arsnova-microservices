@@ -14,7 +14,7 @@ object ContentCommands {
 
   case class GetContentListByRoomId(roomId: UUID) extends ContentCommand
 
-  case class GetContentListByRoomIdAndVariant(roomId: UUID, variant: String) extends ContentCommand
+  case class GetContentListByRoomIdAndGroup(roomId: UUID, group: String) extends ContentCommand
 
   case class CreateContent(roomId: UUID, content: Content, userId: UUID) extends ContentCommand
 

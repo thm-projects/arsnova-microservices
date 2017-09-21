@@ -8,7 +8,7 @@ case class Content(
   subject: String,
   content: String,
   variant: String,
-  format: String,
+  group: String,
   hint: Option[String],
   solution: Option[String],
   active: Boolean,
