@@ -1,7 +1,7 @@
 package de.thm.arsnova.gateway.api
 
 import de.thm.arsnova.gateway.RoomListClientActor
-import de.thm.arsnova.shared.entities.{Room, RoomListEntry}
+import de.thm.arsnova.shared.entities.{Room, RoomListEntry, ContentGroup}
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.roomservice.RoomActor

@@ -6,7 +6,7 @@ case class Room(
   id: Option[UUID],
   keyword: Option[String],
   userId: Option[UUID],
-  groups: Seq[ContentGroup],
+  contentGroups: Map[String, ContentGroup],
   title: String,
   shortName: String,
   lastOwnerActivity: String,
