@@ -47,11 +47,11 @@ object RoomService extends App {
   )
 
   ClusterSharding(system).start(
-    typeName = ContentListShard.shardName,
+    typeName = ContentShard.shardName,
     entityProps = ContentListActor.props(authRouter),
     settings = ClusterShardingSettings(system),
-    extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver
+    extractEntityId = ContentShard.idExtractor,
+    extractShardId = ContentShard.shardResolver
   )
 
   ClusterSharding(system).start(
@@ -93,9 +93,9 @@ object RoomService extends App {
   )
 
   ClusterSharding(system).startProxy(
-    typeName = ContentListShard.shardName,
-    role = ContentListShard.serviceRole,
-    extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver
+    typeName = ContentShard.shardName,
+    role = ContentShard.serviceRole,
+    extractEntityId = ContentShard.idExtractor,
+    extractShardId = ContentShard.shardResolver
   )
 }

@@ -17,7 +17,7 @@ import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands.GetRoleForRoom
-import de.thm.arsnova.shared.shards.{EventShard, ContentListShard, UserShard}
+import de.thm.arsnova.shared.shards.{EventShard, ContentShard, UserShard}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,7 +37,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
 
-  val contentRegion = ClusterSharding(context.system).shardRegion(ContentListShard.shardName)
+  val contentRegion = ClusterSharding(context.system).shardRegion(ContentShard.shardName)
 
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
 

@@ -7,7 +7,7 @@ import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStor
 import akka.routing.RandomPool
 import de.thm.arsnova.authservice.AuthServiceActor
 import de.thm.arsnova.shared.actors.ServiceManagementActor
-import de.thm.arsnova.shared.shards.{ContentListShard, EventShard, RoomShard, UserShard}
+import de.thm.arsnova.shared.shards.{ContentShard, EventShard, RoomShard, UserShard}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

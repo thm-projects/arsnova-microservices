@@ -29,4 +29,8 @@ object RoomCommands {
   case class UpdateRoom(id: UUID, room: Room, userId: UUID) extends RoomCommand
 
   case class DeleteRoom(id: UUID, userId: UUID) extends RoomCommand
+
+  case class GetContentListByRoomId(id: UUID) extends RoomCommand
+
+  case class GetContentListByRoomIdAndGroup(id: UUID, group: String) extends RoomCommand
 }

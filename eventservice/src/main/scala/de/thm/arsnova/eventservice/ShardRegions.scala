@@ -16,13 +16,13 @@ object ShardRegions {
   val userRegion = ClusterSharding(system).shardRegion(UserShard.shardName)
 
   ClusterSharding(system).startProxy(
-    typeName = ContentListShard.shardName,
-    role = ContentListShard.serviceRole,
-    extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver
+    typeName = ContentShard.shardName,
+    role = ContentShard.serviceRole,
+    extractEntityId = ContentShard.idExtractor,
+    extractShardId = ContentShard.shardResolver
   )
 
-  val contentListRegion = ClusterSharding(system).shardRegion(ContentListShard.shardName)
+  val contentListRegion = ClusterSharding(system).shardRegion(ContentShard.shardName)
 
   ClusterSharding(system).startProxy(
     typeName = RoomShard.shardName,

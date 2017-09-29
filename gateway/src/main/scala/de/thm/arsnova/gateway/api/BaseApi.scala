@@ -35,10 +35,10 @@ trait BaseApi {
   )
 
   val contentRegion = ClusterSharding(system).startProxy(
-    typeName = ContentListShard.shardName,
-    role = ContentListShard.serviceRole,
-    extractEntityId = ContentListShard.idExtractor,
-    extractShardId = ContentListShard.shardResolver
+    typeName = ContentShard.shardName,
+    role = ContentShard.serviceRole,
+    extractEntityId = ContentShard.idExtractor,
+    extractShardId = ContentShard.shardResolver
   )
 
   val answerListRegion = ClusterSharding(system).startProxy(
