@@ -15,6 +15,7 @@ import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.entities.Content
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
+import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.gateway.AuthServiceClientActor
 import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
@@ -27,7 +28,7 @@ trait ContentApi extends BaseApi {
         pathPrefix(JavaUUID) { contentId =>
           get {
             complete {
-              (contentRegion ? GetContent(roomId, contentId))
+              (contentRegion ? GetContent(contentId))
                 .mapTo[Option[Content]].map {
                 case Some(c) => Success(c)
                 case None => Failure(ResourceNotFound("content"))
@@ -39,7 +40,7 @@ trait ContentApi extends BaseApi {
               complete {
                 (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
-                    (contentRegion ? DeleteContent(roomId, contentId, uId))
+                    (contentRegion ? DeleteContent(contentId, uId))
                       .mapTo[Try[Content]]
                   }
                   case Failure(t) => Future.failed(t)
@@ -51,14 +52,14 @@ trait ContentApi extends BaseApi {
         get {
           parameters("group") { group =>
             complete {
-              (contentRegion ? GetContentListByRoomIdAndGroup(roomId, group))
+              (roomRegion ? GetContentListByRoomIdAndGroup(roomId, group))
                 .mapTo[Seq[Content]].map(_.toJson)
             }
           }
         } ~
         get {
           complete {
-            (contentRegion ? GetContentListByRoomId(roomId))
+            (roomRegion ? GetContentListByRoomId(roomId))
               .mapTo[Seq[Content]].map(_.toJson)
           }
         } ~
