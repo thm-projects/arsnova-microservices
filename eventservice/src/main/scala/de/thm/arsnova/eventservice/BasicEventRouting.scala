@@ -22,9 +22,11 @@ object BasicEventRouting {
       }
 
       case ContentCreated(content) => {
+        roomRegion ! RoomEventPackage(content.roomId, sep.event)
         answerListRegion ! RoomEventPackage(content.id.get, sep.event)
       }
       case ContentDeleted(content) => {
+        roomRegion ! RoomEventPackage(content.roomId, sep.event)
         answerListRegion ! RoomEventPackage(content.id.get, sep.event)
       }
     }

@@ -18,10 +18,12 @@ import akka.persistence.PersistentActor
 import de.thm.arsnova.shared.entities.{Room, User}
 import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted, RoomEvent, RoomUpdated}
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
+import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException}
 import de.thm.arsnova.shared.events.RoomEventPackage
+import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.shards.{EventShard, UserShard}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,6 +49,8 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   private var state: Option[Room] = None
 
+  val contentIds: collection.mutable.Set[UUID] = collection.mutable.Set.empty[UUID]
+
   override def receiveRecover: Receive = {
     case RoomCreated(room) => {
       state = Some(room)
@@ -64,7 +68,19 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   override def receiveCommand: Receive = initial
 
+  def handleEvents(sep: RoomEventPackage) = {
+    sep.event match {
+      case ContentCreated(content) => {
+        contentIds += content.id.get
+      }
+      case ContentDeleted(content) => {
+        contentIds -= content.id.get
+      }
+    }
+  }
+
   def initial: Receive = {
+    case sep: RoomEventPackage => handleEvents(sep)
     case GetRoom(id) => ((ret: ActorRef) => {
       ret ! Failure(NoSuchRoom(Left(id)))
     }) (sender)
@@ -113,5 +129,6 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
+    case sep: RoomEventPackage => handleEvents(sep)
   }
 }
