@@ -22,7 +22,7 @@ object ShardRegions {
     extractShardId = ContentShard.shardResolver
   )
 
-  val contentListRegion = ClusterSharding(system).shardRegion(ContentShard.shardName)
+  val contentRegion = ClusterSharding(system).shardRegion(ContentShard.shardName)
 
   ClusterSharding(system).startProxy(
     typeName = RoomShard.shardName,

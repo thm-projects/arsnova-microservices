@@ -13,13 +13,13 @@ object BasicEventRouting {
       case RoomCreated(room) => {
         // usershard is based on userId
         userRegion ! RoomEventPackage(room.userId, sep.event)
-        contentListRegion ! sep
+        contentRegion ! sep
         commentRegion ! sep
       }
       case RoomDeleted(room) => {
         // usershard is based on userId
         userRegion ! RoomEventPackage(room.userId, sep.event)
-        contentListRegion ! sep
+        contentRegion ! sep
         commentRegion ! sep
       }
 
