@@ -23,7 +23,7 @@ import scala.util.{Failure, Success, Try}
 
 object ContentActor {
   def props(authRouter: ActorRef): Props =
-    Props(new ContentListActor(authRouter: ActorRef))
+    Props(new ContentActor(authRouter: ActorRef))
 }
 
 class ContentActor(authRouter: ActorRef) extends PersistentActor {

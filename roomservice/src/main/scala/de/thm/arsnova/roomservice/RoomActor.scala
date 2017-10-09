@@ -15,7 +15,7 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ClusterSharding
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.entities.{Room, User}
+import de.thm.arsnova.shared.entities.{Room, Content, User}
 import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted, RoomEvent, RoomUpdated}
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -24,7 +24,7 @@ import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException}
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.ContentEvents._
-import de.thm.arsnova.shared.shards.{EventShard, UserShard}
+import de.thm.arsnova.shared.shards.{ContentShard, EventShard, UserShard}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,6 +42,8 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
 
+  val contentRegion = ClusterSharding(context.system).shardRegion(ContentShard.shardName)
+
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
 
   // passivate the entity when no activity
@@ -49,7 +51,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   private var state: Option[Room] = None
 
-  val contentIds: collection.mutable.Set[UUID] = collection.mutable.Set.empty[UUID]
+  val contentIds: collection.mutable.Set[(UUID, String)] = collection.mutable.Set.empty[(UUID, String)]
 
   override def receiveRecover: Receive = {
     case RoomCreated(room) => {
@@ -71,10 +73,10 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
   def handleEvents(sep: RoomEventPackage) = {
     sep.event match {
       case ContentCreated(content) => {
-        contentIds += content.id.get
+        contentIds += ((content.id.get, content.group))
       }
       case ContentDeleted(content) => {
-        contentIds -= content.id.get
+        contentIds -= ((content.id.get, content.group))
       }
     }
   }
@@ -127,6 +129,19 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
         } else {
           ret ! Failure(InsufficientRights(role, "Delete Room"))
         }
+      }
+    }) (sender)
+
+    case GetContentListByRoomIdAndGroup(roomId, group) => ((ret: ActorRef) => {
+      val ids: Seq[UUID] = contentIds.filter(t => t._2 == group).toSeq.map(_._1)
+      val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
+        (contentRegion ? GetContent(id)).mapTo[Try[Content]].map {
+          case Success(content) => Some(content)
+          case Failure(t) => None
+        }
+      }
+      Future.sequence(contentListFutures).map { list =>
+        ret ! Success(list.flatten)
       }
     }) (sender)
     case sep: RoomEventPackage => handleEvents(sep)
