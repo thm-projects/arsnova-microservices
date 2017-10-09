@@ -48,7 +48,7 @@ object RoomService extends App {
 
   ClusterSharding(system).start(
     typeName = ContentShard.shardName,
-    entityProps = ContentListActor.props(authRouter),
+    entityProps = ContentActor.props(authRouter),
     settings = ClusterShardingSettings(system),
     extractEntityId = ContentShard.idExtractor,
     extractShardId = ContentShard.shardResolver

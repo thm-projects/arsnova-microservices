@@ -111,7 +111,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case sep: RoomEventPackage => handleEvents(sep)
     case cmd: FreetextAnswerCommand => {
       // query question service just in case the content creation event got lost
-      (contentRegion ? GetContent(cmd.roomId, cmd.questionId))
+      (contentRegion ? GetContent(cmd.questionId))
         .mapTo[Try[Content]] map {
         case Success(c) => {
           contentToType(c) match {
