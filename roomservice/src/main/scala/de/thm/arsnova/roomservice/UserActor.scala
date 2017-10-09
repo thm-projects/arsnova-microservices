@@ -53,12 +53,12 @@ class UserActor(authRouter: ActorRef) extends PersistentActor {
   def handleRoomEvents(sep: RoomEventPackage) = {
     sep.event match {
       case RoomCreated(room) => {
-        val newRole = RoomRole(room.userId, room.id.get, "owner")
+        val newRole = RoomRole(room.userId.get, room.id.get, "owner")
         rolesState += newRole
         persist(UserGetsRoomRole(newRole)) { e => e}
       }
       case RoomDeleted(room) => {
-        val oldRole = RoomRole(room.userId, room.id.get, "owner")
+        val oldRole = RoomRole(room.userId.get, room.id.get, "owner")
         rolesState -= oldRole
         persist(UserLosesRoomRole(oldRole))(e => e)
       }

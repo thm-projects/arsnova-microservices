@@ -5,7 +5,7 @@ import java.util.UUID
 case class Room(
   id: Option[UUID],
   keyword: Option[String],
-  userId: UUID,
+  userId: Option[UUID],
   title: String,
   shortName: String,
   lastOwnerActivity: String,
