@@ -15,7 +15,7 @@ trait BaseApi {
   implicit val executionContext = system.dispatcher
 
   // timeout for actor calls
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(15.seconds)
   // actor for every command
   val remoteCommander = system.actorSelection("akka://CommandService@127.0.0.1:8880/user/commander")
   val authClient = system.actorOf(Props[AuthServiceClientActor], name = "authClient")
