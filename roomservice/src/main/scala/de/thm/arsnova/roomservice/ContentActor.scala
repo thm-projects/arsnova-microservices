@@ -67,6 +67,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           ret ! Success(c)
           val e = ContentCreated(c)
           eventRegion ! RoomEventPackage(c.roomId, e)
+          context.become(contentCreated)
           persist(e)(_)
         } else {
           ret ! Failure(InsufficientRights(role, "Create Content"))
@@ -92,6 +93,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           content = None
           ret ! Success(c)
           eventRegion ! RoomEventPackage(c.roomId, ContentDeleted(c))
+          context.become(initial)
           persist(ContentDeleted(c))(e => e)
         } else {
           ret ! Failure(InsufficientRights(role, "Delete Content"))
