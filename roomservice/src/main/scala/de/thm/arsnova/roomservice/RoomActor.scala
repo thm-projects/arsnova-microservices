@@ -81,6 +81,18 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     }
   }
 
+  def getContentFromIds(ids: Seq[UUID], ret: ActorRef) = {
+    val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
+      (contentRegion ? GetContent(id)).mapTo[Try[Content]].map {
+        case Success(content) => Some(content)
+        case Failure(t) => None
+      }
+    }
+    Future.sequence(contentListFutures).map { list =>
+      ret ! list.flatten
+    }
+  }
+
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
     case GetRoom(id) => ((ret: ActorRef) => {
@@ -134,15 +146,10 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
     case GetContentListByRoomIdAndGroup(roomId, group) => ((ret: ActorRef) => {
       val ids: Seq[UUID] = contentIds.filter(t => t._2 == group).toSeq.map(_._1)
-      val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
-        (contentRegion ? GetContent(id)).mapTo[Try[Content]].map {
-          case Success(content) => Some(content)
-          case Failure(t) => None
-        }
-      }
-      Future.sequence(contentListFutures).map { list =>
-        ret ! Success(list.flatten)
-      }
+      getContentFromIds(ids, ret)
+    }) (sender)
+    case GetContentListByRoomId(roomId) => ((ret: ActorRef) => {
+      getContentFromIds(contentIds.toSeq.map(_._1), ret)
     }) (sender)
     case sep: RoomEventPackage => handleEvents(sep)
   }
