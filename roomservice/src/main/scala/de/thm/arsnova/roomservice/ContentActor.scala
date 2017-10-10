@@ -46,8 +46,10 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
   override def receiveRecover: Receive = {
     case ContentCreated(c) =>
       content = Some(c)
+      context.become(contentCreated)
     case ContentDeleted(c) =>
       content = None
+      context.become(initial)
   }
 
   override def receiveCommand: Receive = initial
@@ -74,9 +76,6 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetContent(id) => {
-      sender() ! None
-    }
     case _ => {
       sender() ! Failure(ResourceNotFound("content"))
     }

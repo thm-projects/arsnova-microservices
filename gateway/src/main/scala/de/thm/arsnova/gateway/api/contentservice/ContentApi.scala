@@ -29,10 +29,7 @@ trait ContentApi extends BaseApi {
           get {
             complete {
               (contentRegion ? GetContent(contentId))
-                .mapTo[Option[Content]].map {
-                case Some(c) => Success(c)
-                case None => Failure(ResourceNotFound("content"))
-              }
+                .mapTo[Try[Content]]
             }
           } ~
           delete {
