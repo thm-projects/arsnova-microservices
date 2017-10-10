@@ -61,7 +61,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
     case CreateContent(id, c, userId) => ((ret: ActorRef) => {
-      (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
+      (userRegion ? GetRoleForRoom(userId, c.roomId)).mapTo[String] map { role =>
         if (role == "owner") {
           content = Some(c)
           ret ! Success(c)

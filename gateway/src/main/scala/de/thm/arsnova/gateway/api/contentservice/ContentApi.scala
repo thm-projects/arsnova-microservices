@@ -69,8 +69,9 @@ trait ContentApi extends BaseApi {
               complete {
                 (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
-                    val withIds = content.copy(roomId = roomId, id = Some(UUID.randomUUID()))
-                    (contentRegion ? CreateContent(roomId, withIds, uId))
+                    val newId = Some(UUID.randomUUID())
+                    val withIds = content.copy(roomId = roomId, id = newId)
+                    (contentRegion ? CreateContent(newId.get, withIds, uId))
                       .mapTo[Try[Content]]
                   }
                   case Failure(t) => Future.failed(t)

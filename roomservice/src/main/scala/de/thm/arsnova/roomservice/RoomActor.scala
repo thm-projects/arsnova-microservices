@@ -80,7 +80,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     sep.event match {
       case ContentCreated(content) => {
         contentIds += ((content.id.get, content.group))
-        persist(RoomContentAdded(content.id.get, content.group))(e => println(e))
+        persist(RoomContentAdded(content.id.get, content.group))(_)
       }
       case ContentDeleted(content) => {
         contentIds -= ((content.id.get, content.group))
