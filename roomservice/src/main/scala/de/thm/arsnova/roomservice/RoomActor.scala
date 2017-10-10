@@ -15,8 +15,8 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ClusterSharding
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.entities.{Room, Content, User}
-import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted, RoomEvent, RoomUpdated}
+import de.thm.arsnova.shared.entities.{Content, Room, User}
+import de.thm.arsnova.shared.events.RoomEvents._
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -65,6 +65,12 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       state = None
       context.become(initial)
     }
+    case RoomContentAdded(id, group) => {
+      contentIds += ((id, group))
+    }
+    case RoomContentDeleted(id, group) => {
+      contentIds -= ((id, group))
+    }
     case s: Any => println(s)
   }
 
@@ -74,9 +80,11 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     sep.event match {
       case ContentCreated(content) => {
         contentIds += ((content.id.get, content.group))
+        persist(RoomContentAdded(content.id.get, content.group))(e => println(e))
       }
       case ContentDeleted(content) => {
         contentIds -= ((content.id.get, content.group))
+        persist(RoomContentDeleted(content.id.get, content.group))(_)
       }
     }
   }

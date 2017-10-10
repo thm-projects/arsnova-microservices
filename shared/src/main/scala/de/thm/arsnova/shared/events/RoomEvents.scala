@@ -12,4 +12,8 @@ object RoomEvents {
   case class RoomUpdated(room: Room) extends RoomEvent
 
   case class RoomDeleted(room: Room) extends RoomEvent
+
+  case class RoomContentAdded(id: UUID, group: String) extends RoomEvent
+
+  case class RoomContentDeleted(id: UUID, group: String) extends RoomEvent
 }
