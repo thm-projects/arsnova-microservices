@@ -73,6 +73,12 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
+    case GetContent(id) => {
+      sender() ! None
+    }
+    case _ => {
+      sender() ! Failure(ResourceNotFound("content"))
+    }
   }
 
   def contentCreated: Receive = {
