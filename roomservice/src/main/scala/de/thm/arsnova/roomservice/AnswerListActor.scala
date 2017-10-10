@@ -86,9 +86,13 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   def handleEvents(sep: RoomEventPackage) = {
     sep.event match {
       case ContentCreated(content) => {
-        content.group match {
-          case "mc" => context.become(choiceContentCreated)
-          case "freetext" => context.become(freetextContentCreated)
+        contentToType(content) match {
+          case "choice" => {
+            context.become(choiceContentCreated)
+          }
+          case "freetext" => {
+            context.become(freetextContentCreated)
+          }
         }
         persist(ContentCreated(content))(e => e)
       }
@@ -101,7 +105,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   }
 
   def contentToType(content: Content): String = {
-    content.group match {
+    content.format match {
       case "mc" => "choice"
       case "freetext" => "freetext"
     }
