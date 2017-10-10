@@ -24,9 +24,7 @@ object Exceptions {
       }
     }
   }
-  case object NoSuchContent extends ARSException {
-    def getMsg: String = "No such Content"
-  }
+
   case class InsufficientRights(role: String, action: String) extends ARSException {
     def getMsg: String = s"Insufficient rights for action $action with role: $role"
   }

@@ -30,7 +30,7 @@ trait ContentApi extends BaseApi {
               (contentRegion ? GetContent(roomId, contentId))
                 .mapTo[Option[Content]].map {
                 case Some(c) => Success(c)
-                case None => Failure(NoSuchContent)
+                case None => Failure(ResourceNotFound("content"))
               }
             }
           } ~
