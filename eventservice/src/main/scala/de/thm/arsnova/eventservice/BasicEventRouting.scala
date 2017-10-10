@@ -12,12 +12,12 @@ object BasicEventRouting {
     sep.event match {
       case RoomCreated(room) => {
         // usershard is based on userId
-        userRegion ! RoomEventPackage(room.userId, sep.event)
+        userRegion ! RoomEventPackage(room.userId.get, sep.event)
         commentRegion ! sep
       }
       case RoomDeleted(room) => {
         // usershard is based on userId
-        userRegion ! RoomEventPackage(room.userId, sep.event)
+        userRegion ! RoomEventPackage(room.userId.get, sep.event)
         commentRegion ! sep
       }
 
