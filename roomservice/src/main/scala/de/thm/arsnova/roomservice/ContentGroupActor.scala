@@ -85,6 +85,9 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
             case Some(cg) => {
               getContentFromIds(cg.contentIds) pipeTo ret
             }
+            case None => {
+              ret ! Nil
+            }
           }
         }
         case None => {
