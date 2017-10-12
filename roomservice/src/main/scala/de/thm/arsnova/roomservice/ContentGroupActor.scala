@@ -48,7 +48,7 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
           if (cg.autoSort) {
             val contentList = Await.result(getContentFromIds(cg.contentIds), 5.seconds)
             val listWithNewContent = contentList :+ content
-            val sorted = contentList.sortBy(c => (c.subject, c.content))
+            val sorted = listWithNewContent.sortBy(c => (c.subject, c.content))
             val newCG = ContentGroup(true, sorted.map(_.id.get))
             groups.update(group, newCG)
             ret ! groups
