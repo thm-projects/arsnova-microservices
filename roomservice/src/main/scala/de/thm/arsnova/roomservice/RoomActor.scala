@@ -15,7 +15,7 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ClusterSharding
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.entities.{Content, Room, User}
+import de.thm.arsnova.shared.entities.{Content, ContentGroup, Room, User}
 import de.thm.arsnova.shared.events.RoomEvents._
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -24,6 +24,7 @@ import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException}
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.ContentEvents._
+import de.thm.arsnova.shared.servicecommands.ContentGroupCommands.{AddToGroup, RemoveFromGroup, SendContent}
 import de.thm.arsnova.shared.shards.{ContentShard, EventShard, UserShard}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,14 +45,14 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   val contentRegion = ClusterSharding(context.system).shardRegion(ContentShard.shardName)
 
+  val contentGroupActor = context.actorOf(ContentGroupActor.props(contentRegion))
+
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
 
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
   private var state: Option[Room] = None
-
-  val contentIds: collection.mutable.Set[(UUID, String)] = collection.mutable.Set.empty[(UUID, String)]
 
   override def receiveRecover: Receive = {
     case RoomCreated(room) => {
@@ -65,12 +66,6 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       state = None
       context.become(initial)
     }
-    case RoomContentAdded(id, group) => {
-      contentIds += ((id, group))
-    }
-    case RoomContentDeleted(id, group) => {
-      contentIds -= ((id, group))
-    }
     case s: Any => println(s)
   }
 
@@ -79,12 +74,18 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
   def handleEvents(sep: RoomEventPackage) = {
     sep.event match {
       case ContentCreated(content) => {
-        contentIds += ((content.id.get, content.group))
-        persist(RoomContentAdded(content.id.get, content.group))(_)
+        (contentGroupActor ? AddToGroup(content.group, content))
+          .mapTo[collection.mutable.HashMap[String, ContentGroup]] map {cg =>
+          state = Some(state.get.copy(contentGroups = cg.toMap))
+          persist(RoomUpdated(state.get))(_)
+        }
       }
       case ContentDeleted(content) => {
-        contentIds -= ((content.id.get, content.group))
-        persist(RoomContentDeleted(content.id.get, content.group))(_)
+        (contentGroupActor ? RemoveFromGroup(content.group, content))
+          .mapTo[collection.mutable.HashMap[String, ContentGroup]] map {cg =>
+          state = Some(state.get.copy(contentGroups = cg.toMap))
+          persist(RoomUpdated(state.get))(_)
+        }
       }
     }
   }
@@ -153,11 +154,10 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
 
     case GetContentListByRoomIdAndGroup(roomId, group) => ((ret: ActorRef) => {
-      val ids: Seq[UUID] = contentIds.filter(t => t._2 == group).toSeq.map(_._1)
-      getContentFromIds(ids, ret)
+      contentGroupActor ! SendContent(ret, Some(group))
     }) (sender)
     case GetContentListByRoomId(roomId) => ((ret: ActorRef) => {
-      getContentFromIds(contentIds.toSeq.map(_._1), ret)
+      contentGroupActor ! SendContent(ret, None)
     }) (sender)
     case sep: RoomEventPackage => handleEvents(sep)
   }
