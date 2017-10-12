@@ -87,6 +87,11 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
             }
           }
         }
+        case None => {
+          val values: Seq[ContentGroup] = groups.values.map(identity).toSeq
+          val cIds: Seq[UUID] = values.flatMap(_.contentIds)
+          getContentFromIds(cIds) pipeTo ret
+        }
       }
     }
   }
