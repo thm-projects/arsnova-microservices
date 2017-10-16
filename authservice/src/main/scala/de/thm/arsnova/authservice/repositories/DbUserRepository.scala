@@ -2,6 +2,7 @@ package de.thm.arsnova.authservice.repositories
 
 import java.util.UUID
 
+import scala.util.Try
 import scala.concurrent.Future
 import slick.driver.PostgresDriver.api._
 import slick.lifted.TableQuery
@@ -14,8 +15,8 @@ object DbUserRepository extends BaseRepository {
     db.run(dbUsersTable.filter(_.id === userId).result.headOption)
   }
 
-  def create(user: DbUser): Future[Int] = {
-    db.run(dbUsersTable += user)
+  def create(user: DbUser): Future[Try[Int]] = {
+    db.run((dbUsersTable += user).asTry)
   }
 
   def update(newUser: DbUser, userId: UUID): Future[Int] = {

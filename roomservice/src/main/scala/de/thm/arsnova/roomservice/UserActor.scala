@@ -67,11 +67,11 @@ class UserActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case CreateUser(userId, user) => ((ret: ActorRef) => {
-      (authRouter ? AddDbUser(DbUser(Some(userId), user.username, user.password))).mapTo[Int] map {
+      (authRouter ? AddDbUser(DbUser(Some(userId), user.username, user.password))).mapTo[Try[Int]] map {
         // User must be added to auth db for login
         // authRouter answers with tables touched
         // TODO: maybe return bool - but it would add delay since authRouter can't pipe
-        case 1 => {
+        case Success(i) => {
           ret ! Success(user)
           userState = Some(user)
           context.become(userCreated)
