@@ -1,7 +1,7 @@
 package de.thm.arsnova.testdata
 
 object Generator extends App {
-  case class Config(speakerData: Int = 0, participantData: Int = 0)
+  case class Config(speakerData: Int = 0, participantData: Int = 0, userData: Int = 0)
 
   val parser = new scopt.OptionParser[Config]("testdata") {
     opt[Int]('s', "speaker").action( (x, c) =>
