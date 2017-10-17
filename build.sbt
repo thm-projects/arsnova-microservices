@@ -118,5 +118,11 @@ lazy val commentservice = (project in file("commentservice"))
   )
   .dependsOn(shared, authservice)
 
+lazy val testdata = (project in file("testdata"))
+  .settings(
+    libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
+  )
+  .dependsOn(shared)
+
 // skip Tests in assembly job
 test in assembly := {}
