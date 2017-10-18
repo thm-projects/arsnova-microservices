@@ -51,6 +51,11 @@ val kamonDeps = Seq(
   "io.kamon" %% "kamon-statsd" % kamonVersion
 )
 
+val testDataDeps = Seq(
+  "com.github.scopt" %% "scopt" % "3.7.0",
+  "com.github.azakordonets" % "fabricator_2.10" % "1.0.4"
+)
+
 // skip Tests in assembly job
 // test in assembly := {}
 
@@ -120,7 +125,7 @@ lazy val commentservice = (project in file("commentservice"))
 
 lazy val testdata = (project in file("testdata"))
   .settings(
-    libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
+    libraryDependencies ++= testDataDeps
   )
   .dependsOn(shared)
 
