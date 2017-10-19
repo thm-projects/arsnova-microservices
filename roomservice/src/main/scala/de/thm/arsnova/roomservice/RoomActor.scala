@@ -126,6 +126,9 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
         case None => ret ! Failure(NoSuchRoom(Left(id)))
       }
     }) (sender)
+    case ExportRoom(id) => ((ret: ActorRef) => {
+      
+    }) (sender)
     case UpdateRoom(id, room, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
         if (role == "owner") {
