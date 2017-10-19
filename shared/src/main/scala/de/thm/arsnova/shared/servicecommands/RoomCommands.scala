@@ -33,4 +33,6 @@ object RoomCommands {
   case class GetContentListByRoomId(id: UUID, group: Option[String]) extends RoomCommand
 
   case class AutoSortContentGroup(id: UUID, group: String) extends RoomCommand
+
+  case class ExportRoom(id: UUID) extends RoomCommand
 }
