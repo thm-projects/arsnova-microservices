@@ -5,6 +5,8 @@ import java.util.UUID
 import de.thm.arsnova.shared.entities._
 
 object SpeakerDataGenerator {
+  val alpha = fabricator.Alphanumeric()
+
   def gen(count: Int, ownerId: UUID): Seq[(Room, Seq[Content])] = {
     val sessionId = UUID.randomUUID()
     for(i <- 0 to count) {
@@ -12,7 +14,7 @@ object SpeakerDataGenerator {
     }
   }
 
-  def genContentGroups(count: Int): Seq[ContentGroup] = {
+  def genContentGroups(count: Int): Seq[Map[String, ContentGroup]] = {
     for (i <- 0 to count) {
       
     }
