@@ -1,8 +1,10 @@
 package de.thm.arsnova.shared.entities.export
 
+import java.util.UUID
 import de.thm.arsnova.shared.entities.FormatAttributes
 
 case class ContentExport(
+  id: UUID,
   subject: String,
   content: String,
   format: String,
