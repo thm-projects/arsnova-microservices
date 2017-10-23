@@ -22,10 +22,11 @@ import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException}
+import de.thm.arsnova.shared.entities.export.RoomExport
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.servicecommands.ContentGroupCommands.{AddToGroup, RemoveFromGroup, SendContent}
-import de.thm.arsnova.shared.shards.{ContentShard, EventShard, UserShard}
+import de.thm.arsnova.shared.shards.{AnswerListShard, ContentShard, EventShard, UserShard}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,6 +45,8 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
   val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
 
   val contentRegion = ClusterSharding(context.system).shardRegion(ContentShard.shardName)
+
+  val answerListActor = ClusterSharding(context.system).shardRegion(AnswerListShard.shardName)
 
   val contentGroupActor = context.actorOf(ContentGroupActor.props(contentRegion))
 
@@ -90,6 +93,13 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     }
   }
 
+  def contentToType(content: Content): String = {
+    content.format match {
+      case "mc" => "choice"
+      case "freetext" => "freetext"
+    }
+  }
+
   def getContentFromIds(ids: Seq[UUID], ret: ActorRef) = {
     val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
       (contentRegion ? GetContent(id)).mapTo[Try[Content]].map {
@@ -128,6 +138,20 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
     case ExportRoom(id, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
+        val exported = RoomExport(state.get)
+        (contentGroupActor ? SendContent(self, None))
+          .mapTo[Seq[Content]].map {
+          _.map { c =>
+            contentToType(c) match {
+              case "choice" => {
+                
+              }
+              case "freetext" => {
+
+              }
+            }
+          }
+        }
       }
     }) (sender)
     case UpdateRoom(id, room, userId) => ((ret: ActorRef) => {
