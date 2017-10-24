@@ -107,6 +107,9 @@ class CommentListActor(authRouter: ActorRef) extends PersistentActor {
         case None => ret ! Failure(ResourceNotFound(s"comment with id: $id"))
       }
     }) (sender)
+    case GetCommentsByRoomId(roomId) => ((ret: ActorRef) => {
+      ret ! commentlist.values.map(identity).toSeq
+    }) (sender)
     case GetUnreadComments(roomId) => ((ret: ActorRef) => {
       val unreads: Seq[Comment] = commentlist.values.map(identity).toSeq.filter(_.isRead == false)
       ret ! Success(unreads)

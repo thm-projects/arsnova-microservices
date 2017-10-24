@@ -15,7 +15,7 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ClusterSharding
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.entities.{Content, ContentGroup, Room, User}
+import de.thm.arsnova.shared.entities.{Content, ContentGroup, Room, User, Comment}
 import de.thm.arsnova.shared.events.RoomEvents._
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
@@ -25,8 +25,9 @@ import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserE
 import de.thm.arsnova.shared.entities.export.{ContentExport, RoomExport}
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.ContentEvents._
+import de.thm.arsnova.shared.servicecommands.CommentCommands.GetCommentsByRoomId
 import de.thm.arsnova.shared.servicecommands.ContentGroupCommands._
-import de.thm.arsnova.shared.shards.{AnswerListShard, ContentShard, EventShard, UserShard}
+import de.thm.arsnova.shared.shards._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,6 +48,8 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
   val contentRegion = ClusterSharding(context.system).shardRegion(ContentShard.shardName)
 
   val answerListActor = ClusterSharding(context.system).shardRegion(AnswerListShard.shardName)
+
+  val commentListActor = ClusterSharding(context.system).shardRegion(CommentShard.shardName)
 
   val contentGroupActor = context.actorOf(ContentGroupActor.props(contentRegion))
 
@@ -138,8 +141,19 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
     case ExportRoom(id, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
-        val exported = RoomExport(state.get)
-        val cList = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
+        if (role == "owner") {
+          val exported = RoomExport(state.get)
+          val contentListFuture = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
+          val commentListFuture = (commentListActor ? GetCommentsByRoomId(id)).mapTo[Seq[Comment]]
+          val (cnList, cmList) = for {
+            contentList <- contentListFuture
+            commentList <- commentListFuture
+          } yield (contentList, commentList)
+          val fullExport = exported.copy(content = cnList, comments = cmList)
+          ret ! Success(fullExport)
+        } else {
+          ret ! Failure(InsufficientRights(role, "Export Room"))
+        }
       }
     }) (sender)
     case UpdateRoom(id, room, userId) => ((ret: ActorRef) => {

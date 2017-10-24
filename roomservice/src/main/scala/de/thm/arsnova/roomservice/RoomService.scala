@@ -105,4 +105,11 @@ object RoomService extends App {
     extractEntityId = AnswerListShard.idExtractor,
     extractShardId = AnswerListShard.shardResolver
   )
+
+  ClusterSharding(system).startProxy(
+    typeName = CommentShard.shardName,
+    role = CommentShard.serviceRole,
+    extractEntityId = CommentShard.idExtractor,
+    extractShardId = CommentShard.shardResolver
+  )
 }
