@@ -18,7 +18,8 @@ case class ContentExport(
   abstentionAllowed: Boolean,
   formatAttributes: Option[FormatAttributes],
   answerOptions: Option[Seq[AnswerOptionExport]],
-  answers: Option[Seq[FreetextAnswerExport]]
+  answers: Option[Seq[FreetextAnswerExport]],
+  abstentionCount: Int
 )
 
 object ContentExport {
@@ -38,6 +39,7 @@ object ContentExport {
       c.abstentionAllowed,
       c.formatAttributes,
       None,
-      None
+      None,
+      0
     )
 }

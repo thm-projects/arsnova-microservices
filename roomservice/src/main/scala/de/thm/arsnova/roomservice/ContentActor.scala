@@ -8,14 +8,16 @@ import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions._
-import de.thm.arsnova.shared.entities.{Content, Room, User}
+import de.thm.arsnova.shared.entities.export.{AnswerOptionExport, ContentExport}
+import de.thm.arsnova.shared.entities.{ChoiceAnswerStatistics, Content, Room, User}
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted}
+import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.GetStatistics
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.RoomCommands.GetRoom
 import de.thm.arsnova.shared.servicecommands.UserCommands._
-import de.thm.arsnova.shared.shards.{EventShard, RoomShard, UserShard}
+import de.thm.arsnova.shared.shards.{AnswerListShard, EventShard, RoomShard, UserShard}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,6 +37,8 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
   val userRegion = ClusterSharding(context.system).shardRegion(UserShard.shardName)
 
   val roomRegion = ClusterSharding(context.system).shardRegion(RoomShard.shardName)
+
+  val answerListActor = ClusterSharding(context.system).shardRegion(AnswerListShard.shardName)
 
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
@@ -108,14 +112,23 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
     case GetExport(id) => ((ret: ActorRef) => {
       val c = content.get
+      var export = ContentExport(c)
       contentToType(c) match {
         case "choice" => {
-          
+          (answerListActor ? GetStatistics(c.roomId, c.id.get)).mapTo[ChoiceAnswerStatistics].map { s =>
+            val answerOptionExportList = c.answerOptions.map { seq =>
+              seq map { option =>
+                AnswerOptionExport(option, s.choices(option.index))
+              }
+            }
+            export = export.copy(answerOptions = answerOptionExportList, abstentionCount = s.abstentions)
+          }
         }
         case "freetext" => {
 
         }
       }
+      ret ! export
     }) (sender)
 
     case sep: RoomEventPackage => handleEvents(sep)

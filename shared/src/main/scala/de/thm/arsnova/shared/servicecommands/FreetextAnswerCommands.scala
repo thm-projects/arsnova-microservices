@@ -18,4 +18,6 @@ object FreetextAnswerCommands {
   case class CreateFreetextAnswer(roomId: UUID, questionId: UUID, answer: FreetextAnswer, userId: UUID) extends FreetextAnswerCommand
 
   case class DeleteFreetextAnswer(roomId: UUID, questionId: UUID, id: UUID, userId: UUID) extends FreetextAnswerCommand
+
+  case class GetFreetextStatistics(roomId: UUID, questionId: UUID) extends FreetextAnswerCommand
 }
