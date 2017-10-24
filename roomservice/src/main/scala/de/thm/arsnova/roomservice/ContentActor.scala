@@ -8,12 +8,13 @@ import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions._
-import de.thm.arsnova.shared.entities.export.{AnswerOptionExport, ContentExport}
+import de.thm.arsnova.shared.entities.export.{AnswerOptionExport, ContentExport, FreetextAnswerExport}
 import de.thm.arsnova.shared.entities.{ChoiceAnswerStatistics, Content, Room, User}
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted}
-import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.GetStatistics
+import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.GetChoiceStatistics
+import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands.GetFreetextStatistics
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.RoomCommands.GetRoom
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -115,7 +116,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
       var export = ContentExport(c)
       contentToType(c) match {
         case "choice" => {
-          (answerListActor ? GetStatistics(c.roomId, c.id.get)).mapTo[ChoiceAnswerStatistics].map { s =>
+          (answerListActor ? GetChoiceStatistics(c.roomId, c.id.get)).mapTo[ChoiceAnswerStatistics].map { s =>
             val answerOptionExportList = c.answerOptions.map { seq =>
               seq map { option =>
                 AnswerOptionExport(option, s.choices(option.index))
@@ -125,7 +126,9 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           }
         }
         case "freetext" => {
-
+          (answerListActor ? GetFreetextStatistics(c.roomId, c.id.get)).mapTo[Seq[FreetextAnswerExport]].map { seq =>
+            export = export.copy(answers = Some(seq))
+          }
         }
       }
       ret ! export

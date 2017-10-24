@@ -9,6 +9,7 @@ import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, ResourceNotFound}
 import de.thm.arsnova.shared.entities._
+import de.thm.arsnova.shared.entities.export.FreetextAnswerExport
 import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.FreetextAnswerEvents._
@@ -171,7 +172,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetStatistics(roomId, questionId) => ((ret: ActorRef) => {
+    case GetChoiceStatistics(roomId, questionId) => ((ret: ActorRef) => {
       val list = choiceAnswerList.values.map(identity).toSeq
       var abstentionCount = 0
       val count: Array[Int] = new Array[Int](answerOptions.get.size)
@@ -227,6 +228,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
           }
         }
       }
+    }) (sender)
+    case GetFreetextStatistics(roomId, questionId) => ((ret: ActorRef) => {
+      val list = freetextAnswerList.values.map(identity).toSeq
+      ret ! list.map(FreetextAnswerExport(_))
     }) (sender)
   }
 }
