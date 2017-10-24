@@ -8,7 +8,7 @@ import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, ResourceNotFound}
-import de.thm.arsnova.shared.entities.{ChoiceAnswer, Content, FreetextAnswer, User}
+import de.thm.arsnova.shared.entities._
 import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.FreetextAnswerEvents._
@@ -17,7 +17,7 @@ import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands.GetRoleForRoom
-import de.thm.arsnova.shared.shards.{EventShard, ContentShard, UserShard}
+import de.thm.arsnova.shared.shards.{ContentShard, EventShard, UserShard}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,6 +44,8 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
+  var answerOptions: Option[Seq[AnswerOption]] = None
+
   private val choiceAnswerList: collection.mutable.HashMap[UUID, ChoiceAnswer] =
     collection.mutable.HashMap.empty[UUID, ChoiceAnswer]
   private val freetextAnswerList: collection.mutable.HashMap[UUID, FreetextAnswer] =
@@ -54,6 +56,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       contentToType(content) match {
         case "choice" => {
           context.become(choiceContentCreated)
+          answerOptions = content.answerOptions
         }
         case "freetext" => {
           context.become(freetextContentCreated)
@@ -170,7 +173,20 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
     case GetStatistics(roomId, questionId) => ((ret: ActorRef) => {
       val list = choiceAnswerList.values.map(identity).toSeq
-
+      var abstentionCount = 0
+      val count: Array[Int] = new Array[Int](answerOptions.get.size)
+      list.map { a =>
+        if (a.abstention) {
+          abstentionCount += 1
+        } else {
+          a.answerIndexes.map { seq =>
+            seq.map { i =>
+              count(i) += 1
+            }
+          }
+        }
+      }
+      ret ! ChoiceAnswerStatistics(count, abstentionCount)
     }) (sender)
   }
 
