@@ -15,4 +15,6 @@ object ContentCommands {
   case class CreateContent(id: UUID, content: Content, userId: UUID) extends ContentCommand
 
   case class DeleteContent(id: UUID, userId: UUID) extends ContentCommand
+
+  case class GetExport(id: UUID) extends ContentCommand
 }

@@ -18,4 +18,6 @@ object ChoiceAnswerCommands {
   case class CreateChoiceAnswer(roomId: UUID, questionId: UUID, answer: ChoiceAnswer, userId: UUID) extends ChoiceAnswerCommand
 
   case class DeleteChoiceAnswer(roomId: UUID, questionId: UUID, id: UUID, userId: UUID) extends ChoiceAnswerCommand
+
+  case class GetStatistics(roomId: UUID, questionId: UUID) extends ChoiceAnswerCommand
 }

@@ -60,6 +60,13 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
     }
   }
 
+  def contentToType(content: Content): String = {
+    content.format match {
+      case "mc" => "choice"
+      case "freetext" => "freetext"
+    }
+  }
+
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
     case CreateContent(id, c, userId) => ((ret: ActorRef) => {
@@ -96,6 +103,17 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           persist(ContentDeleted(c))(e => e)
         } else {
           ret ! Failure(InsufficientRights(role, "Delete Content"))
+        }
+      }
+    }) (sender)
+    case GetExport(id) => ((ret: ActorRef) => {
+      val c = content.get
+      contentToType(c) match {
+        case "choice" => {
+          
+        }
+        case "freetext" => {
+
         }
       }
     }) (sender)

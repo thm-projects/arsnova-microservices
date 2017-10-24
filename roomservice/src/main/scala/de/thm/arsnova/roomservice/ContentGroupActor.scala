@@ -7,9 +7,10 @@ import scala.concurrent.duration._
 import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import de.thm.arsnova.shared.entities.export.ContentExport
 import de.thm.arsnova.shared.servicecommands.ContentGroupCommands._
 import de.thm.arsnova.shared.entities.{Content, ContentGroup, Room, User}
-import de.thm.arsnova.shared.servicecommands.ContentCommands.GetContent
+import de.thm.arsnova.shared.servicecommands.ContentCommands._
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -27,6 +28,12 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
   val groups: collection.mutable.HashMap[String, ContentGroup] =
     collection.mutable.HashMap.empty[String, ContentGroup]
 
+  def contentToType(content: Content): String = {
+    content.format match {
+      case "mc" => "choice"
+      case "freetext" => "freetext"
+    }
+  }
 
   def getContentFromIds(ids: Seq[UUID]): Future[Seq[Content]] = {
     val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
@@ -95,6 +102,19 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
           val cIds: Seq[UUID] = values.flatMap(_.contentIds)
           getContentFromIds(cIds) pipeTo ret
         }
+      }
+    }
+    case GetExportList() => {
+      val values: Seq[ContentGroup] = groups.values.map(identity).toSeq
+      val cIds: Seq[UUID] = values.flatMap(_.contentIds)
+      val contentListFutures: Seq[Future[Option[ContentExport]]] = cIds map { id =>
+        (contentRegion ? GetExport(id)).mapTo[Try[ContentExport]].map {
+          case Success(content) => Some(content)
+          case Failure(t) => None
+        }
+      }
+      Future.sequence(contentListFutures).map { list =>
+        list.flatten
       }
     }
   }

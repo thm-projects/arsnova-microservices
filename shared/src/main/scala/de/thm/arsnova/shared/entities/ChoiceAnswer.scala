@@ -7,5 +7,5 @@ case class ChoiceAnswer(
   userId: UUID,
   contentId: UUID,
   roomId: UUID,
-  answerOptionId: UUID
+  answerIndex: Int
 )

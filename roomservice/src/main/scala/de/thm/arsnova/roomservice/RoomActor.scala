@@ -22,10 +22,10 @@ import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException}
-import de.thm.arsnova.shared.entities.export.RoomExport
+import de.thm.arsnova.shared.entities.export.{ContentExport, RoomExport}
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.ContentEvents._
-import de.thm.arsnova.shared.servicecommands.ContentGroupCommands.{AddToGroup, RemoveFromGroup, SendContent}
+import de.thm.arsnova.shared.servicecommands.ContentGroupCommands._
 import de.thm.arsnova.shared.shards.{AnswerListShard, ContentShard, EventShard, UserShard}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -139,19 +139,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     case ExportRoom(id, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
         val exported = RoomExport(state.get)
-        (contentGroupActor ? SendContent(self, None))
-          .mapTo[Seq[Content]].map {
-          _.map { c =>
-            contentToType(c) match {
-              case "choice" => {
-                
-              }
-              case "freetext" => {
-
-              }
-            }
-          }
-        }
+        val cList = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
       }
     }) (sender)
     case UpdateRoom(id, room, userId) => ((ret: ActorRef) => {

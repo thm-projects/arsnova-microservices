@@ -168,6 +168,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
+    case GetStatistics(roomId, questionId) => ((ret: ActorRef) => {
+      val list = choiceAnswerList.values.map(identity).toSeq
+
+    }) (sender)
   }
 
   def freetextContentCreated: Receive = {
