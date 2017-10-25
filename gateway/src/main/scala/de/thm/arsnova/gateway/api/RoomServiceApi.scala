@@ -1,7 +1,7 @@
 package de.thm.arsnova.gateway.api
 
 import de.thm.arsnova.gateway.RoomListClientActor
-import de.thm.arsnova.shared.entities.{Room, RoomListEntry, ContentGroup}
+import de.thm.arsnova.shared.entities.{ContentGroup, Room, RoomListEntry}
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.roomservice.RoomActor
@@ -24,6 +24,7 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
 import de.thm.arsnova.shared.Exceptions._
+import de.thm.arsnova.shared.entities.export.RoomExport
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -37,6 +38,7 @@ trait RoomServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
+  import de.thm.arsnova.shared.mappings.export.RoomExportJsonProtocol._
 
   val roomList = system.actorOf(Props[RoomListClientActor], name = "roomlist")
 
@@ -120,6 +122,21 @@ trait RoomServiceApi extends BaseApi {
                 case Success(uId) => {
                   (roomRegion ? DeleteRoom(roomId, uId))
                     .mapTo[Try[Room]]
+                }
+                case Failure(t) => Future.failed(t)
+              }
+            }
+          }
+        }
+      } ~
+      pathPrefix("export") {
+        get {
+          headerValueByName("X-Session-Token") { token =>
+            complete {
+              (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
+                case Success(uId) => {
+                  (roomRegion ? ExportRoom(roomId, uId))
+                    .mapTo[Try[RoomExport]]
                 }
                 case Failure(t) => Future.failed(t)
               }
