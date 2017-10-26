@@ -4,7 +4,7 @@ import akka.actor.ActorRef
 import de.thm.arsnova.shared.entities.Content
 
 object ContentGroupCommands {
- sealed trait ContentGroupCommand extends ServiceCommand
+  sealed trait ContentGroupCommand extends ServiceCommand
 
   case class AddToGroup(group: String, content: Content) extends ContentGroupCommand
 
