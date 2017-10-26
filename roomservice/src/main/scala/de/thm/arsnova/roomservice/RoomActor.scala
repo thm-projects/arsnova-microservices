@@ -47,9 +47,9 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   val contentRegion = ClusterSharding(context.system).shardRegion(ContentShard.shardName)
 
-  val answerListActor = ClusterSharding(context.system).shardRegion(AnswerListShard.shardName)
+  val answerListRegion = ClusterSharding(context.system).shardRegion(AnswerListShard.shardName)
 
-  val commentListActor = ClusterSharding(context.system).shardRegion(CommentShard.shardName)
+  val commentListRegion = ClusterSharding(context.system).shardRegion(CommentShard.shardName)
 
   val contentGroupActor = context.actorOf(ContentGroupActor.props(contentRegion))
 
@@ -144,7 +144,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
         if (role == "owner") {
           val exported = RoomExport(state.get)
           val contentListFuture = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
-          val commentListFuture = (commentListActor ? GetCommentsByRoomId(id)).mapTo[Seq[Comment]]
+          val commentListFuture = (commentListRegion ? GetCommentsByRoomId(id)).mapTo[Seq[Comment]]
           val ff: Future[(Seq[ContentExport], Seq[Comment])] = for {
             contentList <- contentListFuture
             commentList <- commentListFuture
