@@ -25,8 +25,8 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
-  val groups: collection.mutable.HashMap[String, ContentGroup] =
-    collection.mutable.HashMap.empty[String, ContentGroup]
+  var groups: collection.mutable.Map[String, ContentGroup] =
+    collection.mutable.Map.empty[String, ContentGroup]
 
   def contentToType(content: Content): String = {
     content.format match {
@@ -48,6 +48,9 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
   }
 
   def receive: Receive = {
+    case SetGroups(g) => {
+      groups = collection.mutable.Map(g.toSeq: _*)
+    }
     case AddToGroup(group: String, content: Content) => ((ret: ActorRef) => {
       groups.get(group) match {
         // add to existing group

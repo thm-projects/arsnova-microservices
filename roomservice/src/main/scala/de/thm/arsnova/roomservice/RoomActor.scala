@@ -64,9 +64,11 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     case RoomCreated(room) => {
       state = Some(room)
       context.become(roomCreated)
+      contentGroupActor ! SetGroups(room.contentGroups)
     }
     case RoomUpdated(room) => {
       state = Some(room)
+      contentGroupActor ! SetGroups(room.contentGroups)
     }
     case RoomDeleted(room) => {
       state = None
