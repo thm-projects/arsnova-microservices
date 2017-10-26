@@ -38,7 +38,6 @@ trait RoomServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
-  import de.thm.arsnova.shared.mappings.export.RoomExportJsonProtocol._
 
   val roomList = system.actorOf(Props[RoomListClientActor], name = "roomlist")
 
@@ -122,21 +121,6 @@ trait RoomServiceApi extends BaseApi {
                 case Success(uId) => {
                   (roomRegion ? DeleteRoom(roomId, uId))
                     .mapTo[Try[Room]]
-                }
-                case Failure(t) => Future.failed(t)
-              }
-            }
-          }
-        }
-      } ~
-      pathPrefix("export") {
-        get {
-          headerValueByName("X-Session-Token") { token =>
-            complete {
-              (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
-                case Success(uId) => {
-                  (roomRegion ? ExportRoom(roomId, uId))
-                    .mapTo[Try[RoomExport]]
                 }
                 case Failure(t) => Future.failed(t)
               }
