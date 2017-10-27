@@ -68,6 +68,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       context.become(initial)
       choiceAnswerList.clear()
       freetextAnswerList.clear()
+      answerOptions = None
     }
 
     case ChoiceAnswerCreated(answer) => {
@@ -93,6 +94,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         contentToType(content) match {
           case "choice" => {
             context.become(choiceContentCreated)
+            answerOptions = content.answerOptions
           }
           case "freetext" => {
             context.become(freetextContentCreated)
@@ -103,6 +105,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       case ContentDeleted(content) => {
         choiceAnswerList.clear()
         freetextAnswerList.clear()
+        answerOptions = None
         persist(ContentDeleted(content))(e => e)
       }
     }
