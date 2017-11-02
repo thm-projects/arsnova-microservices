@@ -127,7 +127,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       context.become(roomCreated)
       ret ! Success(room)
       eventRegion ! RoomEventPackage(id, RoomCreated(room))
-      persist(RoomCreated(room))(e => println(e))
+      persist(RoomCreated(room))(_)
     }) (sender)
     case DeleteRoom(id, userId) => {
       sender() ! NoSuchRoom(Left(id))
@@ -166,7 +166,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
           state = Some(room)
           ret ! Success(room)
           eventRegion ! RoomEventPackage(id, RoomUpdated(room))
-          persist(RoomUpdated(room))(e => println(e))
+          persist(RoomUpdated(room))(_)
         } else {
           ret ! Failure(InsufficientRights(role, "Update Room"))
         }
