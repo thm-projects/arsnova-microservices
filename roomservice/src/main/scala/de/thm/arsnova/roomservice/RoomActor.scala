@@ -83,14 +83,14 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     sep.event match {
       case ContentCreated(content) => {
         (contentGroupActor ? AddToGroup(content.group, content))
-          .mapTo[collection.mutable.HashMap[String, ContentGroup]] map {cg =>
+          .mapTo[collection.mutable.Map[String, ContentGroup]] map {cg =>
           state = Some(state.get.copy(contentGroups = cg.toMap))
           persist(RoomUpdated(state.get))(_)
         }
       }
       case ContentDeleted(content) => {
         (contentGroupActor ? RemoveFromGroup(content.group, content))
-          .mapTo[collection.mutable.HashMap[String, ContentGroup]] map {cg =>
+          .mapTo[collection.mutable.Map[String, ContentGroup]] map {cg =>
           state = Some(state.get.copy(contentGroups = cg.toMap))
           persist(RoomUpdated(state.get))(_)
         }
