@@ -3,7 +3,7 @@ organization in ThisBuild := "de.thm.arsnova"
 version in ThisBuild := "0.1"
 scalaVersion in ThisBuild := "2.11.8"
 
-val akkaVersion = "2.5.3"
+val akkaVersion = "2.5.6"
 val akkaHTTPVersion = "10.0.5"
 val scalaTestVersion = "3.0.0"
 val scalaMockVersion = "3.2.2"
