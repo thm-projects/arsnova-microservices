@@ -14,6 +14,8 @@ object RoomCommands {
     def id: UUID
   }
 
+  case class RoomCommandWithRole(cmd: RoomCommand, role: String, ret: ActorRef)
+
   case class GetRoom(id: UUID) extends RoomCommand
 
   object GetRoomFormat extends DefaultJsonProtocol {

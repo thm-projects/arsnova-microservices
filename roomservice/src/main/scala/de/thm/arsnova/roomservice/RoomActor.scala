@@ -141,55 +141,70 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
         case None => ret ! Failure(NoSuchRoom(Left(id)))
       }
     }) (sender)
-    case ExportRoom(id, userId) => ((ret: ActorRef) => {
+    case c@ExportRoom(id, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
-        if (role == "owner") {
-          val exported = RoomExport(state.get)
-          val contentListFuture = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
-          val commentListFuture = (commentListRegion ? GetCommentsByRoomId(id)).mapTo[Seq[Comment]]
-          val ff: Future[(Seq[ContentExport], Seq[Comment])] = for {
-            contentList <- contentListFuture
-            commentList <- commentListFuture
-          } yield (contentList, commentList)
-          ff.map { t =>
-            val fullExport = exported.copy(content = t._1, comments = t._2)
-            ret ! Success(fullExport)
-          }
-        } else {
-          ret ! Failure(InsufficientRights(role, "Export Room"))
-        }
-      }
+        RoomCommandWithRole(c, role, ret)
+      } pipeTo self
     }) (sender)
-    case UpdateRoom(id, room, userId) => ((ret: ActorRef) => {
+    case c@UpdateRoom(id, room, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
-        if (role == "owner") {
-          state = Some(room)
-          ret ! Success(room)
-          eventRegion ! RoomEventPackage(id, RoomUpdated(room))
-          persist(RoomUpdated(room))(_)
-        } else {
-          ret ! Failure(InsufficientRights(role, "Update Room"))
-        }
-      }
+        RoomCommandWithRole(c, role, ret)
+      } pipeTo self
     }) (sender)
-    case DeleteRoom(id, userId) => ((ret: ActorRef) => {
+    case c@DeleteRoom(id, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
-        if (role == "owner") {
-          ret ! Success(state.get)
-          val e = RoomDeleted(state.get)
-          state = None
-          context.become(initial)
-          eventRegion ! RoomEventPackage(id, e)
-          persist(e)(e => e)
-        } else {
-          ret ! Failure(InsufficientRights(role, "Delete Room"))
-        }
-      }
+        RoomCommandWithRole(c, role, ret)
+      } pipeTo self
     }) (sender)
 
     case GetContentListByRoomId(roomId, group) => ((ret: ActorRef) => {
       contentGroupActor ! SendContent(ret, group)
     }) (sender)
+
+    case RoomCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case UpdateRoom(id, room, userId) => {
+          if (role == "owner") {
+            state = Some(room)
+            ret ! Success(room)
+            eventRegion ! RoomEventPackage(id, RoomUpdated(room))
+            persist(RoomUpdated(room))(e => println("yay"))
+          } else {
+            ret ! Failure(InsufficientRights(role, "Update Room"))
+          }
+        }
+        case DeleteRoom(id, userId) => {
+          if (role == "owner") {
+            ret ! Success(state.get)
+            val e = RoomDeleted(state.get)
+            state = None
+            context.become(initial)
+            eventRegion ! RoomEventPackage(id, e)
+            persist(e)(e => e)
+          } else {
+            ret ! Failure(InsufficientRights(role, "Delete Room"))
+          }
+        }
+        case ExportRoom(id, userId) => {
+          if (role == "owner") {
+            val exported = RoomExport(state.get)
+            val contentListFuture = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
+            val commentListFuture = (commentListRegion ? GetCommentsByRoomId(id)).mapTo[Seq[Comment]]
+            val ff: Future[(Seq[ContentExport], Seq[Comment])] = for {
+              contentList <- contentListFuture
+              commentList <- commentListFuture
+            } yield (contentList, commentList)
+            ff.map { t =>
+              val fullExport = exported.copy(content = t._1, comments = t._2)
+              ret ! Success(fullExport)
+            }
+          } else {
+            ret ! Failure(InsufficientRights(role, "Export Room"))
+          }
+        }
+      }
+    }
+
     case sep: RoomEventPackage => handleEvents(sep)
   }
 }
