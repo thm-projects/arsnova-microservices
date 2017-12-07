@@ -3,7 +3,7 @@ package de.thm.arsnova.roomservice
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
-import akka.pattern.ask
+import akka.pattern.{ask, pipe}
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
@@ -97,19 +97,11 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
     case GetContent(id) => {
       sender() ! Success(content.get)
     }
-    case DeleteContent(id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteContent(id, userId) => ((ret: ActorRef) => {
       val c = content.get
       (userRegion ? GetRoleForRoom(userId, c.roomId)).mapTo[String] map { role =>
-        if (role == "owner") {
-          content = None
-          ret ! Success(c)
-          eventRegion ! RoomEventPackage(c.roomId, ContentDeleted(c))
-          context.become(initial)
-          persist(ContentDeleted(c))(e => e)
-        } else {
-          ret ! Failure(InsufficientRights(role, "Delete Content"))
-        }
-      }
+        ContentCommandWithRole(cmd, role, ret)
+      } pipeTo self
     }) (sender)
     case GetExport(id) => ((ret: ActorRef) => {
       val c = content.get
@@ -123,16 +115,34 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
               }
             }
             export = export.copy(answerOptions = answerOptionExportList, abstentionCount = s.abstentions)
+            ret ! export
           }
         }
         case "freetext" => {
           (answerListActor ? GetFreetextStatistics(c.roomId, c.id.get)).mapTo[Seq[FreetextAnswerExport]].map { seq =>
             export = export.copy(answers = Some(seq))
+            ret ! export
           }
         }
       }
-      ret ! export
     }) (sender)
+
+    case ContentCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case DeleteContent(id, userId) => {
+          val c = content.get
+          if (role == "owner") {
+            content = None
+            ret ! Success(c)
+            eventRegion ! RoomEventPackage(c.roomId, ContentDeleted(c))
+            context.become(initial)
+            persist(ContentDeleted(c))(e => e)
+          } else {
+            ret ! Failure(InsufficientRights(role, "Delete Content"))
+          }
+        }
+      }
+    }
 
     case sep: RoomEventPackage => handleEvents(sep)
   }

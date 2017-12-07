@@ -2,13 +2,15 @@ package de.thm.arsnova.shared.servicecommands
 
 import java.util.UUID
 
-import akka.Done
+import akka.actor.ActorRef
 import de.thm.arsnova.shared.entities.Content
 
 object ContentCommands {
   sealed trait ContentCommand extends ServiceCommand {
     def id: UUID
   }
+
+  case class ContentCommandWithRole(cmd: ContentCommand, role: String, ret: ActorRef)
 
   case class GetContent(id: UUID) extends ContentCommand
 
