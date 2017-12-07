@@ -3,6 +3,7 @@ package de.thm.arsnova.shared.servicecommands
 import java.util.UUID
 
 import akka.Done
+import akka.actor.ActorRef
 import de.thm.arsnova.shared.entities.FreetextAnswer
 
 object FreetextAnswerCommands {
@@ -10,6 +11,8 @@ object FreetextAnswerCommands {
     def roomId: UUID
     def questionId: UUID
   }
+
+  case class FreetextAnswerCommandWithRole(cmd: FreetextAnswerCommand, role: String, ret: ActorRef)
 
   case class GetFreetextAnswers(roomId: UUID, questionId: UUID) extends FreetextAnswerCommand
 

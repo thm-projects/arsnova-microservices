@@ -3,7 +3,7 @@ package de.thm.arsnova.roomservice
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
-import akka.pattern.ask
+import akka.pattern.{ask, pipe}
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
@@ -152,7 +152,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       choiceAnswerList += awu.id.get -> awu
       persist(ChoiceAnswerCreated(awu)) { e => e }
     }) (sender)
-    case DeleteChoiceAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteChoiceAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
       choiceAnswerList.get(id) match {
         case Some(a) => {
           if (a.userId == userId) {
@@ -162,16 +162,12 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             persist(ChoiceAnswerDeleted(a)) { e => e }
           } else {
             (userRegion ? GetRoleForRoom(userId, roomId)).mapTo[String] map { role =>
-              if (role == "owner") {
-                choiceAnswerList -= id
-                eventRegion ! RoomEventPackage(a.roomId, ChoiceAnswerDeleted(a))
-                ret ! Success(a)
-                persist(ChoiceAnswerDeleted(a)) { e => e }
-              } else {
-                ret ! Failure(InsufficientRights(role, "DeleteChoiceAnswer"))
-              }
-            }
+              ChoiceAnswerCommandWithRole(cmd, role, ret)
+            } pipeTo self
           }
+        }
+        case None => {
+          ret ! ResourceNotFound(s"choice answer $id")
         }
       }
     }) (sender)
@@ -192,6 +188,25 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       }
       ret ! ChoiceAnswerStatistics(count, abstentionCount)
     }) (sender)
+
+    case ChoiceAnswerCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case DeleteChoiceAnswer(roomId, questionId, id, userId) => {
+          choiceAnswerList.get(id) match {
+            case Some(a) => {
+              if (role == "owner") {
+                choiceAnswerList -= id
+                eventRegion ! RoomEventPackage(a.roomId, ChoiceAnswerDeleted(a))
+                ret ! Success(a)
+                persist(ChoiceAnswerDeleted(a)) { e => e }
+              } else {
+                ret ! Failure(InsufficientRights(role, "DeleteChoiceAnswer"))
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   def freetextContentCreated: Receive = {
@@ -209,7 +224,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       freetextAnswerList += awu.id.get -> awu
       persist(FreetextAnswerCreated(awu)) { e => e }
     }) (sender)
-    case DeleteFreetextAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteFreetextAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
       freetextAnswerList.get(id) match {
         case Some(a) => {
           if (a.userId == userId) {
@@ -219,16 +234,12 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             persist(FreetextAnswerDeleted(a)) { e => e }
           } else {
             (userRegion ? GetRoleForRoom(userId, roomId)).mapTo[String] map { role =>
-              if (role == "owner") {
-                freetextAnswerList -= id
-                eventRegion ! RoomEventPackage(a.roomId, FreetextAnswerDeleted(a))
-                ret ! Success(a)
-                persist(FreetextAnswerDeleted(a)) { e => e }
-              } else {
-                ret ! Failure(InsufficientRights(role, "DeleteFreetextAnswer"))
-              }
-            }
+              FreetextAnswerCommandWithRole(cmd, role, ret)
+            } pipeTo self
           }
+        }
+        case None => {
+          ret ! ResourceNotFound(s"choice answer $id")
         }
       }
     }) (sender)
@@ -236,5 +247,24 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       val list = freetextAnswerList.values.map(identity).toSeq
       ret ! list.map(FreetextAnswerExport(_))
     }) (sender)
+
+    case FreetextAnswerCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case DeleteFreetextAnswer(roomId, questionId, id, userId) => {
+          freetextAnswerList.get(id) match {
+            case Some(a) => {
+              if (role == "owner") {
+                freetextAnswerList -= id
+                eventRegion ! RoomEventPackage(a.roomId, FreetextAnswerDeleted(a))
+                ret ! Success(a)
+                persist(FreetextAnswerDeleted(a)) { e => e }
+              } else {
+                ret ! Failure(InsufficientRights(role, "DeleteChoiceAnswer"))
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

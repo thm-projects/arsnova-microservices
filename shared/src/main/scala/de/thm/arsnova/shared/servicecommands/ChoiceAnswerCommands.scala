@@ -3,6 +3,7 @@ package de.thm.arsnova.shared.servicecommands
 import java.util.UUID
 
 import akka.Done
+import akka.actor.ActorRef
 import de.thm.arsnova.shared.entities.ChoiceAnswer
 
 object ChoiceAnswerCommands {
@@ -10,6 +11,8 @@ object ChoiceAnswerCommands {
     def roomId: UUID
     def questionId: UUID
   }
+
+  case class ChoiceAnswerCommandWithRole(cmd: ChoiceAnswerCommand, role: String, ret: ActorRef)
 
   case class GetChoiceAnswers(roomId: UUID, questionId: UUID) extends ChoiceAnswerCommand
 
