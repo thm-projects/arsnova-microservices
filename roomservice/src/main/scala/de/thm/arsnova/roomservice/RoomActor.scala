@@ -15,13 +15,13 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ClusterSharding
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.entities.{Content, ContentGroup, Room, User, Comment}
+import de.thm.arsnova.shared.entities.{Comment, Content, ContentGroup, Room, User}
 import de.thm.arsnova.shared.events.RoomEvents._
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
-import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException}
+import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException, ResourceNotFound}
 import de.thm.arsnova.shared.entities.export.{ContentExport, RoomExport}
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.ContentEvents._
@@ -131,6 +131,10 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
     case DeleteRoom(id, userId) => {
       sender() ! NoSuchRoom(Left(id))
+    }
+
+    case _ => {
+      sender() ! ResourceNotFound("session")
     }
   }
 
