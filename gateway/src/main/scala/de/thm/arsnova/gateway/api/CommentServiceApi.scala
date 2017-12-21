@@ -39,7 +39,7 @@ trait CommentServiceApi extends BaseApi {
                 }
                 case false => {
                   (commentRegion ? GetCommentsByRoomId(roomId))
-                    .mapTo[Seq[Comment]]
+                    .mapTo[Try[Seq[Comment]]]
                 }
               }
             }

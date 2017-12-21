@@ -107,7 +107,7 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
         }
       }
     }
-    case GetExportList() => {
+    case GetExportList() => ((ret: ActorRef) => {
       val values: Seq[ContentGroup] = groups.values.map(identity).toSeq
       val cIds: Seq[UUID] = values.flatMap(_.contentIds)
       val contentListFutures: Seq[Future[Option[ContentExport]]] = cIds map { id =>
@@ -117,8 +117,8 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
         }
       }
       Future.sequence(contentListFutures).map { list =>
-        list.flatten
+        ret ! list.flatten
       }
-    }
+    }) (sender)
   }
 }

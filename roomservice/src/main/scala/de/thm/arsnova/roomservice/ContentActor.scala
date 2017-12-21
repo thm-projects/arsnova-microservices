@@ -115,13 +115,13 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
               }
             }
             export = export.copy(answerOptions = answerOptionExportList, abstentionCount = s.abstentions)
-            ret ! export
+            ret ! Success(export)
           }
         }
         case "freetext" => {
           (answerListActor ? GetFreetextStatistics(c.roomId, c.id.get)).mapTo[Seq[FreetextAnswerExport]].map { seq =>
             export = export.copy(answers = Some(seq))
-            ret ! export
+            ret ! Success(export)
           }
         }
       }

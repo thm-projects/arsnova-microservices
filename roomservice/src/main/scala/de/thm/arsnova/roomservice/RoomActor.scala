@@ -193,13 +193,15 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
           if (role == "owner") {
             val exported = RoomExport(state.get)
             val contentListFuture = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
-            val commentListFuture = (commentListRegion ? GetCommentsByRoomId(id)).mapTo[Seq[Comment]]
-            val ff: Future[(Seq[ContentExport], Seq[Comment])] = for {
+            val commentListFuture = (commentListRegion ? GetCommentsByRoomId(id)).mapTo[Try[Seq[Comment]]]
+            val ff: Future[(Seq[ContentExport], Try[Seq[Comment]])] = for {
               contentList <- contentListFuture
               commentList <- commentListFuture
             } yield (contentList, commentList)
             ff.map { t =>
-              val fullExport = exported.copy(content = t._1, comments = t._2)
+              val cc = t._1
+              val ccc = t._2.getOrElse(Nil)
+              val fullExport = exported.copy(content = cc, comments = ccc)
               ret ! Success(fullExport)
             }
           } else {
