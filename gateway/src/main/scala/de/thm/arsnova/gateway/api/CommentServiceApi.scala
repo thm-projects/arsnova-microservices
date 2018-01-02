@@ -51,7 +51,9 @@ trait CommentServiceApi extends BaseApi {
               complete {
                 (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
-                    (commentRegion ? CreateComment(roomId, comment, uId))
+                    val newId = Some(UUID.randomUUID())
+                    val withIds = comment.copy(roomId = roomId, id = newId, userId = uId)
+                    (commentRegion ? CreateComment(roomId, withIds, uId))
                       .mapTo[Try[Comment]]
                   }
                   case Failure(t) => Future.failed(t)
