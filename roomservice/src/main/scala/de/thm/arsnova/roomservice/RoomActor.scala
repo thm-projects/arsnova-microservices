@@ -84,16 +84,14 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       case ContentCreated(content) => {
         (contentGroupActor ? AddToGroup(content.group, content))
           .mapTo[collection.mutable.Map[String, ContentGroup]] map {cg =>
-          state = Some(state.get.copy(contentGroups = cg.toMap))
-          persist(RoomUpdated(state.get))(_)
-        }
+          UpdateContentGroups(cg.toMap)
+        } pipeTo self
       }
       case ContentDeleted(content) => {
         (contentGroupActor ? RemoveFromGroup(content.group, content))
           .mapTo[collection.mutable.Map[String, ContentGroup]] map {cg =>
-          state = Some(state.get.copy(contentGroups = cg.toMap))
-          persist(RoomUpdated(state.get))(_)
-        }
+          UpdateContentGroups(cg.toMap)
+        } pipeTo self
       }
     }
   }
@@ -164,6 +162,11 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     case GetContentListByRoomId(roomId, group) => ((ret: ActorRef) => {
       contentGroupActor ! SendContent(ret, group)
     }) (sender)
+
+    case UpdateContentGroups(groups) => {
+      state = Some(state.get.copy(contentGroups = groups))
+      persist(RoomUpdated(state.get))(e => e)
+    }
 
     case RoomCommandWithRole(cmd, role, ret) => {
       cmd match {

@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.Done
 import akka.actor.ActorRef
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
-import de.thm.arsnova.shared.entities.Room
+import de.thm.arsnova.shared.entities.{Room, ContentGroup}
 
 object RoomCommands {
   import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
@@ -37,4 +37,6 @@ object RoomCommands {
   case class AutoSortContentGroup(id: UUID, group: String) extends RoomCommand
 
   case class ExportRoom(id: UUID, userId: UUID) extends RoomCommand
+
+  case class UpdateContentGroups(groups: Map[String, ContentGroup])
 }
