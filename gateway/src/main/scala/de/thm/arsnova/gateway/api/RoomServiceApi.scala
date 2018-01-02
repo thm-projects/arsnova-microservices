@@ -128,6 +128,29 @@ trait RoomServiceApi extends BaseApi {
           }
         }
       }
+    } ~
+    pathPrefix("import") {
+      pathEndOrSingleSlash {
+        post {
+          headerValueByName("X-Session-Token") { token =>
+            entity(as[RoomExport]) { room =>
+              complete {
+                (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
+                  case Success(uId) => {
+                    (roomList ? GenerateEntry).mapTo[RoomListEntry].map { s =>
+                      val newRoom = Room(room)
+                      val completeRoom = newRoom.copy(id = Some(s.id), keyword = Some(s.keyword), userId = Some(uId))
+                      (roomRegion ? CreateRoom(completeRoom.id.get, completeRoom, uId))
+                        .mapTo[Try[Room]]
+                    }
+                  }
+                  case Failure(t) => Future.failed(t)
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
