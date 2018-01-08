@@ -49,9 +49,7 @@ trait RoomExportServiceApi extends BaseApi {
                 (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                   case Success(uId) => {
                     (roomList ? GenerateEntry).mapTo[RoomListEntry].map { s =>
-                      val newRoom = Room(room)
-                      val completeRoom = newRoom.copy(id = Some(s.id), keyword = Some(s.keyword), userId = Some(uId))
-                      (roomRegion ? CreateRoom(completeRoom.id.get, completeRoom, uId))
+                      (roomRegion ? ImportRoom(s.id, s.keyword, uId, room))
                         .mapTo[Try[Room]]
                     }
                   }

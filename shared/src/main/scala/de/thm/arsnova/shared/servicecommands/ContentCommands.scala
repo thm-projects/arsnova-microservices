@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.ActorRef
 import de.thm.arsnova.shared.entities.Content
+import de.thm.arsnova.shared.entities.export.ContentExport
 
 object ContentCommands {
   sealed trait ContentCommand extends ServiceCommand {
