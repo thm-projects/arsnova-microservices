@@ -9,11 +9,11 @@ import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions._
 import de.thm.arsnova.shared.entities.export.{AnswerOptionExport, ContentExport, FreetextAnswerExport}
-import de.thm.arsnova.shared.entities.{ChoiceAnswerStatistics, Content, Room, User}
+import de.thm.arsnova.shared.entities.{AnswerOption, ChoiceAnswerStatistics, Content, Room, User}
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted}
-import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.GetChoiceStatistics
+import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.{GetChoiceStatistics, ImportChoiceAnswers}
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands.GetFreetextStatistics
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.RoomCommands.GetRoom
@@ -44,16 +44,16 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
-  private var content: Option[Content] = None
+  private var state: Option[Content] = None
 
   override def persistenceId: String = self.path.parent.name + "-"  + self.path.name
 
   override def receiveRecover: Receive = {
     case ContentCreated(c) =>
-      content = Some(c)
+      state = Some(c)
       context.become(contentCreated)
     case ContentDeleted(c) =>
-      content = None
+      state = None
       context.become(initial)
   }
 
@@ -77,7 +77,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
     case CreateContent(id, c, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, c.roomId)).mapTo[String] map { role =>
         if (role == "owner") {
-          content = Some(c)
+          state = Some(c)
           ret ! Success(c)
           val e = ContentCreated(c)
           eventRegion ! RoomEventPackage(c.roomId, e)
@@ -88,6 +88,22 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
+    case Import(id, exportedContent) => ((ret: ActorRef) => {
+      var content = Content(exportedContent, id)
+      contentToType(content) match {
+        case "choice" => {
+          var index: Int = 0
+          val answerOptions: Seq[AnswerOption] = exportedContent.answerOptions.get.map { ao =>
+            val a = AnswerOption(ao, index, id)
+            index = index + 1
+            a
+          }
+          content = content.copy(answerOptions = Some(answerOptions))
+          answerListActor ! ImportChoiceAnswers(content.roomId, id, exportedContent.answerOptions.get)
+        }
+      }
+      state = Some(content)
+    }) (sender)
     case _ => {
       sender() ! Failure(ResourceNotFound("content"))
     }
@@ -95,16 +111,16 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
 
   def contentCreated: Receive = {
     case GetContent(id) => {
-      sender() ! Success(content.get)
+      sender() ! Success(state.get)
     }
     case cmd@DeleteContent(id, userId) => ((ret: ActorRef) => {
-      val c = content.get
+      val c = state.get
       (userRegion ? GetRoleForRoom(userId, c.roomId)).mapTo[String] map { role =>
         ContentCommandWithRole(cmd, role, ret)
       } pipeTo self
     }) (sender)
     case GetExport(id) => ((ret: ActorRef) => {
-      val c = content.get
+      val c = state.get
       var export = ContentExport(c)
       contentToType(c) match {
         case "choice" => {
@@ -130,9 +146,9 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
     case ContentCommandWithRole(cmd, role, ret) => {
       cmd match {
         case DeleteContent(id, userId) => {
-          val c = content.get
+          val c = state.get
           if (role == "owner") {
-            content = None
+            state = None
             ret ! Success(c)
             eventRegion ! RoomEventPackage(c.roomId, ContentDeleted(c))
             context.become(initial)

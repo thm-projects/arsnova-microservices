@@ -124,6 +124,16 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       eventRegion ! RoomEventPackage(id, RoomCreated(room))
       persist(RoomCreated(room))(_)
     }) (sender)
+    case ImportRoom(id, keyword, userId, exportedRoom) => ((ret: ActorRef) => {
+      val room = Room(exportedRoom).copy(id = Some(id), keyword = Some(keyword), userId = Some(userId))
+      state = Some(room)
+      exportedRoom.content map { contentExport =>
+
+      }
+
+      context.become(roomCreated)
+      persist(RoomCreated(room))(_)
+    }) (sender)
 
     case _ => {
       sender() ! ResourceNotFound("session")

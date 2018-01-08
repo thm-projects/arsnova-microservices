@@ -120,20 +120,13 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case cmd: FreetextAnswerCommand => {
-      // query question service just in case the content creation event got lost
-      (contentRegion ? GetContent(cmd.questionId))
-        .mapTo[Try[Content]] map {
-        case Success(c) => {
-          contentToType(c) match {
-            case "choice" => context.become(choiceContentCreated)
-            case "freetext" => context.become(freetextContentCreated)
-          }
-          context.self ! cmd
-          persist(ContentCreated(c)) { e => e }
-        }
-        case Failure(t) => sender() ! Failure(ResourceNotFound("question"))
-      }
+    case ImportChoiceAnswers(roomId, contentId, exportedAnswerOptions) => {
+      var index: Int = 0
+      answerOptions = Some(exportedAnswerOptions.map { ao =>
+        val a = AnswerOption(ao, index, contentId)
+        index = index + 1
+        a
+      })
     }
   }
 
