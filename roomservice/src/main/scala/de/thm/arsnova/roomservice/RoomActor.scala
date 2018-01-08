@@ -117,9 +117,6 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case GetRoom(id) => ((ret: ActorRef) => {
-      ret ! Failure(NoSuchRoom(Left(id)))
-    }) (sender)
     case CreateRoom(id, room, userId) => ((ret: ActorRef) => {
       state = Some(room)
       context.become(roomCreated)
@@ -127,9 +124,6 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       eventRegion ! RoomEventPackage(id, RoomCreated(room))
       persist(RoomCreated(room))(_)
     }) (sender)
-    case DeleteRoom(id, userId) => {
-      sender() ! NoSuchRoom(Left(id))
-    }
 
     case _ => {
       sender() ! ResourceNotFound("session")
