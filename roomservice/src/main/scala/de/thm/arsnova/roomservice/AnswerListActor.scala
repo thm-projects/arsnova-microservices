@@ -134,7 +134,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         val newId = UUID.randomUUID()
         val guestUser = GuestUser()
         val answer = FreetextAnswer(Some(newId), guestUser.id.get, contentId, roomId, eAnswer.subject, eAnswer.text)
-        
+        freetextAnswerList += newId -> answer
       }
     }
   }
