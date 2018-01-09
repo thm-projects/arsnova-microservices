@@ -128,6 +128,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         index = index + 1
         a
       })
+      context.become(choiceContentCreated)
     }
     case ImportFreetextAnswers(roomId, contentId, exportedAnswers) => {
       exportedAnswers.map { eAnswer =>
@@ -135,7 +136,9 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         val guestUser = GuestUser()
         val answer = FreetextAnswer(Some(newId), guestUser.id.get, contentId, roomId, eAnswer.subject, eAnswer.text)
         freetextAnswerList += newId -> answer
+        persistAsync(FreetextAnswerCreated(answer)) { e => e }
       }
+      context.become(freetextContentCreated)
     }
   }
 
