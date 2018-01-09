@@ -21,5 +21,5 @@ object ContentCommands {
 
   case class GetExport(id: UUID) extends ContentCommand
 
-  case class Import(id: UUID, exportedContent: ContentExport) extends ContentCommand
+  case class Import(id: UUID, roomId: UUID, exportedContent: ContentExport) extends ContentCommand
 }

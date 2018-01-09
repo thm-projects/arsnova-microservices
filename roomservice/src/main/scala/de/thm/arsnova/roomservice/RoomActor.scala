@@ -125,12 +125,27 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       persist(RoomCreated(room))(_)
     }) (sender)
     case ImportRoom(id, keyword, userId, exportedRoom) => ((ret: ActorRef) => {
-      val room = Room(exportedRoom).copy(id = Some(id), keyword = Some(keyword), userId = Some(userId))
-      state = Some(room)
+      var room = Room(exportedRoom).copy(id = Some(id), keyword = Some(keyword), userId = Some(userId))
+      var contentGroups = exportedRoom.contentGroups
       exportedRoom.content map { contentExport =>
-
+        val newContentId = UUID.randomUUID()
+        val oldContentId = contentExport.id
+        // save content
+        contentRegion ! Import(newContentId, id, contentExport)
+        // replace old id with new id
+        contentGroups = contentGroups map {
+          case (k, v) => {
+            val zipped = v.contentIds.zipWithIndex
+            val toReplace = zipped.find(_._1 == oldContentId)
+            val newIds = v.contentIds.updated(toReplace.get._2, newContentId)
+            k -> ContentGroup(v.autoSort, newIds)
+          }
+        }
       }
-
+      // tell content group actor about groups
+      contentGroupActor ! SetGroups(contentGroups)
+      room = room.copy(contentGroups = contentGroups)
+      state = Some(room)
       context.become(roomCreated)
       persist(RoomCreated(room))(_)
     }) (sender)

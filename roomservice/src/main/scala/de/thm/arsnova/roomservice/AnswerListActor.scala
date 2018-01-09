@@ -14,6 +14,7 @@ import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.FreetextAnswerEvents._
 import de.thm.arsnova.shared.events.RoomEventPackage
+import de.thm.arsnova.shared.global.GuestUser
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
@@ -127,6 +128,14 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         index = index + 1
         a
       })
+    }
+    case ImportFreetextAnswers(roomId, contentId, exportedAnswers) => {
+      exportedAnswers.map { eAnswer =>
+        val newId = UUID.randomUUID()
+        val guestUser = GuestUser()
+        val answer = FreetextAnswer(Some(newId), guestUser.id.get, contentId, roomId, eAnswer.subject, eAnswer.text)
+        
+      }
     }
   }
 

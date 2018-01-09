@@ -14,7 +14,7 @@ import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted}
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands.{GetChoiceStatistics, ImportChoiceAnswers}
-import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands.GetFreetextStatistics
+import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands.{GetFreetextStatistics, ImportFreetextAnswers}
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.RoomCommands.GetRoom
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -88,18 +88,30 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case Import(id, exportedContent) => ((ret: ActorRef) => {
-      var content = Content(exportedContent, id)
+    case Import(id, roomId, exportedContent) => ((ret: ActorRef) => {
+      var content = Content(exportedContent, roomId)
+      content = content.copy(id = Some(id))
       contentToType(content) match {
         case "choice" => {
-          var index: Int = 0
-          val answerOptions: Seq[AnswerOption] = exportedContent.answerOptions.get.map { ao =>
-            val a = AnswerOption(ao, index, id)
-            index = index + 1
-            a
+          exportedContent.answerOptions match {
+            case Some(options) => {
+              var index: Int = 0
+              val answerOptions: Seq[AnswerOption] = options.map { ao =>
+                val a = AnswerOption(ao, index, id)
+                index = index + 1
+                a
+              }
+              content = content.copy(answerOptions = Some(answerOptions))
+              answerListActor ! ImportChoiceAnswers(content.roomId, id, exportedContent.answerOptions.get)
+            }
           }
-          content = content.copy(answerOptions = Some(answerOptions))
-          answerListActor ! ImportChoiceAnswers(content.roomId, id, exportedContent.answerOptions.get)
+        }
+        case "freetext" => {
+          exportedContent.answers match {
+            case Some(answers) => {
+              answerListActor ! ImportFreetextAnswers(roomId, id, answers)
+            }
+          }
         }
       }
       state = Some(content)

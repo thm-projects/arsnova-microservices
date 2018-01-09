@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.Done
 import akka.actor.ActorRef
 import de.thm.arsnova.shared.entities.FreetextAnswer
+import de.thm.arsnova.shared.entities.export.FreetextAnswerExport
 
 object FreetextAnswerCommands {
   sealed trait FreetextAnswerCommand extends ServiceCommand {
@@ -23,4 +24,6 @@ object FreetextAnswerCommands {
   case class DeleteFreetextAnswer(roomId: UUID, questionId: UUID, id: UUID, userId: UUID) extends FreetextAnswerCommand
 
   case class GetFreetextStatistics(roomId: UUID, questionId: UUID) extends FreetextAnswerCommand
+
+  case class ImportFreetextAnswers(roomId: UUID, questionId: UUID, exportedAnswers: Seq[FreetextAnswerExport]) extends FreetextAnswerCommand
 }
