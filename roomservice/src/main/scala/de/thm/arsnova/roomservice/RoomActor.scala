@@ -152,7 +152,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
 
     case _ => {
-      sender() ! ResourceNotFound("session")
+      sender() ! Failure(ResourceNotFound("session"))
     }
   }
 
