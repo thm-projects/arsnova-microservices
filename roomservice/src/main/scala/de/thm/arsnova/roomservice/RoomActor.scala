@@ -148,6 +148,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       state = Some(room)
       context.become(roomCreated)
       persist(RoomCreated(room))(_)
+      ret ! Success(room)
     }) (sender)
 
     case _ => {
