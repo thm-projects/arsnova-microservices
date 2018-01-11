@@ -74,19 +74,10 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case CreateContent(id, c, userId) => ((ret: ActorRef) => {
+    case cmd@CreateContent(id, c, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, c.roomId)).mapTo[String] map { role =>
-        if (role == "owner") {
-          state = Some(c)
-          ret ! Success(c)
-          val e = ContentCreated(c)
-          eventRegion ! RoomEventPackage(c.roomId, e)
-          context.become(contentCreated)
-          persist(e)(_)
-        } else {
-          ret ! Failure(InsufficientRights(role, "Create Content"))
-        }
-      }
+        ContentCommandWithRole(cmd, role, ret)
+      } pipeTo self
     }) (sender)
     case Import(id, roomId, exportedContent) => ((ret: ActorRef) => {
       var content = Content(exportedContent, roomId)
@@ -116,6 +107,24 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
       }
       state = Some(content)
     }) (sender)
+
+    case ContentCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case CreateContent(id, c, userId) => {
+          if (role == "owner") {
+            state = Some(c)
+            ret ! Success(c)
+            val e = ContentCreated(c)
+            eventRegion ! RoomEventPackage(c.roomId, e)
+            context.become(contentCreated)
+            persist(e)(e => e)
+          } else {
+            ret ! Failure(InsufficientRights(role, "Create Content"))
+          }
+        }
+      }
+    }
+
     case _ => {
       sender() ! Failure(ResourceNotFound("content"))
     }
