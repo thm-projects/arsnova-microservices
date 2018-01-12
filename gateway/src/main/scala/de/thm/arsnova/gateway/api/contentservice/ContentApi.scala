@@ -47,17 +47,11 @@ trait ContentApi extends BaseApi {
           }
         } ~
         get {
-          parameters("group") { group =>
+          parameters("group".?) { group =>
             complete {
-              (roomRegion ? GetContentListByRoomIdAndGroup(roomId, group))
+              (roomRegion ? GetContentListByRoomId(roomId, group))
                 .mapTo[Seq[Content]].map(_.toJson)
             }
-          }
-        } ~
-        get {
-          complete {
-            (roomRegion ? GetContentListByRoomId(roomId))
-              .mapTo[Seq[Content]].map(_.toJson)
           }
         } ~
         post {

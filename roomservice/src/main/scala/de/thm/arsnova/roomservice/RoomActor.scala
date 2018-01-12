@@ -153,11 +153,8 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       }
     }) (sender)
 
-    case GetContentListByRoomIdAndGroup(roomId, group) => ((ret: ActorRef) => {
-      contentGroupActor ! SendContent(ret, Some(group))
-    }) (sender)
-    case GetContentListByRoomId(roomId) => ((ret: ActorRef) => {
-      contentGroupActor ! SendContent(ret, None)
+    case GetContentListByRoomId(roomId, group) => ((ret: ActorRef) => {
+      contentGroupActor ! SendContent(ret, group)
     }) (sender)
     case sep: RoomEventPackage => handleEvents(sep)
   }
