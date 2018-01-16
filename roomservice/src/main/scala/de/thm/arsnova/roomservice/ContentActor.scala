@@ -106,6 +106,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
       state = Some(content)
+      context.become(contentCreated)
       persist(ContentCreated(content))(e => e)
     }) (sender)
 
