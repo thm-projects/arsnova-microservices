@@ -106,6 +106,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
       state = Some(content)
+      persist(ContentCreated(content))(e => e)
     }) (sender)
 
     case ContentCommandWithRole(cmd, role, ret) => {

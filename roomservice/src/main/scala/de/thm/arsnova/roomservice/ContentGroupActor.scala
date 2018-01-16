@@ -36,6 +36,7 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
   }
 
   def getContentFromIds(ids: Seq[UUID]): Future[Seq[Content]] = {
+    // TODO: Failure handling
     val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
       (contentRegion ? GetContent(id)).mapTo[Try[Content]].map {
         case Success(content) => Some(content)
