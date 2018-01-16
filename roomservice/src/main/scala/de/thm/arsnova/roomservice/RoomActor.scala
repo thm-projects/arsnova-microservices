@@ -147,7 +147,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       room = room.copy(contentGroups = contentGroups)
       state = Some(room)
       context.become(roomCreated)
-      persist(RoomCreated(room))(_)
+      persist(RoomCreated(room))(e => e)
       ret ! Success(room)
     }) (sender)
 
