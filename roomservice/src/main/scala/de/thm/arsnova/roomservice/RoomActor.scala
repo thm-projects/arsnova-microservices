@@ -15,17 +15,19 @@ import akka.cluster.sharding.ShardRegion
 import akka.cluster.sharding.ClusterSharding
 import akka.cluster.sharding.ShardRegion.Passivate
 import akka.persistence.PersistentActor
-import de.thm.arsnova.shared.entities.{Content, ContentGroup, Room, User}
+import de.thm.arsnova.shared.entities.{Comment, Content, ContentGroup, Room, User}
 import de.thm.arsnova.shared.events.RoomEvents._
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
 import de.thm.arsnova.shared.Exceptions
-import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException}
+import de.thm.arsnova.shared.Exceptions.{InsufficientRights, NoSuchRoom, NoUserException, ResourceNotFound}
+import de.thm.arsnova.shared.entities.export.{ContentExport, RoomExport}
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.ContentEvents._
-import de.thm.arsnova.shared.servicecommands.ContentGroupCommands.{AddToGroup, RemoveFromGroup, SendContent}
-import de.thm.arsnova.shared.shards.{ContentShard, EventShard, UserShard}
+import de.thm.arsnova.shared.servicecommands.CommentCommands.GetCommentsByRoomId
+import de.thm.arsnova.shared.servicecommands.ContentGroupCommands._
+import de.thm.arsnova.shared.shards._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,6 +47,10 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   val contentRegion = ClusterSharding(context.system).shardRegion(ContentShard.shardName)
 
+  val answerListRegion = ClusterSharding(context.system).shardRegion(AnswerListShard.shardName)
+
+  val commentListRegion = ClusterSharding(context.system).shardRegion(CommentShard.shardName)
+
   val contentGroupActor = context.actorOf(ContentGroupActor.props(contentRegion))
 
   override def persistenceId: String = self.path.parent.name + "-" + self.path.name
@@ -58,9 +64,11 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     case RoomCreated(room) => {
       state = Some(room)
       context.become(roomCreated)
+      contentGroupActor ! SetGroups(room.contentGroups)
     }
     case RoomUpdated(room) => {
       state = Some(room)
+      contentGroupActor ! SetGroups(room.contentGroups)
     }
     case RoomDeleted(room) => {
       state = None
@@ -75,18 +83,23 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
     sep.event match {
       case ContentCreated(content) => {
         (contentGroupActor ? AddToGroup(content.group, content))
-          .mapTo[collection.mutable.HashMap[String, ContentGroup]] map {cg =>
-          state = Some(state.get.copy(contentGroups = cg.toMap))
-          persist(RoomUpdated(state.get))(_)
-        }
+          .mapTo[collection.mutable.Map[String, ContentGroup]] map {cg =>
+          UpdateContentGroups(cg.toMap)
+        } pipeTo self
       }
       case ContentDeleted(content) => {
         (contentGroupActor ? RemoveFromGroup(content.group, content))
-          .mapTo[collection.mutable.HashMap[String, ContentGroup]] map {cg =>
-          state = Some(state.get.copy(contentGroups = cg.toMap))
-          persist(RoomUpdated(state.get))(_)
-        }
+          .mapTo[collection.mutable.Map[String, ContentGroup]] map {cg =>
+          UpdateContentGroups(cg.toMap)
+        } pipeTo self
       }
+    }
+  }
+
+  def contentToType(content: Content): String = {
+    content.format match {
+      case "mc" => "choice"
+      case "freetext" => "freetext"
     }
   }
 
@@ -104,18 +117,42 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case GetRoom(id) => ((ret: ActorRef) => {
-      ret ! Failure(NoSuchRoom(Left(id)))
-    }) (sender)
     case CreateRoom(id, room, userId) => ((ret: ActorRef) => {
       state = Some(room)
       context.become(roomCreated)
       ret ! Success(room)
       eventRegion ! RoomEventPackage(id, RoomCreated(room))
-      persist(RoomCreated(room))(e => println(e))
+      persist(RoomCreated(room))(_)
     }) (sender)
-    case DeleteRoom(id, userId) => {
-      sender() ! NoSuchRoom(Left(id))
+    case ImportRoom(id, keyword, userId, exportedRoom) => ((ret: ActorRef) => {
+      var room = Room(exportedRoom).copy(id = Some(id), keyword = Some(keyword), userId = Some(userId))
+      var contentGroups = exportedRoom.contentGroups
+      exportedRoom.content map { contentExport =>
+        val newContentId = UUID.randomUUID()
+        val oldContentId = contentExport.id
+        // save content
+        contentRegion ! Import(newContentId, id, contentExport)
+        // replace old id with new id
+        contentGroups = contentGroups map {
+          case (k, v) => {
+            val zipped = v.contentIds.zipWithIndex
+            val toReplace = zipped.find(_._1 == oldContentId)
+            val newIds = v.contentIds.updated(toReplace.get._2, newContentId)
+            k -> ContentGroup(v.autoSort, newIds)
+          }
+        }
+      }
+      // tell content group actor about groups
+      contentGroupActor ! SetGroups(contentGroups)
+      room = room.copy(contentGroups = contentGroups)
+      state = Some(room)
+      context.become(roomCreated)
+      persist(RoomCreated(room))(e => e)
+      ret ! Success(room)
+    }) (sender)
+
+    case _ => {
+      sender() ! Failure(ResourceNotFound("session"))
     }
   }
 
@@ -126,36 +163,77 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
         case None => ret ! Failure(NoSuchRoom(Left(id)))
       }
     }) (sender)
-    case UpdateRoom(id, room, userId) => ((ret: ActorRef) => {
+    case c@ExportRoom(id, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
-        if (role == "owner") {
-          state = Some(room)
-          ret ! Success(room)
-          eventRegion ! RoomEventPackage(id, RoomUpdated(room))
-          persist(RoomUpdated(room))(e => println(e))
-        } else {
-          ret ! Failure(InsufficientRights(role, "Update Room"))
-        }
-      }
+        RoomCommandWithRole(c, role, ret)
+      } pipeTo self
     }) (sender)
-    case DeleteRoom(id, userId) => ((ret: ActorRef) => {
+    case c@UpdateRoom(id, room, userId) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
-        if (role == "owner") {
-          ret ! Success(state.get)
-          val e = RoomDeleted(state.get)
-          state = None
-          context.become(initial)
-          eventRegion ! RoomEventPackage(id, e)
-          persist(e)(e => e)
-        } else {
-          ret ! Failure(InsufficientRights(role, "Delete Room"))
-        }
-      }
+        RoomCommandWithRole(c, role, ret)
+      } pipeTo self
+    }) (sender)
+    case c@DeleteRoom(id, userId) => ((ret: ActorRef) => {
+      (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
+        RoomCommandWithRole(c, role, ret)
+      } pipeTo self
     }) (sender)
 
     case GetContentListByRoomId(roomId, group) => ((ret: ActorRef) => {
       contentGroupActor ! SendContent(ret, group)
     }) (sender)
+
+    case UpdateContentGroups(groups) => {
+      state = Some(state.get.copy(contentGroups = groups))
+      persist(RoomUpdated(state.get))(e => e)
+    }
+
+    case RoomCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case UpdateRoom(id, room, userId) => {
+          if (role == "owner") {
+            state = Some(room)
+            ret ! Success(room)
+            eventRegion ! RoomEventPackage(id, RoomUpdated(room))
+            persist(RoomUpdated(room))(e => println("yay"))
+          } else {
+            ret ! Failure(InsufficientRights(role, "Update Room"))
+          }
+        }
+        case DeleteRoom(id, userId) => {
+          if (role == "owner") {
+            ret ! Success(state.get)
+            val e = RoomDeleted(state.get)
+            state = None
+            context.become(initial)
+            eventRegion ! RoomEventPackage(id, e)
+            persist(e)(e => e)
+          } else {
+            ret ! Failure(InsufficientRights(role, "Delete Room"))
+          }
+        }
+        case ExportRoom(id, userId) => {
+          if (role == "owner") {
+            val exported = RoomExport(state.get)
+            val contentListFuture = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
+            val commentListFuture = (commentListRegion ? GetCommentsByRoomId(id)).mapTo[Try[Seq[Comment]]]
+            val ff: Future[(Seq[ContentExport], Try[Seq[Comment]])] = for {
+              contentList <- contentListFuture
+              commentList <- commentListFuture
+            } yield (contentList, commentList)
+            ff.map { t =>
+              val cc = t._1
+              val ccc = t._2.getOrElse(Nil)
+              val fullExport = exported.copy(content = cc, comments = ccc)
+              ret ! Success(fullExport)
+            }
+          } else {
+            ret ! Failure(InsufficientRights(role, "Export Room"))
+          }
+        }
+      }
+    }
+
     case sep: RoomEventPackage => handleEvents(sep)
   }
 }

@@ -3,21 +3,23 @@ package de.thm.arsnova.roomservice
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
-import akka.pattern.ask
+import akka.pattern.{ask, pipe}
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
 import de.thm.arsnova.shared.Exceptions.{InsufficientRights, ResourceNotFound}
-import de.thm.arsnova.shared.entities.{ChoiceAnswer, Content, FreetextAnswer, User}
+import de.thm.arsnova.shared.entities._
+import de.thm.arsnova.shared.entities.export.FreetextAnswerExport
 import de.thm.arsnova.shared.events.ChoiceAnswerEvents._
 import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.FreetextAnswerEvents._
 import de.thm.arsnova.shared.events.RoomEventPackage
+import de.thm.arsnova.shared.global.GuestUser
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.ContentCommands._
 import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands.GetRoleForRoom
-import de.thm.arsnova.shared.shards.{EventShard, ContentShard, UserShard}
+import de.thm.arsnova.shared.shards.{ContentShard, EventShard, UserShard}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,6 +46,8 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
+  var answerOptions: Option[Seq[AnswerOption]] = None
+
   private val choiceAnswerList: collection.mutable.HashMap[UUID, ChoiceAnswer] =
     collection.mutable.HashMap.empty[UUID, ChoiceAnswer]
   private val freetextAnswerList: collection.mutable.HashMap[UUID, FreetextAnswer] =
@@ -54,6 +58,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       contentToType(content) match {
         case "choice" => {
           context.become(choiceContentCreated)
+          answerOptions = content.answerOptions
         }
         case "freetext" => {
           context.become(freetextContentCreated)
@@ -64,6 +69,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       context.become(initial)
       choiceAnswerList.clear()
       freetextAnswerList.clear()
+      answerOptions = None
     }
 
     case ChoiceAnswerCreated(answer) => {
@@ -89,6 +95,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         contentToType(content) match {
           case "choice" => {
             context.become(choiceContentCreated)
+            answerOptions = content.answerOptions
           }
           case "freetext" => {
             context.become(freetextContentCreated)
@@ -99,6 +106,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       case ContentDeleted(content) => {
         choiceAnswerList.clear()
         freetextAnswerList.clear()
+        answerOptions = None
         persist(ContentDeleted(content))(e => e)
       }
     }
@@ -113,20 +121,24 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case cmd: FreetextAnswerCommand => {
-      // query question service just in case the content creation event got lost
-      (contentRegion ? GetContent(cmd.questionId))
-        .mapTo[Try[Content]] map {
-        case Success(c) => {
-          contentToType(c) match {
-            case "choice" => context.become(choiceContentCreated)
-            case "freetext" => context.become(freetextContentCreated)
-          }
-          context.self ! cmd
-          persist(ContentCreated(c)) { e => e }
-        }
-        case Failure(t) => sender() ! Failure(ResourceNotFound("question"))
+    case ImportChoiceAnswers(roomId, contentId, exportedAnswerOptions) => {
+      var index: Int = 0
+      answerOptions = Some(exportedAnswerOptions.map { ao =>
+        val a = AnswerOption(ao, index, contentId)
+        index = index + 1
+        a
+      })
+      context.become(choiceContentCreated)
+    }
+    case ImportFreetextAnswers(roomId, contentId, exportedAnswers) => {
+      exportedAnswers.map { eAnswer =>
+        val newId = UUID.randomUUID()
+        val guestUser = GuestUser()
+        val answer = FreetextAnswer(Some(newId), guestUser.id.get, contentId, roomId, eAnswer.subject, eAnswer.text)
+        freetextAnswerList += newId -> answer
+        persistAsync(FreetextAnswerCreated(answer)) { e => e }
       }
+      context.become(freetextContentCreated)
     }
   }
 
@@ -145,7 +157,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       choiceAnswerList += awu.id.get -> awu
       persist(ChoiceAnswerCreated(awu)) { e => e }
     }) (sender)
-    case DeleteChoiceAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteChoiceAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
       choiceAnswerList.get(id) match {
         case Some(a) => {
           if (a.userId == userId) {
@@ -155,6 +167,38 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             persist(ChoiceAnswerDeleted(a)) { e => e }
           } else {
             (userRegion ? GetRoleForRoom(userId, roomId)).mapTo[String] map { role =>
+              ChoiceAnswerCommandWithRole(cmd, role, ret)
+            } pipeTo self
+          }
+        }
+        case None => {
+          ret ! ResourceNotFound(s"choice answer $id")
+        }
+      }
+    }) (sender)
+    case GetChoiceStatistics(roomId, questionId) => ((ret: ActorRef) => {
+      val list = choiceAnswerList.values.map(identity).toSeq
+      var abstentionCount = 0
+      val count: Array[Int] = new Array[Int](answerOptions.get.size)
+      list.map { a =>
+        if (a.abstention) {
+          abstentionCount += 1
+        } else {
+          a.answerIndexes.map { seq =>
+            seq.map { i =>
+              count(i) += 1
+            }
+          }
+        }
+      }
+      ret ! ChoiceAnswerStatistics(count, abstentionCount)
+    }) (sender)
+
+    case ChoiceAnswerCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case DeleteChoiceAnswer(roomId, questionId, id, userId) => {
+          choiceAnswerList.get(id) match {
+            case Some(a) => {
               if (role == "owner") {
                 choiceAnswerList -= id
                 eventRegion ! RoomEventPackage(a.roomId, ChoiceAnswerDeleted(a))
@@ -167,7 +211,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
           }
         }
       }
-    }) (sender)
+    }
   }
 
   def freetextContentCreated: Receive = {
@@ -185,7 +229,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       freetextAnswerList += awu.id.get -> awu
       persist(FreetextAnswerCreated(awu)) { e => e }
     }) (sender)
-    case DeleteFreetextAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteFreetextAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
       freetextAnswerList.get(id) match {
         case Some(a) => {
           if (a.userId == userId) {
@@ -195,18 +239,37 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             persist(FreetextAnswerDeleted(a)) { e => e }
           } else {
             (userRegion ? GetRoleForRoom(userId, roomId)).mapTo[String] map { role =>
+              FreetextAnswerCommandWithRole(cmd, role, ret)
+            } pipeTo self
+          }
+        }
+        case None => {
+          ret ! ResourceNotFound(s"choice answer $id")
+        }
+      }
+    }) (sender)
+    case GetFreetextStatistics(roomId, questionId) => ((ret: ActorRef) => {
+      val list = freetextAnswerList.values.map(identity).toSeq
+      ret ! list.map(FreetextAnswerExport(_))
+    }) (sender)
+
+    case FreetextAnswerCommandWithRole(cmd, role, ret) => {
+      cmd match {
+        case DeleteFreetextAnswer(roomId, questionId, id, userId) => {
+          freetextAnswerList.get(id) match {
+            case Some(a) => {
               if (role == "owner") {
                 freetextAnswerList -= id
                 eventRegion ! RoomEventPackage(a.roomId, FreetextAnswerDeleted(a))
                 ret ! Success(a)
                 persist(FreetextAnswerDeleted(a)) { e => e }
               } else {
-                ret ! Failure(InsufficientRights(role, "DeleteFreetextAnswer"))
+                ret ! Failure(InsufficientRights(role, "DeleteChoiceAnswer"))
               }
             }
           }
         }
       }
-    }) (sender)
+    }
   }
 }

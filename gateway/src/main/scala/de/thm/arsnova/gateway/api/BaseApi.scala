@@ -5,7 +5,7 @@ import akka.actor.Props
 import scala.concurrent.duration._
 import akka.util.Timeout
 import akka.cluster.sharding.ClusterSharding
-import de.thm.arsnova.gateway.AuthServiceClientActor
+import de.thm.arsnova.gateway.{AuthServiceClientActor, RoomListClientActor}
 import de.thm.arsnova.shared.shards._
 
 trait BaseApi {
@@ -19,6 +19,7 @@ trait BaseApi {
   // actor for every command
   val remoteCommander = system.actorSelection("akka://CommandService@127.0.0.1:8880/user/commander")
   val authClient = system.actorOf(Props[AuthServiceClientActor], name = "authClient")
+  val roomList = system.actorOf(Props[RoomListClientActor], name = "roomlist")
   
   val userRegion = ClusterSharding(system).startProxy(
     typeName = UserShard.shardName,

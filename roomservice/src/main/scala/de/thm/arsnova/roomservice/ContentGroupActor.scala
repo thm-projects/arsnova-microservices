@@ -7,9 +7,10 @@ import scala.concurrent.duration._
 import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import de.thm.arsnova.shared.entities.export.ContentExport
 import de.thm.arsnova.shared.servicecommands.ContentGroupCommands._
 import de.thm.arsnova.shared.entities.{Content, ContentGroup, Room, User}
-import de.thm.arsnova.shared.servicecommands.ContentCommands.GetContent
+import de.thm.arsnova.shared.servicecommands.ContentCommands._
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -24,11 +25,18 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
 
-  val groups: collection.mutable.HashMap[String, ContentGroup] =
-    collection.mutable.HashMap.empty[String, ContentGroup]
+  var groups: collection.mutable.Map[String, ContentGroup] =
+    collection.mutable.Map.empty[String, ContentGroup]
 
+  def contentToType(content: Content): String = {
+    content.format match {
+      case "mc" => "choice"
+      case "freetext" => "freetext"
+    }
+  }
 
   def getContentFromIds(ids: Seq[UUID]): Future[Seq[Content]] = {
+    // TODO: Failure handling
     val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
       (contentRegion ? GetContent(id)).mapTo[Try[Content]].map {
         case Success(content) => Some(content)
@@ -41,6 +49,9 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
   }
 
   def receive: Receive = {
+    case SetGroups(g) => {
+      groups = collection.mutable.Map(g.toSeq: _*)
+    }
     case AddToGroup(group: String, content: Content) => ((ret: ActorRef) => {
       groups.get(group) match {
         // add to existing group
@@ -97,5 +108,18 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
         }
       }
     }
+    case GetExportList() => ((ret: ActorRef) => {
+      val values: Seq[ContentGroup] = groups.values.map(identity).toSeq
+      val cIds: Seq[UUID] = values.flatMap(_.contentIds)
+      val contentListFutures: Seq[Future[Option[ContentExport]]] = cIds map { id =>
+        (contentRegion ? GetExport(id)).mapTo[Try[ContentExport]].map {
+          case Success(content) => Some(content)
+          case Failure(t) => None
+        }
+      }
+      Future.sequence(contentListFutures).map { list =>
+        ret ! list.flatten
+      }
+    }) (sender)
   }
 }

@@ -7,5 +7,6 @@ case class ChoiceAnswer(
   userId: UUID,
   contentId: UUID,
   roomId: UUID,
-  answerOptionId: UUID
+  answerIndexes: Option[Seq[Int]],
+  abstention: Boolean
 )

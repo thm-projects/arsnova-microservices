@@ -1,12 +1,10 @@
-package de.thm.arsnova.shared.entities
+package de.thm.arsnova.shared.entities.export
 
 import java.util.UUID
+import de.thm.arsnova.shared.entities.{Content, FormatAttributes}
 
-import de.thm.arsnova.shared.entities.export.ContentExport
-
-case class Content(
-  id: Option[UUID],
-  roomId: UUID,
+case class ContentExport(
+  id: UUID,
   subject: String,
   content: String,
   format: String,
@@ -19,14 +17,15 @@ case class Content(
   showAnswer: Boolean,
   abstentionAllowed: Boolean,
   formatAttributes: Option[FormatAttributes],
-  answerOptions: Option[Seq[AnswerOption]]
+  answerOptions: Option[Seq[AnswerOptionExport]],
+  answers: Option[Seq[FreetextAnswerExport]],
+  abstentionCount: Int
 )
 
-object Content {
-  def apply(c: ContentExport, roomId: UUID, optionalAnswerOptions: Option[Seq[AnswerOption]] = None): Content =
-    Content(
-      None,
-      roomId,
+object ContentExport {
+  def apply(c: Content): ContentExport =
+    ContentExport(
+      c.id.get,
       c.subject,
       c.content,
       c.format,
@@ -39,6 +38,8 @@ object Content {
       c.showAnswer,
       c.abstentionAllowed,
       c.formatAttributes,
-      optionalAnswerOptions
+      None,
+      None,
+      0
     )
 }

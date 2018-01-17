@@ -1,7 +1,7 @@
 package de.thm.arsnova.gateway.api
 
 import de.thm.arsnova.gateway.RoomListClientActor
-import de.thm.arsnova.shared.entities.{Room, RoomListEntry, ContentGroup}
+import de.thm.arsnova.shared.entities.{ContentGroup, Room, RoomListEntry}
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.roomservice.RoomActor
@@ -24,6 +24,7 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.routing.RandomPool
 import akka.routing.RandomGroup
 import de.thm.arsnova.shared.Exceptions._
+import de.thm.arsnova.shared.entities.export.RoomExport
 import spray.json._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
 import de.thm.arsnova.shared.servicecommands.UserCommands._
@@ -37,8 +38,6 @@ trait RoomServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
   import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
-
-  val roomList = system.actorOf(Props[RoomListClientActor], name = "roomlist")
 
   val roomApi = pathPrefix("room") {
     pathEndOrSingleSlash {
