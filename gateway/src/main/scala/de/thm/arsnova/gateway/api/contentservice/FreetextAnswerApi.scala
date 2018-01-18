@@ -22,12 +22,12 @@ trait FreetextAnswerApi extends BaseApi {
     optionalHeaderValueByName("X-Session-Token") { tokenstring =>
       pathPrefix(JavaUUID) { roomId =>
         pathPrefix("content") {
-          pathPrefix(JavaUUID) { questionId =>
+          pathPrefix(JavaUUID) { contentId =>
             pathPrefix("freetextanswer") {
               pathPrefix(JavaUUID) { answerId =>
                 get {
                   complete {
-                    (answerListRegion ? GetFreetextAnswer(roomId, questionId, answerId))
+                    (answerListRegion ? GetFreetextAnswer(roomId, contentId, answerId))
                       .mapTo[Option[FreetextAnswer]]
                   }
                 } ~
@@ -36,7 +36,7 @@ trait FreetextAnswerApi extends BaseApi {
                     complete {
                       (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                         case Success(uId) => {
-                          (answerListRegion ? DeleteFreetextAnswer(roomId, questionId, answerId, uId))
+                          (answerListRegion ? DeleteFreetextAnswer(roomId, contentId, answerId, uId))
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)
@@ -47,7 +47,7 @@ trait FreetextAnswerApi extends BaseApi {
               } ~
               get {
                 complete {
-                  (answerListRegion ? GetFreetextAnswers(roomId, questionId))
+                  (answerListRegion ? GetFreetextAnswers(roomId, contentId))
                     .mapTo[Seq[FreetextAnswer]]
                 }
               } ~
@@ -57,7 +57,7 @@ trait FreetextAnswerApi extends BaseApi {
                     complete {
                       (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                         case Success(uId) => {
-                          (answerListRegion ? CreateFreetextAnswer(roomId, questionId, answer, uId))
+                          (answerListRegion ? CreateFreetextAnswer(roomId, contentId, answer, uId))
                             .mapTo[Try[FreetextAnswer]]
                         }
                         case Failure(t) => Future.failed(t)
