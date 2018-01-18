@@ -10,7 +10,7 @@ trait ContentServiceApi
   with FreetextAnswerApi {
 
   val contentServiceApi =
-    contentApi ~
     choiceAnswerApi ~
-    freetextAnswerApi
+    freetextAnswerApi ~
+    contentApi
 }
