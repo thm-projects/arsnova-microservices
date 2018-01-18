@@ -21,7 +21,7 @@ trait FreetextAnswerApi extends BaseApi {
   val freetextAnswerApi = pathPrefix("room") {
     optionalHeaderValueByName("X-Session-Token") { tokenstring =>
       pathPrefix(JavaUUID) { roomId =>
-        pathPrefix("question") {
+        pathPrefix("content") {
           pathPrefix(JavaUUID) { questionId =>
             pathPrefix("freetextanswer") {
               pathPrefix(JavaUUID) { answerId =>

@@ -25,7 +25,7 @@ trait ChoiceAnswerApi extends BaseApi {
 
   val choiceAnswerApi = pathPrefix("room") {
     pathPrefix(JavaUUID) { roomId =>
-      pathPrefix("question") {
+      pathPrefix("content") {
         pathPrefix(JavaUUID) { questionId =>
           pathPrefix("choiceanswer") {
             pathPrefix(JavaUUID) { answerId =>
