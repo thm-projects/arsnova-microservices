@@ -150,10 +150,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case GetChoiceAnswer(roomId, questionId, id) => {
       sender() ! choiceAnswerList.get(id)
     }
-    case CreateChoiceAnswer(roomId, questionId, answer, userId) => ((ret: ActorRef) => {
-      val awu = answer.copy(userId = userId)
+    case CreateChoiceAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
+      val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId))
       ret ! Success(awu)
-      eventRegion ! RoomEventPackage(awu.roomId, ChoiceAnswerCreated(awu))
+      eventRegion ! RoomEventPackage(roomId, ChoiceAnswerCreated(awu))
       choiceAnswerList += awu.id.get -> awu
       persist(ChoiceAnswerCreated(awu)) { e => e }
     }) (sender)
@@ -162,7 +162,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         case Some(a) => {
           if (a.userId == userId) {
             choiceAnswerList -= id
-            eventRegion ! RoomEventPackage(a.roomId, ChoiceAnswerDeleted(a))
+            eventRegion ! RoomEventPackage(a.roomId.get, ChoiceAnswerDeleted(a))
             ret ! Success(a)
             persist(ChoiceAnswerDeleted(a)) { e => e }
           } else {
@@ -201,7 +201,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             case Some(a) => {
               if (role == "owner") {
                 choiceAnswerList -= id
-                eventRegion ! RoomEventPackage(a.roomId, ChoiceAnswerDeleted(a))
+                eventRegion ! RoomEventPackage(a.roomId.get, ChoiceAnswerDeleted(a))
                 ret ! Success(a)
                 persist(ChoiceAnswerDeleted(a)) { e => e }
               } else {
