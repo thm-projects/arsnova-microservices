@@ -134,7 +134,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       exportedAnswers.map { eAnswer =>
         val newId = UUID.randomUUID()
         val guestUser = GuestUser()
-        val answer = FreetextAnswer(Some(newId), guestUser.id.get, contentId, roomId, eAnswer.subject, eAnswer.text)
+        val answer = FreetextAnswer(Some(newId), guestUser.id, Some(contentId), Some(roomId), eAnswer.subject, eAnswer.text)
         freetextAnswerList += newId -> answer
         persistAsync(FreetextAnswerCreated(answer)) { e => e }
       }
@@ -222,10 +222,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case GetFreetextAnswer(roomId, questionId, id) => {
       sender() ! freetextAnswerList.get(id)
     }
-    case CreateFreetextAnswer(roomId, questionId, answer, userId) => ((ret: ActorRef) => {
-      val awu = answer.copy(userId = userId)
+    case CreateFreetextAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
+      val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId))
       ret ! Success(awu)
-      eventRegion ! RoomEventPackage(awu.roomId, FreetextAnswerCreated(awu))
+      eventRegion ! RoomEventPackage(roomId, FreetextAnswerCreated(awu))
       freetextAnswerList += awu.id.get -> awu
       persist(FreetextAnswerCreated(awu)) { e => e }
     }) (sender)
@@ -234,7 +234,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         case Some(a) => {
           if (a.userId == userId) {
             freetextAnswerList -= id
-            eventRegion ! RoomEventPackage(a.roomId, FreetextAnswerDeleted(a))
+            eventRegion ! RoomEventPackage(a.roomId.get, FreetextAnswerDeleted(a))
             ret ! Success(a)
             persist(FreetextAnswerDeleted(a)) { e => e }
           } else {
@@ -260,7 +260,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             case Some(a) => {
               if (role == "owner") {
                 freetextAnswerList -= id
-                eventRegion ! RoomEventPackage(a.roomId, FreetextAnswerDeleted(a))
+                eventRegion ! RoomEventPackage(a.roomId.get, FreetextAnswerDeleted(a))
                 ret ! Success(a)
                 persist(FreetextAnswerDeleted(a)) { e => e }
               } else {

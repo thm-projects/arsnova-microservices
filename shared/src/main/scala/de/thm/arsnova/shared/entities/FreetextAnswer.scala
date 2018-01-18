@@ -4,9 +4,9 @@ import java.util.UUID
 
 case class FreetextAnswer(
   id: Option[UUID],
-  userId: UUID,
-  contentId: UUID,
-  roomId: UUID,
+  userId: Option[UUID],
+  contentId: Option[UUID],
+  roomId: Option[UUID],
   subject: String,
   text: String
 )
