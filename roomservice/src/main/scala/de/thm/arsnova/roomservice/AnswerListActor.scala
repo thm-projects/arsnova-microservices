@@ -48,6 +48,8 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   var answerOptions: Option[Seq[AnswerOption]] = None
 
+  var votingRound: Int = 0
+
   private val choiceAnswerList: collection.mutable.HashMap[UUID, ChoiceAnswer] =
     collection.mutable.HashMap.empty[UUID, ChoiceAnswer]
   private val freetextAnswerList: collection.mutable.HashMap[UUID, FreetextAnswer] =
@@ -151,7 +153,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       sender() ! choiceAnswerList.get(id)
     }
     case CreateChoiceAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
-      val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId))
+      val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId), round = Some(votingRound))
       ret ! Success(awu)
       eventRegion ! RoomEventPackage(roomId, ChoiceAnswerCreated(awu))
       choiceAnswerList += awu.id.get -> awu
