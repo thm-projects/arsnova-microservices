@@ -18,6 +18,7 @@ case class Content(
   showStatistic: Boolean,
   showAnswer: Boolean,
   abstentionAllowed: Boolean,
+  votingRound: Int,
   formatAttributes: Option[FormatAttributes],
   answerOptions: Option[Seq[AnswerOption]]
 )
@@ -38,6 +39,7 @@ object Content {
       c.showStatistic,
       c.showAnswer,
       c.abstentionAllowed,
+      0,
       c.formatAttributes,
       optionalAnswerOptions
     )

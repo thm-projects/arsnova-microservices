@@ -30,5 +30,5 @@ object ContentJsonProtocol extends DefaultJsonProtocol with UUIDFormat {
       }
     }
   }
-  implicit val contentFormat: RootJsonFormat[Content] = jsonFormat15(Content.apply)
+  implicit val contentFormat: RootJsonFormat[Content] = jsonFormat16(Content.apply)
 }
