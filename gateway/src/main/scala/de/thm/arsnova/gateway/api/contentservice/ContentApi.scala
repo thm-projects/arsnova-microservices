@@ -44,6 +44,21 @@ trait ContentApi extends BaseApi {
                 }
               }
             }
+          } ~
+          put {
+            parameters("round".as[Int]) { round =>
+              headerValueByName("X-Session-Token") { token =>
+                complete {
+                  (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
+                    case Success(uId) => {
+                      (contentRegion ? SetRound(contentId, round))
+                        .mapTo[Try[Int]]
+                    }
+                    case Failure(t) => Future.failed(t)
+                  }
+                }
+              }
+            }
           }
         } ~
         get {

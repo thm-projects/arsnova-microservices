@@ -22,4 +22,6 @@ object ContentCommands {
   case class GetExport(id: UUID) extends ContentCommand
 
   case class Import(id: UUID, roomId: UUID, exportedContent: ContentExport) extends ContentCommand
+
+  case class SetRound(id: UUID, round: Int) extends ContentCommand
 }
