@@ -1,7 +1,7 @@
 package de.thm.arsnova.eventservice
 
 import akka.actor.ActorRef
-import de.thm.arsnova.shared.events.ContentEvents.{ContentCreated, ContentDeleted}
+import de.thm.arsnova.shared.events.ContentEvents._
 import de.thm.arsnova.shared.events.RoomEventPackage
 import de.thm.arsnova.shared.events.RoomEvents.{RoomCreated, RoomDeleted}
 
@@ -28,6 +28,9 @@ object BasicEventRouting {
       case ContentDeleted(content) => {
         roomRegion ! RoomEventPackage(content.roomId, sep.event)
         answerListRegion ! RoomEventPackage(content.id.get, sep.event)
+      }
+      case NewRound(contentId, round) => {
+        answerListRegion ! RoomEventPackage(contentId, sep.event)
       }
     }
   }

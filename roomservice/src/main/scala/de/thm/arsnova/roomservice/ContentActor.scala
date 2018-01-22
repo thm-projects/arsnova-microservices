@@ -192,8 +192,9 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           if (role == "owner") {
             val updated = c.copy(votingRound = round)
             state = Some(updated)
-            persist(ContentUpdated(updated))(e => e)
             ret ! Success(round)
+            eventRegion ! RoomEventPackage(c.roomId, NewRound(contentId, round))
+            persist(ContentUpdated(updated))(e => e)
           } else {
             ret ! Failure(InsufficientRights(role, "Delete Content"))
           }

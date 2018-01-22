@@ -73,6 +73,9 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       freetextAnswerList.clear()
       answerOptions = None
     }
+    case NewRound(contentId, round) => {
+      votingRound = round
+    }
 
     case ChoiceAnswerCreated(answer) => {
       choiceAnswerList += answer.id.get -> answer
@@ -110,6 +113,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         freetextAnswerList.clear()
         answerOptions = None
         persist(ContentDeleted(content))(e => e)
+      }
+      case e@NewRound(contentId, round) => {
+        votingRound = round
+        persist(e)(e => e)
       }
     }
   }
