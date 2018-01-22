@@ -52,7 +52,7 @@ trait ContentApi extends BaseApi {
                   (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                     case Success(uId) => {
                       (contentRegion ? SetRound(contentId, round))
-                        .mapTo[Try[Int]]
+                        .mapTo[Try[Int]].map(_.toJson)
                     }
                     case Failure(t) => Future.failed(t)
                   }
