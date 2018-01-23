@@ -145,7 +145,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         val guestUser = GuestUser()
         val answer = FreetextAnswer(Some(newId), guestUser.id, Some(contentId), Some(roomId), eAnswer.subject, eAnswer.text)
         freetextAnswerList += newId -> answer
-        persistAsync(FreetextAnswerCreated(answer)) { e => e }
+        persistAsync(FreetextAnswerCreated(answer))(e => e)
       }
       context.become(freetextContentCreated)
     }
@@ -169,7 +169,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case cmd@DeleteChoiceAnswer(roomId, contentId, id, userId) => ((ret: ActorRef) => {
       choiceAnswerList.get(id) match {
         case Some(a) => {
-          if (a.userId == userId) {
+          if (a.userId.get == userId) {
             choiceAnswerList -= id
             eventRegion ! RoomEventPackage(a.roomId.get, ChoiceAnswerDeleted(a))
             ret ! Success(a)
@@ -241,7 +241,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case cmd@DeleteFreetextAnswer(roomId, contentId, id, userId) => ((ret: ActorRef) => {
       freetextAnswerList.get(id) match {
         case Some(a) => {
-          if (a.userId == userId) {
+          if (a.userId.get == userId) {
             freetextAnswerList -= id
             eventRegion ! RoomEventPackage(a.roomId.get, FreetextAnswerDeleted(a))
             ret ! Success(a)
