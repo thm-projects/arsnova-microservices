@@ -203,6 +203,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       ret ! ChoiceAnswerStatistics(count, abstentionCount)
     }) (sender)
 
+    case GetTransitions(contentId, roundA, roundB) => ((ret: ActorRef) => {
+
+    }) (sender)
+
     case ChoiceAnswerCommandWithRole(cmd, role, ret) => {
       cmd match {
         case DeleteChoiceAnswer(roomId, contentId, id, userId) => {

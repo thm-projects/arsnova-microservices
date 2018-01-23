@@ -26,5 +26,5 @@ object ChoiceAnswerCommands {
 
   case class ImportChoiceAnswers(contentId: UUID, roomId: UUID, exportedAnswerOptions: Seq[AnswerOptionExport]) extends ChoiceAnswerCommand
 
-  case class GetTransitions(contentId: UUID, startRound: Int, endRound: Int) extends ChoiceAnswerCommand
+  case class GetTransitions(contentId: UUID, roundA: Int, roundB: Int) extends ChoiceAnswerCommand
 }
