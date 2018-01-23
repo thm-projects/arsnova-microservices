@@ -202,7 +202,30 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
 
     case GetTransitions(contentId, roundA, roundB) => ((ret: ActorRef) => {
-
+      var transitions: Seq[RoundTransition] = Seq.empty[RoundTransition]
+      choiceAnswerList.values.foreach( (answer) => {
+        if (answer.round.get == roundA) {
+          val second = choiceAnswerList.values.find(a => (a.userId.get == answer.userId.get) && (a.round.get == roundB))
+          second match {
+            // user has given an answer for roundB
+            case Some(secondAnswer) => {
+              var updated = false
+              transitions = transitions.map( t => {
+                if ((t.selectedIndexesA == answer.answerIndexes) && (t.selectedIndexesB == secondAnswer.answerIndexes)) {
+                  updated = true
+                  RoundTransition(roundA, roundB, t.selectedIndexesA, t.selectedIndexesB, t.count + 1)
+                 } else {
+                  t
+                }
+              })
+              if (!updated) {
+                transitions = transitions :+ RoundTransition(roundA, roundB, answer.answerIndexes, secondAnswer.answerIndexes, 1)
+              }
+            }
+          }
+        }
+      })
+      ret ! Success(transitions)
     }) (sender)
 
     case ChoiceAnswerCommandWithRole(cmd, role, ret) => {
