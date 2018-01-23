@@ -130,7 +130,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case ImportChoiceAnswers(roomId, contentId, exportedAnswerOptions) => {
+    case ImportChoiceAnswers(contentId, roomId, exportedAnswerOptions) => {
       var index: Int = 0
       answerOptions = Some(exportedAnswerOptions.map { ao =>
         val a = AnswerOption(ao, index, contentId)
@@ -139,7 +139,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       })
       context.become(choiceContentCreated)
     }
-    case ImportFreetextAnswers(roomId, contentId, exportedAnswers) => {
+    case ImportFreetextAnswers(contentId, roomId, exportedAnswers) => {
       exportedAnswers.map { eAnswer =>
         val newId = UUID.randomUUID()
         val guestUser = GuestUser()
@@ -153,20 +153,20 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def choiceContentCreated: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case GetChoiceAnswers(roomId, contentId) => {
+    case GetChoiceAnswers(contentId) => {
       sender() ! choiceAnswerList.values.map(identity).toSeq
     }
-    case GetChoiceAnswer(roomId, contentId, id) => {
+    case GetChoiceAnswer(contentId, id) => {
       sender() ! choiceAnswerList.get(id)
     }
-    case CreateChoiceAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
+    case CreateChoiceAnswer(contentId, roomId, answer, userId) => ((ret: ActorRef) => {
       val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId), round = Some(votingRound))
       ret ! Success(awu)
       eventRegion ! RoomEventPackage(roomId, ChoiceAnswerCreated(awu))
       choiceAnswerList += awu.id.get -> awu
       persist(ChoiceAnswerCreated(awu)) { e => e }
     }) (sender)
-    case cmd@DeleteChoiceAnswer(roomId, contentId, id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteChoiceAnswer(contentId, roomId, id, userId) => ((ret: ActorRef) => {
       choiceAnswerList.get(id) match {
         case Some(a) => {
           if (a.userId.get == userId) {
@@ -185,7 +185,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetChoiceStatistics(roomId, contentId) => ((ret: ActorRef) => {
+    case GetChoiceStatistics(contentId) => ((ret: ActorRef) => {
       val list = choiceAnswerList.values.map(identity).toSeq
       var abstentionCount = 0
       val count: Array[Int] = new Array[Int](answerOptions.get.size)
@@ -225,10 +225,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def freetextContentCreated: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case GetFreetextAnswers(roomId, contentId) => {
+    case GetFreetextAnswers(contentId) => {
       sender() ! freetextAnswerList.values.map(identity).toSeq
     }
-    case GetFreetextAnswer(roomId, contentId, id) => {
+    case GetFreetextAnswer(contentId, id) => {
       sender() ! freetextAnswerList.get(id)
     }
     case CreateFreetextAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
@@ -257,7 +257,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetFreetextStatistics(roomId, contentId) => ((ret: ActorRef) => {
+    case GetFreetextStatistics(contentId) => ((ret: ActorRef) => {
       val list = freetextAnswerList.values.map(identity).toSeq
       ret ! list.map(FreetextAnswerExport(_))
     }) (sender)

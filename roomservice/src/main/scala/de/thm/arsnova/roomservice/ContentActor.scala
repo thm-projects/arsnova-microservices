@@ -93,14 +93,14 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
                 a
               }
               content = content.copy(answerOptions = Some(answerOptions))
-              answerListActor ! ImportChoiceAnswers(content.roomId, id, exportedContent.answerOptions.get)
+              answerListActor ! ImportChoiceAnswers(id, roomId, exportedContent.answerOptions.get)
             }
           }
         }
         case "freetext" => {
           exportedContent.answers match {
             case Some(answers) => {
-              answerListActor ! ImportFreetextAnswers(roomId, id, answers)
+              answerListActor ! ImportFreetextAnswers(id, roomId, answers)
             }
           }
         }
@@ -147,7 +147,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
       var export = ContentExport(c)
       contentToType(c) match {
         case "choice" => {
-          (answerListActor ? GetChoiceStatistics(c.roomId, c.id.get)).mapTo[ChoiceAnswerStatistics].map { s =>
+          (answerListActor ? GetChoiceStatistics(c.id.get)).mapTo[ChoiceAnswerStatistics].map { s =>
             val answerOptionExportList = c.answerOptions.map { seq =>
               seq map { option =>
                 AnswerOptionExport(option, s.choices(option.index))
@@ -158,7 +158,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           }
         }
         case "freetext" => {
-          (answerListActor ? GetFreetextStatistics(c.roomId, c.id.get)).mapTo[Seq[FreetextAnswerExport]].map { seq =>
+          (answerListActor ? GetFreetextStatistics(c.id.get)).mapTo[Seq[FreetextAnswerExport]].map { seq =>
             export = export.copy(answers = Some(seq))
             ret ! Success(export)
           }

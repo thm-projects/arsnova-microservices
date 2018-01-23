@@ -31,7 +31,7 @@ trait ChoiceAnswerApi extends BaseApi {
             pathPrefix(JavaUUID) { answerId =>
               get {
                 complete {
-                  (answerListRegion ? GetChoiceAnswer(roomId, contentId, answerId))
+                  (answerListRegion ? GetChoiceAnswer(contentId, answerId))
                     .mapTo[Option[ChoiceAnswer]]
                 }
               } ~
@@ -40,7 +40,7 @@ trait ChoiceAnswerApi extends BaseApi {
                   complete {
                     (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                       case Success(uId) => {
-                        (answerListRegion ? DeleteChoiceAnswer(roomId, contentId, answerId, uId))
+                        (answerListRegion ? DeleteChoiceAnswer(contentId, answerId, uId))
                           .mapTo[Try[ChoiceAnswer]]
                       }
                       case Failure(t) => Future.failed(t)
@@ -51,7 +51,7 @@ trait ChoiceAnswerApi extends BaseApi {
             } ~
             get {
               complete {
-                (answerListRegion ? GetChoiceAnswers(roomId, contentId))
+                (answerListRegion ? GetChoiceAnswers(contentId))
                   .mapTo[Seq[ChoiceAnswer]]
               }
             } ~
@@ -61,7 +61,7 @@ trait ChoiceAnswerApi extends BaseApi {
                   complete {
                     (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                       case Success(uId) => {
-                        (answerListRegion ? CreateChoiceAnswer(roomId, contentId, answer, uId))
+                        (answerListRegion ? CreateChoiceAnswer(contentId, answer, uId))
                           .mapTo[Try[ChoiceAnswer]]
                       }
                       case Failure(t) => Future.failed(t)

@@ -9,21 +9,22 @@ import de.thm.arsnova.shared.entities.export.AnswerOptionExport
 
 object ChoiceAnswerCommands {
   sealed trait ChoiceAnswerCommand extends ServiceCommand {
-    def roomId: UUID
     def contentId: UUID
   }
 
   case class ChoiceAnswerCommandWithRole(cmd: ChoiceAnswerCommand, role: String, ret: ActorRef)
 
-  case class GetChoiceAnswers(roomId: UUID, contentId: UUID) extends ChoiceAnswerCommand
+  case class GetChoiceAnswers(contentId: UUID) extends ChoiceAnswerCommand
 
-  case class GetChoiceAnswer(roomId: UUID, contentId: UUID, id: UUID) extends ChoiceAnswerCommand
+  case class GetChoiceAnswer(contentId: UUID, id: UUID) extends ChoiceAnswerCommand
 
-  case class CreateChoiceAnswer(roomId: UUID, contentId: UUID, answer: ChoiceAnswer, userId: UUID) extends ChoiceAnswerCommand
+  case class CreateChoiceAnswer(contentId: UUID, roomId: UUID, answer: ChoiceAnswer, userId: UUID) extends ChoiceAnswerCommand
 
-  case class DeleteChoiceAnswer(roomId: UUID, contentId: UUID, id: UUID, userId: UUID) extends ChoiceAnswerCommand
+  case class DeleteChoiceAnswer(contentId: UUID, roomId: UUID, id: UUID, userId: UUID) extends ChoiceAnswerCommand
 
-  case class GetChoiceStatistics(roomId: UUID, contentId: UUID) extends ChoiceAnswerCommand
+  case class GetChoiceStatistics(contentId: UUID) extends ChoiceAnswerCommand
 
-  case class ImportChoiceAnswers(roomId: UUID, contentId: UUID, exportedAnswerOptions: Seq[AnswerOptionExport]) extends ChoiceAnswerCommand
+  case class ImportChoiceAnswers(contentId: UUID, roomId: UUID, exportedAnswerOptions: Seq[AnswerOptionExport]) extends ChoiceAnswerCommand
+
+  case class GetTransitions(contentId: UUID, startRound: Int, endRound: Int) extends ChoiceAnswerCommand
 }
