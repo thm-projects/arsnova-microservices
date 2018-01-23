@@ -190,13 +190,11 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       var abstentionCount = 0
       val count: Array[Int] = new Array[Int](answerOptions.get.size)
       list.map { a =>
-        if (a.abstention) {
+        if (a.answerIndexes.isEmpty) {
           abstentionCount += 1
         } else {
-          a.answerIndexes.map { seq =>
-            seq.map { i =>
-              count(i) += 1
-            }
+          a.answerIndexes.map { i =>
+            count(i) += 1
           }
         }
       }
