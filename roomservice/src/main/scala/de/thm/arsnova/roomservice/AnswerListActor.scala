@@ -153,10 +153,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def choiceContentCreated: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case GetChoiceAnswers(roomId, questionId) => {
+    case GetChoiceAnswers(roomId, contentId) => {
       sender() ! choiceAnswerList.values.map(identity).toSeq
     }
-    case GetChoiceAnswer(roomId, questionId, id) => {
+    case GetChoiceAnswer(roomId, contentId, id) => {
       sender() ! choiceAnswerList.get(id)
     }
     case CreateChoiceAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
@@ -166,7 +166,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       choiceAnswerList += awu.id.get -> awu
       persist(ChoiceAnswerCreated(awu)) { e => e }
     }) (sender)
-    case cmd@DeleteChoiceAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteChoiceAnswer(roomId, contentId, id, userId) => ((ret: ActorRef) => {
       choiceAnswerList.get(id) match {
         case Some(a) => {
           if (a.userId == userId) {
@@ -185,7 +185,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetChoiceStatistics(roomId, questionId) => ((ret: ActorRef) => {
+    case GetChoiceStatistics(roomId, contentId) => ((ret: ActorRef) => {
       val list = choiceAnswerList.values.map(identity).toSeq
       var abstentionCount = 0
       val count: Array[Int] = new Array[Int](answerOptions.get.size)
@@ -205,7 +205,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
     case ChoiceAnswerCommandWithRole(cmd, role, ret) => {
       cmd match {
-        case DeleteChoiceAnswer(roomId, questionId, id, userId) => {
+        case DeleteChoiceAnswer(roomId, contentId, id, userId) => {
           choiceAnswerList.get(id) match {
             case Some(a) => {
               if (role == "owner") {
@@ -225,10 +225,10 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def freetextContentCreated: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case GetFreetextAnswers(roomId, questionId) => {
+    case GetFreetextAnswers(roomId, contentId) => {
       sender() ! freetextAnswerList.values.map(identity).toSeq
     }
-    case GetFreetextAnswer(roomId, questionId, id) => {
+    case GetFreetextAnswer(roomId, contentId, id) => {
       sender() ! freetextAnswerList.get(id)
     }
     case CreateFreetextAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
@@ -238,7 +238,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       freetextAnswerList += awu.id.get -> awu
       persist(FreetextAnswerCreated(awu)) { e => e }
     }) (sender)
-    case cmd@DeleteFreetextAnswer(roomId, questionId, id, userId) => ((ret: ActorRef) => {
+    case cmd@DeleteFreetextAnswer(roomId, contentId, id, userId) => ((ret: ActorRef) => {
       freetextAnswerList.get(id) match {
         case Some(a) => {
           if (a.userId == userId) {
@@ -257,14 +257,14 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetFreetextStatistics(roomId, questionId) => ((ret: ActorRef) => {
+    case GetFreetextStatistics(roomId, contentId) => ((ret: ActorRef) => {
       val list = freetextAnswerList.values.map(identity).toSeq
       ret ! list.map(FreetextAnswerExport(_))
     }) (sender)
 
     case FreetextAnswerCommandWithRole(cmd, role, ret) => {
       cmd match {
-        case DeleteFreetextAnswer(roomId, questionId, id, userId) => {
+        case DeleteFreetextAnswer(roomId, contentId, id, userId) => {
           freetextAnswerList.get(id) match {
             case Some(a) => {
               if (role == "owner") {
