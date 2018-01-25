@@ -172,6 +172,12 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         ContentCommandWithRole(cmd, role, ret)
       } pipeTo self
     }) (sender)
+    case cmd@StartNewRound(contentId, userId) => ((ret: ActorRef) => {
+      val c = state.get
+      (userRegion ? GetRoleForRoom(userId, c.roomId)).mapTo[String] map { role =>
+        ContentCommandWithRole(cmd, role, ret)
+      } pipeTo self
+    }) (sender)
 
     case ContentCommandWithRole(cmd, role, ret) => {
       cmd match {
@@ -194,6 +200,19 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
             state = Some(updated)
             ret ! Success(updated)
             eventRegion ! RoomEventPackage(c.roomId, NewRound(contentId, round))
+            persist(ContentUpdated(updated))(e => e)
+          } else {
+            ret ! Failure(InsufficientRights(role, "Delete Content"))
+          }
+        }
+        case StartNewRound(contentId, userId) => {
+          val c = state.get
+          if (role == "owner") {
+            val newRound = c.votingRound + 1
+            val updated = c.copy(votingRound = newRound)
+            state = Some(updated)
+            ret ! Success(updated)
+            eventRegion ! RoomEventPackage(c.roomId, NewRound(contentId, newRound))
             persist(ContentUpdated(updated))(e => e)
           } else {
             ret ! Failure(InsufficientRights(role, "Delete Content"))

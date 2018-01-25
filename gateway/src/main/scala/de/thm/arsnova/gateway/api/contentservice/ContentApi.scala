@@ -45,13 +45,13 @@ trait ContentApi extends BaseApi {
               }
             }
           } ~
-          put {
-            parameters("round".as[Int]) { round =>
+          pathPrefix("newRound") {
+            post {
               headerValueByName("X-Session-Token") { token =>
                 complete {
                   (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                     case Success(uId) => {
-                      (contentRegion ? SetRound(contentId, uId, round))
+                      (contentRegion ? StartNewRound(contentId, uId))
                         .mapTo[Try[Content]]
                     }
                     case Failure(t) => Future.failed(t)

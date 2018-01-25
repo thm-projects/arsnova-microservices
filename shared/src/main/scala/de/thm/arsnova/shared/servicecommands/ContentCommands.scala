@@ -24,4 +24,6 @@ object ContentCommands {
   case class Import(id: UUID, roomId: UUID, exportedContent: ContentExport) extends ContentCommand
 
   case class SetRound(id: UUID, userId: UUID, round: Int) extends ContentCommand
+
+  case class StartNewRound(id: UUID, userId: UUID) extends ContentCommand
 }
