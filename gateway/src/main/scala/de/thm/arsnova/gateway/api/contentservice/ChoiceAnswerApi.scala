@@ -32,7 +32,7 @@ trait ChoiceAnswerApi extends BaseApi {
               get {
                 complete {
                   (answerListRegion ? GetChoiceAnswer(contentId, answerId))
-                    .mapTo[Option[ChoiceAnswer]]
+                    .mapTo[Try[ChoiceAnswer]]
                 }
               } ~
               get {
@@ -60,7 +60,7 @@ trait ChoiceAnswerApi extends BaseApi {
             get {
               complete {
                 (answerListRegion ? GetChoiceAnswers(contentId))
-                  .mapTo[Seq[ChoiceAnswer]]
+                  .mapTo[Try[Seq[ChoiceAnswer]]]
               }
             } ~
             post {

@@ -154,10 +154,13 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   def choiceContentCreated: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
     case GetChoiceAnswers(contentId) => {
-      sender() ! choiceAnswerList.values.map(identity).toSeq
+      sender() ! Success(choiceAnswerList.values.map(identity).toSeq)
     }
     case GetChoiceAnswer(contentId, id) => {
-      sender() ! choiceAnswerList.get(id)
+      choiceAnswerList.get(id) match {
+        case Some(a) => sender() ! Success(a)
+        case None => sender() ! ResourceNotFound("choice answer")
+      }
     }
     case CreateChoiceAnswer(contentId, roomId, answer, userId) => ((ret: ActorRef) => {
       val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId), round = Some(votingRound))
