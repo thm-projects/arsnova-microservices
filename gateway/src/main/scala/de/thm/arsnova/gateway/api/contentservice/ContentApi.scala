@@ -20,7 +20,7 @@ import de.thm.arsnova.gateway.AuthServiceClientActor
 import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait ContentApi extends BaseApi {
-  import de.thm.arsnova.shared.mappings.ContentJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val contentApi = pathPrefix("room") {
     pathPrefix(JavaUUID) { roomId =>

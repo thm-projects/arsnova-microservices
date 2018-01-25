@@ -37,7 +37,7 @@ The API Interface regarding rooms, the core component for arsnova.voting.
 trait RoomServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
-  import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val roomApi = pathPrefix("room") {
     pathEndOrSingleSlash {

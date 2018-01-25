@@ -16,7 +16,7 @@ import de.thm.arsnova.shared.servicecommands.FreetextAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait FreetextAnswerApi extends BaseApi {
-  import de.thm.arsnova.shared.mappings.FreetextAnswerJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val freetextAnswerApi = pathPrefix("room") {
     optionalHeaderValueByName("X-Session-Token") { tokenstring =>

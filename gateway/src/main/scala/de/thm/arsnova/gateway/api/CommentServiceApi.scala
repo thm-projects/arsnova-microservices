@@ -16,7 +16,7 @@ import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait CommentServiceApi extends BaseApi {
   // protocol for serializing data
-  import de.thm.arsnova.shared.mappings.CommentJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val commentServiceApi = pathPrefix("room") {
     pathPrefix(JavaUUID) { roomId =>

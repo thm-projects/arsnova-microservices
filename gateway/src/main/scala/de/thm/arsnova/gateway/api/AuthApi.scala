@@ -21,7 +21,7 @@ import de.thm.arsnova.shared.servicecommands.UserCommands.GetUser
 import de.thm.arsnova.shared.entities.{Token, User}
 
 trait AuthApi extends BaseApi {
-  import de.thm.arsnova.shared.mappings.UserJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val authApi = pathPrefix("auth") {
     pathPrefix("whoami") {

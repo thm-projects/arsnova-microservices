@@ -22,8 +22,7 @@ import de.thm.arsnova.shared.Exceptions._
 
 trait UserApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
-  import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
-  import de.thm.arsnova.shared.mappings.UserJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val userApi = pathPrefix("user") {
     pathPrefix(JavaUUID) { userId =>

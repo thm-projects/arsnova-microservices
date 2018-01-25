@@ -19,8 +19,7 @@ import scala.util.{Failure, Success, Try}
 trait RoomExportServiceApi extends BaseApi {
   import de.thm.arsnova.gateway.Context._
   // protocol for serializing data
-  import de.thm.arsnova.shared.mappings.export.RoomExportJsonProtocol._
-  import de.thm.arsnova.shared.mappings.RoomJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val roomExportApi = pathPrefix("room") {
     pathPrefix(JavaUUID) { roomId =>

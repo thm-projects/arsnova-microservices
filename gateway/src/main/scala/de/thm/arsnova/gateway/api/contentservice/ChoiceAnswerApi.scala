@@ -21,8 +21,7 @@ import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait ChoiceAnswerApi extends BaseApi {
-  import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
-  import de.thm.arsnova.shared.mappings.RoundTransitionJsonProtocol._
+  import de.thm.arsnova.shared.mappings.EntitiesJsonProtocol._
 
   val choiceAnswerApi = pathPrefix("room") {
     pathPrefix(JavaUUID) { roomId =>
