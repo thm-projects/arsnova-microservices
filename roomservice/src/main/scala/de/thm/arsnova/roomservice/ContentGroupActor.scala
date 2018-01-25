@@ -35,7 +35,7 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
     }
   }
 
-  def getContentFromIds(ids: Seq[UUID]): Future[Seq[Content]] = {
+  def getContentFromIds(ids: Seq[UUID]): Future[Try[Seq[Content]]] = {
     // TODO: Failure handling
     val contentListFutures: Seq[Future[Option[Content]]] = ids map { id =>
       (contentRegion ? GetContent(id)).mapTo[Try[Content]].map {
@@ -44,7 +44,7 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
       }
     }
     Future.sequence(contentListFutures).map { list =>
-      list.flatten
+      Success(list.flatten)
     }
   }
 
@@ -58,11 +58,15 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
         case Some(cg) => {
           if (cg.autoSort) {
             val contentList = Await.result(getContentFromIds(cg.contentIds), 5.seconds)
-            val listWithNewContent = contentList :+ content
-            val sorted = listWithNewContent.sortBy(c => (c.subject, c.content))
-            val newCG = ContentGroup(true, sorted.map(_.id.get))
-            groups.update(group, newCG)
-            ret ! groups
+            contentList match {
+              case Success(list) => {
+                val listWithNewContent = list :+ content
+                val sorted = listWithNewContent.sortBy(c => (c.subject, c.content))
+                val newCG = ContentGroup(true, sorted.map(_.id.get))
+                groups.update(group, newCG)
+                ret ! groups
+              }
+            }
           } else {
             val newCG = ContentGroup(false, cg.contentIds :+ content.id.get)
             groups.update(group, newCG)

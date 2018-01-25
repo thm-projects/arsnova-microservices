@@ -65,7 +65,7 @@ trait ContentApi extends BaseApi {
           parameters("group".?) { group =>
             complete {
               (roomRegion ? GetContentListByRoomId(roomId, group))
-                .mapTo[Seq[Content]].map(_.toJson)
+                .mapTo[Try[Seq[Content]]]
             }
           }
         } ~
