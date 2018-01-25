@@ -35,14 +35,6 @@ trait ChoiceAnswerApi extends BaseApi {
                     .mapTo[Try[ChoiceAnswer]]
                 }
               } ~
-              get {
-                parameters("roundA".as[Int], "roundB".as[Int]) { (roundA, roundB) =>
-                  complete {
-                    (answerListRegion ? GetTransitions(contentId, roundA, roundB))
-                      .mapTo[Try[Seq[RoundTransition]]]
-                  }
-                }
-              } ~
               delete {
                 headerValueByName("X-Session-Token") { token =>
                   complete {
@@ -54,6 +46,14 @@ trait ChoiceAnswerApi extends BaseApi {
                       case Failure(t) => Future.failed(t)
                     }
                   }
+                }
+              }
+            } ~
+            get {
+              parameters("roundA".as[Int], "roundB".as[Int]) { (roundA, roundB) =>
+                complete {
+                  (answerListRegion ? GetTransitions(contentId, roundA, roundB))
+                    .mapTo[Try[Seq[RoundTransition]]]
                 }
               }
             } ~
