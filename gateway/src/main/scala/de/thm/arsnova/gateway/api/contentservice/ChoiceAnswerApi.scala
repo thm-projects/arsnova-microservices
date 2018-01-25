@@ -15,13 +15,14 @@ import de.thm.arsnova.gateway.AuthServiceClientActor
 import de.thm.arsnova.gateway.Context._
 import spray.json._
 import de.thm.arsnova.gateway.api.BaseApi
-import de.thm.arsnova.shared.entities.{ChoiceAnswer, User}
+import de.thm.arsnova.shared.entities.{ChoiceAnswer, RoundTransition, User}
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 
 trait ChoiceAnswerApi extends BaseApi {
   import de.thm.arsnova.shared.mappings.ChoiceAnswerJsonProtocol._
+  import de.thm.arsnova.shared.mappings.RoundTransitionJsonProtocol._
 
   val choiceAnswerApi = pathPrefix("room") {
     pathPrefix(JavaUUID) { roomId =>
@@ -33,6 +34,14 @@ trait ChoiceAnswerApi extends BaseApi {
                 complete {
                   (answerListRegion ? GetChoiceAnswer(contentId, answerId))
                     .mapTo[Option[ChoiceAnswer]]
+                }
+              } ~
+              get {
+                parameters("roundA".as[Int], "roundB".as[Int]) { (roundA, roundB) =>
+                  complete {
+                    (answerListRegion ? GetTransitions(contentId, roundA, roundB))
+                      .mapTo[Try[Seq[RoundTransition]]]
+                  }
                 }
               } ~
               delete {
