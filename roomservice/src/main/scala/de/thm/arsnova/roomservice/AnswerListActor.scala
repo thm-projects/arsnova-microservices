@@ -163,7 +163,8 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       }
     }
     case CreateChoiceAnswer(contentId, roomId, answer, userId) => ((ret: ActorRef) => {
-      val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId), round = Some(votingRound))
+      val newId = UUID.randomUUID()
+      val awu = answer.copy(id = Some(newId), userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId), round = Some(votingRound))
       ret ! Success(awu)
       eventRegion ! RoomEventPackage(roomId, ChoiceAnswerCreated(awu))
       choiceAnswerList += awu.id.get -> awu
