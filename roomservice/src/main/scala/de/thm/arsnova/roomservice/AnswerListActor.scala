@@ -261,7 +261,8 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
       sender() ! freetextAnswerList.get(id)
     }
     case CreateFreetextAnswer(roomId, contentId, answer, userId) => ((ret: ActorRef) => {
-      val awu = answer.copy(userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId))
+      val newId = UUID.randomUUID()
+      val awu = answer.copy(id = Some(newId), userId = Some(userId), roomId = Some(roomId), contentId = Some(contentId))
       ret ! Success(awu)
       eventRegion ! RoomEventPackage(roomId, FreetextAnswerCreated(awu))
       freetextAnswerList += awu.id.get -> awu
