@@ -122,7 +122,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
       context.become(roomCreated)
       ret ! Success(room)
       eventRegion ! RoomEventPackage(id, RoomCreated(room))
-      persist(RoomCreated(room))(_)
+      persist(RoomCreated(room))(e => e)
     }) (sender)
     case ImportRoom(id, keyword, userId, exportedRoom) => ((ret: ActorRef) => {
       var room = Room(exportedRoom).copy(id = Some(id), keyword = Some(keyword), userId = Some(userId))
