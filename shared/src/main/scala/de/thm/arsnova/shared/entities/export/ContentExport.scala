@@ -1,7 +1,7 @@
 package de.thm.arsnova.shared.entities.export
 
 import java.util.UUID
-import de.thm.arsnova.shared.entities.{Content, FormatAttributes}
+import de.thm.arsnova.shared.entities.{Content, FormatAttributes, AnswerOption}
 
 case class ContentExport(
   id: UUID,
@@ -17,9 +17,9 @@ case class ContentExport(
   showAnswer: Boolean,
   abstentionAllowed: Boolean,
   formatAttributes: Option[FormatAttributes],
-  answerOptions: Option[Seq[AnswerOptionExport]],
-  answers: Option[Seq[FreetextAnswerExport]],
-  abstentionCount: Int
+  answerOptions: Option[Seq[AnswerOption]],
+  answers: Option[Either[Seq[FreetextAnswerExport], ChoiceAnswerExport]],
+  abstentionCount: Seq[Int]
 )
 
 object ContentExport {
@@ -38,8 +38,8 @@ object ContentExport {
       c.showAnswer,
       c.abstentionAllowed,
       c.formatAttributes,
+      c.answerOptions,
       None,
-      None,
-      0
+      Nil
     )
 }

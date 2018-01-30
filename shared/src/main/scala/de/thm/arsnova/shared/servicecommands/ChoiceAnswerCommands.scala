@@ -5,7 +5,8 @@ import java.util.UUID
 import akka.Done
 import akka.actor.ActorRef
 import de.thm.arsnova.shared.entities.ChoiceAnswer
-import de.thm.arsnova.shared.entities.export.AnswerOptionExport
+import de.thm.arsnova.shared.entities.AnswerOption
+import de.thm.arsnova.shared.entities.export.ChoiceAnswerExport
 
 object ChoiceAnswerCommands {
   sealed trait ChoiceAnswerCommand extends ServiceCommand {
@@ -24,7 +25,19 @@ object ChoiceAnswerCommands {
 
   case class GetChoiceStatistics(contentId: UUID) extends ChoiceAnswerCommand
 
-  case class ImportChoiceAnswers(contentId: UUID, roomId: UUID, exportedAnswerOptions: Seq[AnswerOptionExport]) extends ChoiceAnswerCommand
+  case class GetChoiceAbstentionCount(contentId: UUID) extends ChoiceAnswerCommand
+
+  case class GetSummary(contentId: UUID) extends ChoiceAnswerCommand
+
+  case class ImportChoiceAnswers(
+    contentId: UUID,
+    roomId: UUID,
+    exportedAnswerOptions: Seq[AnswerOption],
+    choiceAnswerExport: ChoiceAnswerExport,
+    abstentionCount: Seq[Int]
+  ) extends ChoiceAnswerCommand
 
   case class GetTransitions(contentId: UUID, roundA: Int, roundB: Int) extends ChoiceAnswerCommand
+
+  case class GetAllTransitions(contentId: UUID) extends ChoiceAnswerCommand
 }

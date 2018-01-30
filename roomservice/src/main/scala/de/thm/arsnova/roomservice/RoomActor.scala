@@ -163,7 +163,7 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
         case None => ret ! Failure(NoSuchRoom(Left(id)))
       }
     }) (sender)
-    case c@ExportRoom(id, userId) => ((ret: ActorRef) => {
+    case c@ExportRoom(id, userId, withChoiceStats) => ((ret: ActorRef) => {
       (userRegion ? GetRoleForRoom(userId, id)).mapTo[String] map { role =>
         RoomCommandWithRole(c, role, ret)
       } pipeTo self
@@ -212,10 +212,10 @@ class RoomActor(authRouter: ActorRef) extends PersistentActor {
             ret ! Failure(InsufficientRights(role, "Delete Room"))
           }
         }
-        case ExportRoom(id, userId) => {
+        case ExportRoom(id, userId, withChoiceStats) => {
           if (role == "owner") {
             val exported = RoomExport(state.get)
-            val contentListFuture = (contentGroupActor ? GetExportList()).mapTo[Seq[ContentExport]]
+            val contentListFuture = (contentGroupActor ? GetExportList(withChoiceStats)).mapTo[Seq[ContentExport]]
             val commentListFuture = (commentListRegion ? GetCommentsByRoomId(id)).mapTo[Try[Seq[Comment]]]
             val ff: Future[(Seq[ContentExport], Try[Seq[Comment]])] = for {
               contentList <- contentListFuture

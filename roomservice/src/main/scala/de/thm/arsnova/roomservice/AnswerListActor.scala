@@ -130,13 +130,44 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case ImportChoiceAnswers(contentId, roomId, exportedAnswerOptions) => {
-      var index: Int = 0
-      answerOptions = Some(exportedAnswerOptions.map { ao =>
-        val a = AnswerOption(ao, index, contentId)
-        index = index + 1
-        a
-      })
+    case ImportChoiceAnswers(contentId, roomId, exportedAnswerOptions, choiceAnswerExport, abstentionCount) => {
+      abstentionCount.foreach { a =>
+        for (i <- 0 to a) {
+          val newId = UUID.randomUUID()
+          choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), Nil, Some(i))
+        }
+      }
+      choiceAnswerExport.transitions match {
+        case Some(transitions) =>
+          // Content has more than one round, don't use stats to import
+          transitions.foreach { transition =>
+            if (votingRound != transition.roundA) {
+              votingRound = transition.roundA
+            }
+            for (i <- 0 to transition.count) {
+              val newId = UUID.randomUUID()
+              choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), transition.selectedIndexesA, Some(votingRound))
+            }
+          }
+          // since only stats for roundA got imported, import for the last round
+          transitions.filter(t => t.roundA == votingRound).foreach { transition =>
+            val newId = UUID.randomUUID()
+            choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), transition.selectedIndexesB, Some(votingRound))
+          }
+          votingRound = votingRound + 1
+        case None =>
+          // Try to import from stats
+          choiceAnswerExport.stats match {
+            case Some(stats) =>
+              stats.foreach { summary =>
+                for (i <- 0 to summary.count) {
+                  val newId = UUID.randomUUID()
+                  choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), summary.choice, Some(votingRound))
+                }
+              }
+          }
+      }
+      answerOptions = Some(exportedAnswerOptions.map(a => a.copy(contentId = Some(contentId))))
       context.become(choiceContentCreated)
     }
     case ImportFreetextAnswers(contentId, roomId, exportedAnswers) => {
@@ -191,18 +222,46 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     }) (sender)
     case GetChoiceStatistics(contentId) => ((ret: ActorRef) => {
       val list = choiceAnswerList.values.map(identity).toSeq
-      var abstentionCount = 0
-      val count: Array[Int] = new Array[Int](answerOptions.get.size)
-      list.map { a =>
+      val abs: Array[Int] = new Array[Int](votingRound)
+      val c: Set[Seq[Int]] = list.map { a =>
         if (a.answerIndexes.isEmpty) {
-          abstentionCount += 1
+          abs.update(a.round.get, abs(a.round.get) + 1)
+          Nil
         } else {
-          a.answerIndexes.map { i =>
-            count(i) += 1
-          }
+          a.answerIndexes
+        }
+      }.toSet
+      val choices = c.map { choice =>
+        ChoiceAnswerSummary(choice, c.count(_ == choice))
+      }.toSeq
+      ret ! ChoiceAnswerStatistics(choices, abs.toSeq)
+    }) (sender)
+    case GetChoiceAbstentionCount(contentId) => ((ret: ActorRef) => {
+      val list = choiceAnswerList.values.map(identity).toSeq
+      val abs: Array[Int] = new Array[Int](votingRound)
+      list.foreach { a =>
+        if (a.answerIndexes.isEmpty) {
+           abs.update(a.round.get, abs(a.round.get) + 1)
+          Nil
+        } else {
+          a.answerIndexes
         }
       }
-      ret ! ChoiceAnswerStatistics(count, abstentionCount)
+      ret ! abs.toSeq
+    }) (sender)
+    case GetSummary(contentId) => ((ret: ActorRef) => {
+      val list = choiceAnswerList.values.map(identity).toSeq
+      val c: Set[Seq[Int]] = list.map { a =>
+        if (a.answerIndexes.isEmpty) {
+          Nil
+        } else {
+          a.answerIndexes
+        }
+      }.toSet
+      val choices = c.map { choice =>
+        ChoiceAnswerSummary(choice, c.count(_ == choice))
+      }.toSeq
+      ret ! choices
     }) (sender)
 
     case GetTransitions(contentId, roundA, roundB) => ((ret: ActorRef) => {
@@ -218,7 +277,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
                 if ((t.selectedIndexesA == answer.answerIndexes) && (t.selectedIndexesB == secondAnswer.answerIndexes)) {
                   updated = true
                   RoundTransition(roundA, roundB, t.selectedIndexesA, t.selectedIndexesB, t.count + 1)
-                 } else {
+                } else {
                   t
                 }
               })
@@ -229,6 +288,36 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
           }
         }
       })
+      ret ! Success(transitions)
+    }) (sender)
+    case GetAllTransitions(contentId) => ((ret: ActorRef) => {
+      var transitions: Seq[RoundTransition] = Seq.empty[RoundTransition]
+      for (i <- 0 to votingRound -1) {
+        val roundA = i
+        val roundB = i + 1
+        choiceAnswerList.values.foreach((answer) => {
+          if (answer.round.get == roundA) {
+            val second = choiceAnswerList.values.find(a => (a.userId.get == answer.userId.get) && (a.round.get == roundB))
+            second match {
+              // user has given an answer for roundB
+              case Some(secondAnswer) => {
+                var updated = false
+                transitions = transitions.map(t => {
+                  if ((t.selectedIndexesA == answer.answerIndexes) && (t.selectedIndexesB == secondAnswer.answerIndexes)) {
+                    updated = true
+                    RoundTransition(roundA, roundB, t.selectedIndexesA, t.selectedIndexesB, t.count + 1)
+                  } else {
+                    t
+                  }
+                })
+                if (!updated) {
+                  transitions = transitions :+ RoundTransition(roundA, roundB, answer.answerIndexes, secondAnswer.answerIndexes, 1)
+                }
+              }
+            }
+          }
+        })
+      }
       ret ! Success(transitions)
     }) (sender)
 

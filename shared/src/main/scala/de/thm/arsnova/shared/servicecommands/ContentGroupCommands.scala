@@ -14,5 +14,5 @@ object ContentGroupCommands {
 
   case class SendContent(ret: ActorRef, group: Option[String]) extends ContentGroupCommand
 
-  case class GetExportList() extends ContentGroupCommand
+  case class GetExportList(withChoiceStats: Boolean) extends ContentGroupCommand
 }

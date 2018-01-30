@@ -112,11 +112,11 @@ class ContentGroupActor(contentRegion: ActorRef) extends Actor {
         }
       }
     }
-    case GetExportList() => ((ret: ActorRef) => {
+    case GetExportList(withChoiceStats) => ((ret: ActorRef) => {
       val values: Seq[ContentGroup] = groups.values.map(identity).toSeq
       val cIds: Seq[UUID] = values.flatMap(_.contentIds)
       val contentListFutures: Seq[Future[Option[ContentExport]]] = cIds map { id =>
-        (contentRegion ? GetExport(id)).mapTo[Try[ContentExport]].map {
+        (contentRegion ? GetExport(id, withChoiceStats)).mapTo[Try[ContentExport]].map {
           case Success(content) => Some(content)
           case Failure(t) => None
         }

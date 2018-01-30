@@ -25,14 +25,16 @@ trait RoomExportServiceApi extends BaseApi {
     pathPrefix(JavaUUID) { roomId =>
       pathPrefix("export") {
         get {
-          headerValueByName("X-Session-Token") { token =>
-            complete {
-              (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
-                case Success(uId) => {
-                  (roomRegion ? ExportRoom(roomId, uId))
-                    .mapTo[Try[RoomExport]]
+          parameters("choicestats" ? false) { choicestats =>
+            headerValueByName("X-Session-Token") { token =>
+              complete {
+                (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
+                  case Success(uId) => {
+                    (roomRegion ? ExportRoom(roomId, uId, choicestats))
+                      .mapTo[Try[RoomExport]]
+                  }
+                  case Failure(t) => Future.failed(t)
                 }
-                case Failure(t) => Future.failed(t)
               }
             }
           }
