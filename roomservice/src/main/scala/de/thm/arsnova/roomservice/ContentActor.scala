@@ -84,22 +84,15 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
       content = content.copy(id = Some(id))
       contentToType(content) match {
         case "choice" => {
-          exportedContent.answers match {
-            case Some(answers) => {
-              answers match {
-                case Right(choiceAnswerExport) =>
-                  answerListActor ! ImportChoiceAnswers(id, roomId, content.answerOptions.get, choiceAnswerExport, exportedContent.abstentionCount)
-              }
-            }
+          exportedContent.choiceAnswers match {
+            case Some(answers) =>
+              answerListActor ! ImportChoiceAnswers(id, roomId, content.answerOptions.get, answers, exportedContent.abstentionCount)
           }
         }
         case "freetext" => {
-          exportedContent.answers match {
-            case Some(answers) => {
-              answers match {
-                case Left(freetextAnswers) => answerListActor ! ImportFreetextAnswers(id, roomId, freetextAnswers)
-              }
-            }
+          exportedContent.textAnswers match {
+            case Some(answers) =>
+              answerListActor ! ImportFreetextAnswers(id, roomId, answers)
           }
         }
       }
@@ -148,7 +141,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           if (c.votingRound == 0 || withChoiceStats) {
             (answerListActor ? GetChoiceStatistics(c.id.get)).mapTo[ChoiceAnswerStatistics].map { s =>
               val cae = ChoiceAnswerExport(Some(s.choices), None)
-              export = export.copy(answers = Some(Right(cae)), abstentionCount = s.abstentions)
+              export = export.copy(choiceAnswers = Some(cae), abstentionCount = s.abstentions)
               ret ! Success(export)
             }
           } else {
@@ -163,14 +156,14 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
             } yield (transitions, stats)
             ff.map { r =>
               val cae = ChoiceAnswerExport(Some(r._2.choices), Some(r._1))
-              export = export.copy(answers = Some(Right(cae)), abstentionCount = r._2.abstentions)
+              export = export.copy(choiceAnswers = Some(cae), abstentionCount = r._2.abstentions)
               ret ! Success(export)
             }
           }
         }
         case "freetext" => {
           (answerListActor ? GetFreetextStatistics(c.id.get)).mapTo[Seq[FreetextAnswerExport]].map { seq =>
-            export = export.copy(answers = Some(Left(seq)))
+            export = export.copy(textAnswers = Some(seq))
             ret ! Success(export)
           }
         }
