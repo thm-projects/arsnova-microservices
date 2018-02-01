@@ -24,7 +24,7 @@ case class Content(
 )
 
 object Content {
-  def apply(c: ContentExport, roomId: UUID, optionalAnswerOptions: Option[Seq[AnswerOption]] = None): Content =
+  def apply(c: ContentExport, roomId: UUID): Content =
     Content(
       None,
       roomId,
@@ -41,6 +41,6 @@ object Content {
       c.abstentionAllowed,
       0,
       c.formatAttributes,
-      optionalAnswerOptions
+      c.answerOptions
     )
 }
