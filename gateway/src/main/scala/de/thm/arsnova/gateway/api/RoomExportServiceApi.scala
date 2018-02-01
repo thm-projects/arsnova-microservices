@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import de.thm.arsnova.gateway.RoomListClientActor
 import de.thm.arsnova.shared.entities.{Room, RoomListEntry}
-import de.thm.arsnova.shared.entities.export.RoomExport
+import de.thm.arsnova.shared.entities.export.{ChoiceAnswerExport, RoomExport}
 import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
 import de.thm.arsnova.shared.servicecommands.RoomCommands._
 import de.thm.arsnova.shared.servicecommands.KeywordCommands._
