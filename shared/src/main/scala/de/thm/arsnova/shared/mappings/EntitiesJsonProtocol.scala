@@ -38,6 +38,7 @@ object EntitiesJsonProtocol extends DefaultJsonProtocol with UUIDFormat {
   implicit val tokenFormat: RootJsonFormat[Token] = jsonFormat5(Token.apply)
   implicit val userFormat: RootJsonFormat[User] = jsonFormat3(User.apply)
   implicit val choiceAnswerSummaryFormat: RootJsonFormat[ChoiceAnswerSummary] = jsonFormat2(ChoiceAnswerSummary.apply)
+  implicit val choiceAnswerStatisticsFormat: RootJsonFormat[ChoiceAnswerStatistics] = jsonFormat2(ChoiceAnswerStatistics.apply)
 
   // export protocols
   implicit val answerOptionExportFormat: RootJsonFormat[AnswerOptionExport] = jsonFormat4(AnswerOptionExport.apply)

@@ -15,7 +15,7 @@ import de.thm.arsnova.gateway.AuthServiceClientActor
 import de.thm.arsnova.gateway.Context._
 import spray.json._
 import de.thm.arsnova.gateway.api.BaseApi
-import de.thm.arsnova.shared.entities.{ChoiceAnswer, RoundTransition, User}
+import de.thm.arsnova.shared.entities.{ChoiceAnswer, ChoiceAnswerStatistics, RoundTransition, User}
 import de.thm.arsnova.shared.servicecommands.ChoiceAnswerCommands._
 import de.thm.arsnova.shared.servicecommands.CommandWithToken
 import de.thm.arsnova.shared.servicecommands.AuthCommands.AuthenticateUser
@@ -74,6 +74,20 @@ trait ChoiceAnswerApi extends BaseApi {
                       }
                       case Failure(t) => Future.failed(t)
                     }
+                  }
+                }
+              }
+            }
+          } ~
+          pathPrefix("stats") {
+            get {
+              headerValueByName("X-Session-Token") { token =>
+                complete {
+                  (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
+                    case Success(uId) =>
+                      (answerListRegion ? GetChoiceStatistics(contentId))
+                        .mapTo[Try[ChoiceAnswerStatistics]]
+                    case Failure(t) => Future.failed(t)
                   }
                 }
               }
