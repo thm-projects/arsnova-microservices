@@ -46,6 +46,8 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   // passivate the entity when no activity
   context.setReceiveTimeout(2.minutes)
 
+  var roomId: Option[UUID] = None
+
   var answerOptions: Option[Seq[AnswerOption]] = None
 
   var votingRound: Int = 0
@@ -57,6 +59,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   override def receiveRecover: Receive = {
     case ContentCreated(content) => {
+      roomId = Some(content.roomId)
       contentToType(content) match {
         case "choice" => {
           context.become(choiceContentCreated)
@@ -107,6 +110,7 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
   def handleEvents(sep: RoomEventPackage) = {
     sep.event match {
       case ContentCreated(content) => {
+        roomId = Some(content.roomId)
         contentToType(content) match {
           case "choice" => {
             context.become(choiceContentCreated)
@@ -118,6 +122,13 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
         persist(ContentCreated(content))(e => e)
       }
+      case ContentRefresh(content) =>
+        roomId = Some(content.roomId)
+        contentToType(content) match {
+          case "choice" =>
+            answerOptions = content.answerOptions
+          case "freetext" =>
+        }
       case ContentDeleted(content) => {
         choiceAnswerList.clear()
         freetextAnswerList.clear()
@@ -245,21 +256,41 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
         }
       }
     }) (sender)
-    case GetChoiceStatistics(contentId) => ((ret: ActorRef) => {
-      val list = choiceAnswerList.values.map(identity).toSeq
-      val abs: Array[Int] = new Array[Int](votingRound)
-      val c: Set[Seq[Int]] = list.map { a =>
-        if (a.answerIndexes.isEmpty) {
-          abs.update(a.round.get, abs(a.round.get) + 1)
-          Nil
-        } else {
-          a.answerIndexes
-        }
-      }.toSet
-      val choices = c.map { choice =>
-        ChoiceAnswerSummary(choice, c.count(_ == choice))
-      }.toSeq
-      ret ! ChoiceAnswerStatistics(choices, abs.toSeq)
+    case cmd@GetChoiceStatistics(contentId, userId) => ((ret: ActorRef) => {
+      userId match {
+        case Some(uId) =>
+          roomId match {
+            case Some(rId) =>
+              (userRegion ? GetRoleForRoom(uId, rId)).mapTo[String] map { role =>
+                ChoiceAnswerCommandWithRole(cmd, role, ret)
+              } pipeTo self
+            case None =>
+              // this should never happen
+              (contentRegion ? GetContent(contentId)).mapTo[Try[Content]] map {
+                case Success(content) =>
+                  self ! RoomEventPackage(contentId, ContentRefresh(content))
+                  self ! cmd
+                case Failure(t) =>
+                  ret ! Failure(ResourceNotFound("content"))
+              }
+          }
+        case None =>
+          // command is used internally or after auth
+          val list = choiceAnswerList.values.map(identity).toSeq
+          val abs: Array[Int] = new Array[Int](votingRound)
+          val c: Set[Seq[Int]] = list.map { a =>
+            if (a.answerIndexes.isEmpty) {
+              abs.update(a.round.get, abs(a.round.get) + 1)
+              Nil
+            } else {
+              a.answerIndexes
+            }
+          }.toSet
+          val choices = c.map { choice =>
+            ChoiceAnswerSummary(choice, c.count(_ == choice))
+          }.toSeq
+          ret ! ChoiceAnswerStatistics(choices, abs.toSeq)
+      }
     }) (sender)
     case GetChoiceAbstentionCount(contentId) => ((ret: ActorRef) => {
       val list = choiceAnswerList.values.map(identity).toSeq
@@ -362,6 +393,23 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             }
           }
         }
+        case GetChoiceStatistics(contentId, userId) => ((ret: ActorRef) => {
+          // command is used internally or after auth
+          val list = choiceAnswerList.values.map(identity).toSeq
+          val abs: Array[Int] = new Array[Int](votingRound)
+          val c: Set[Seq[Int]] = list.map { a =>
+            if (a.answerIndexes.isEmpty) {
+              abs.update(a.round.get, abs(a.round.get) + 1)
+              Nil
+            } else {
+              a.answerIndexes
+            }
+          }.toSet
+          val choices = c.map { choice =>
+            ChoiceAnswerSummary(choice, c.count(_ == choice))
+          }.toSeq
+          ret ! ChoiceAnswerStatistics(choices, abs.toSeq)
+        }) (sender)
       }
     }
   }

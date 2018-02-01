@@ -85,7 +85,7 @@ trait ChoiceAnswerApi extends BaseApi {
                 complete {
                   (authClient ? AuthenticateUser(token)).mapTo[Try[UUID]] map {
                     case Success(uId) =>
-                      (answerListRegion ? GetChoiceStatistics(contentId))
+                      (answerListRegion ? GetChoiceStatistics(contentId, Some(uId)))
                         .mapTo[Try[ChoiceAnswerStatistics]]
                     case Failure(t) => Future.failed(t)
                   }

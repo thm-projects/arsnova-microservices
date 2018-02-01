@@ -9,6 +9,8 @@ object ContentEvents {
 
   case class ContentCreated(content: Content) extends ContentEvent
 
+  case class ContentRefresh(content: Content) extends ContentEvent
+
   case class ContentDeleted(content: Content) extends ContentEvent
 
   case class ContentUpdated(content: Content) extends ContentEvent

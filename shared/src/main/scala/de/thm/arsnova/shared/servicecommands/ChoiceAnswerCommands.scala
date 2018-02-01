@@ -22,7 +22,8 @@ object ChoiceAnswerCommands {
 
   case class DeleteChoiceAnswer(contentId: UUID, roomId: UUID, id: UUID, userId: UUID) extends ChoiceAnswerCommand
 
-  case class GetChoiceStatistics(contentId: UUID) extends ChoiceAnswerCommand
+  // if userId == None, Command is used internally
+  case class GetChoiceStatistics(contentId: UUID, userId: Option[UUID]) extends ChoiceAnswerCommand
 
   case class GetChoiceAbstentionCount(contentId: UUID) extends ChoiceAnswerCommand
 

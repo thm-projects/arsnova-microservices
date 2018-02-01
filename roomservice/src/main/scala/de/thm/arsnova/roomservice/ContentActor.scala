@@ -139,7 +139,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
       contentToType(c) match {
         case "choice" => {
           if (c.votingRound == 0 || withChoiceStats) {
-            (answerListActor ? GetChoiceStatistics(c.id.get)).mapTo[ChoiceAnswerStatistics].map { s =>
+            (answerListActor ? GetChoiceStatistics(c.id.get, None)).mapTo[ChoiceAnswerStatistics].map { s =>
               val cae = ChoiceAnswerExport(Some(s.choices), None)
               export = export.copy(choiceAnswers = Some(cae), abstentionCount = s.abstentions)
               ret ! Success(export)
@@ -147,7 +147,7 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
           } else {
             val fTransitions = (answerListActor ? GetAllTransitions(c.id.get)).mapTo[Seq[RoundTransition]]
             val fStats = withChoiceStats match {
-              case true => (answerListActor ? GetChoiceStatistics(c.id.get)).mapTo[ChoiceAnswerStatistics]
+              case true => (answerListActor ? GetChoiceStatistics(c.id.get, None)).mapTo[ChoiceAnswerStatistics]
               case false => (answerListActor ? GetChoiceAbstentionCount(c.id.get)).mapTo[Seq[Int]].map {ChoiceAnswerStatistics(Nil, _)}
             }
             val ff: Future[(Seq[RoundTransition], ChoiceAnswerStatistics)] = for {
