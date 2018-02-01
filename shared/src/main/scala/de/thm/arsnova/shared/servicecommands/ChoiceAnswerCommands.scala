@@ -4,8 +4,7 @@ import java.util.UUID
 
 import akka.Done
 import akka.actor.ActorRef
-import de.thm.arsnova.shared.entities.ChoiceAnswer
-import de.thm.arsnova.shared.entities.AnswerOption
+import de.thm.arsnova.shared.entities.{ChoiceAnswer, AnswerOption, Content}
 import de.thm.arsnova.shared.entities.export.ChoiceAnswerExport
 
 object ChoiceAnswerCommands {
@@ -32,7 +31,7 @@ object ChoiceAnswerCommands {
   case class ImportChoiceAnswers(
     contentId: UUID,
     roomId: UUID,
-    exportedAnswerOptions: Seq[AnswerOption],
+    content: Content,
     choiceAnswerExport: ChoiceAnswerExport,
     abstentionCount: Seq[Int]
   ) extends ChoiceAnswerCommand

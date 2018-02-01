@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.Done
 import akka.actor.ActorRef
-import de.thm.arsnova.shared.entities.FreetextAnswer
+import de.thm.arsnova.shared.entities.{FreetextAnswer, Content}
 import de.thm.arsnova.shared.entities.export.FreetextAnswerExport
 
 object FreetextAnswerCommands {
@@ -24,5 +24,5 @@ object FreetextAnswerCommands {
 
   case class GetFreetextStatistics(contentId: UUID) extends FreetextAnswerCommand
 
-  case class ImportFreetextAnswers(contentId: UUID, roomId: UUID, exportedAnswers: Seq[FreetextAnswerExport]) extends FreetextAnswerCommand
+  case class ImportFreetextAnswers(contentId: UUID, roomId: UUID, content: Content, exportedAnswers: Seq[FreetextAnswerExport]) extends FreetextAnswerCommand
 }

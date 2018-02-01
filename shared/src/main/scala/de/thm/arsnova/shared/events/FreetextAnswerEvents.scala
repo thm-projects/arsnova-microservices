@@ -9,5 +9,7 @@ object FreetextAnswerEvents {
 
   case class FreetextAnswerCreated(answer: FreetextAnswer) extends FreetextAnswerEvent
 
+  case class FreetextAnswersCreated(answers: Seq[FreetextAnswer]) extends FreetextAnswerEvent
+
   case class FreetextAnswerDeleted(answer: FreetextAnswer) extends FreetextAnswerEvent
 }

@@ -86,13 +86,13 @@ class ContentActor(authRouter: ActorRef) extends PersistentActor {
         case "choice" => {
           exportedContent.choiceAnswers match {
             case Some(answers) =>
-              answerListActor ! ImportChoiceAnswers(id, roomId, content.answerOptions.get, answers, exportedContent.abstentionCount)
+              answerListActor ! ImportChoiceAnswers(id, roomId, content, answers, exportedContent.abstentionCount)
           }
         }
         case "freetext" => {
           exportedContent.textAnswers match {
             case Some(answers) =>
-              answerListActor ! ImportFreetextAnswers(id, roomId, answers)
+              answerListActor ! ImportFreetextAnswers(id, roomId, content, answers)
           }
         }
       }

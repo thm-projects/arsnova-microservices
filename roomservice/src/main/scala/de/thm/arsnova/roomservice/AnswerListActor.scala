@@ -80,12 +80,22 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
     case ChoiceAnswerCreated(answer) => {
       choiceAnswerList += answer.id.get -> answer
     }
+    case ChoiceAnswersCreated(answers) => {
+      answers.map { answer =>
+        choiceAnswerList += answer.id.get -> answer
+      }
+    }
     case ChoiceAnswerDeleted(answer) => {
       choiceAnswerList -= answer.id.get
     }
 
     case FreetextAnswerCreated(answer) => {
       freetextAnswerList += answer.id.get -> answer
+    }
+    case FreetextAnswersCreated(answers) => {
+      answers.map { answer =>
+        freetextAnswerList += answer.id.get -> answer
+      }
     }
     case FreetextAnswerDeleted(answer) => {
       freetextAnswerList -= answer.id.get
@@ -130,11 +140,12 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
 
   def initial: Receive = {
     case sep: RoomEventPackage => handleEvents(sep)
-    case ImportChoiceAnswers(contentId, roomId, exportedAnswerOptions, choiceAnswerExport, abstentionCount) => {
+    case ImportChoiceAnswers(contentId, roomId, content, choiceAnswerExport, abstentionCount) => {
+      val answers = collection.mutable.Seq.empty[ChoiceAnswer]
       abstentionCount.foreach { a =>
         for (i <- 0 to a) {
           val newId = UUID.randomUUID()
-          choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), Nil, Some(i))
+          answers :+ ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), Nil, Some(i))
         }
       }
       choiceAnswerExport.transitions match {
@@ -146,13 +157,13 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
             }
             for (i <- 0 to transition.count) {
               val newId = UUID.randomUUID()
-              choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), transition.selectedIndexesA, Some(votingRound))
+              answers :+ ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), transition.selectedIndexesA, Some(votingRound))
             }
           }
           // since only stats for roundA got imported, import for the last round
           transitions.filter(t => t.roundA == votingRound).foreach { transition =>
             val newId = UUID.randomUUID()
-            choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), transition.selectedIndexesB, Some(votingRound))
+            answers :+ ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), transition.selectedIndexesB, Some(votingRound))
           }
           votingRound = votingRound + 1
         case None =>
@@ -162,22 +173,36 @@ class AnswerListActor(authRouter: ActorRef) extends PersistentActor {
               stats.foreach { summary =>
                 for (i <- 0 to summary.count) {
                   val newId = UUID.randomUUID()
-                  choiceAnswerList += newId -> ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), summary.choice, Some(votingRound))
+                  answers :+ ChoiceAnswer(Some(newId), Some(GuestUser().id.get), Some(contentId), Some(roomId), summary.choice, Some(votingRound))
                 }
               }
           }
       }
-      answerOptions = Some(exportedAnswerOptions.map(a => a.copy(contentId = Some(contentId))))
+      // save all answers
+      answers.map { answer =>
+        choiceAnswerList += answer.id.get -> answer
+      }
+      // persist events
+      persist(ContentCreated(content))(e => e)
+      persist(ChoiceAnswersCreated(answers))(e => e)
+      
+      answerOptions = Some(content.answerOptions.get.map(a => a.copy(contentId = Some(contentId))))
       context.become(choiceContentCreated)
     }
-    case ImportFreetextAnswers(contentId, roomId, exportedAnswers) => {
+    case ImportFreetextAnswers(contentId, roomId, content, exportedAnswers) => {
+      val answers = collection.mutable.Seq.empty[FreetextAnswer]
       exportedAnswers.map { eAnswer =>
         val newId = UUID.randomUUID()
         val guestUser = GuestUser()
         val answer = FreetextAnswer(Some(newId), guestUser.id, Some(contentId), Some(roomId), eAnswer.subject, eAnswer.text)
+        answers :+ answer
         freetextAnswerList += newId -> answer
         persistAsync(FreetextAnswerCreated(answer))(e => e)
       }
+      // persist events
+      persist(ContentCreated(content))(e => e)
+      persist(FreetextAnswersCreated(answers))(e => e)
+
       context.become(freetextContentCreated)
     }
   }
